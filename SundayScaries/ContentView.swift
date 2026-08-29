@@ -2,20 +2,13 @@
 //  ContentView.swift
 //  SundayScaries
 //
-//  Created by Cole Sherman on 8/28/26.
-//
 
 import SwiftUI
 
 struct ContentView: View {
+    // Milestone 1 has no UI. This is the throwaway debug dump and nothing else.
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
+        DebugLeagueDumpView()
     }
 }
 
