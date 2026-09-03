@@ -47,18 +47,26 @@ final class DebugDumpModel {
 
         // Anything outside a league's own block is genuinely fatal, so it stays in one
         // do/catch. Everything per-league is isolated below.
-        let crosswalk: PlayerCrosswalk
-        do {
-            crosswalk = try CrosswalkLoader.loadBundled()
-            line("crosswalk: \(crosswalk.count) rows loaded from the bundle")
-        } catch {
-            line("FAILED to load the bundled crosswalk: \(error)")
-            return
-        }
-
         let store: any SnapshotStore
         do { store = try FileSnapshotStore.applicationSupport() }
         catch { store = InMemorySnapshotStore(); line("cache: falling back to memory (\(error))") }
+
+        // The crosswalk is downloaded and cached, not bundled — FantasyKit ships no
+        // player data of its own. First run needs a network; after that it is local.
+        let crosswalkStore = CrosswalkStore(http: URLSessionHTTPClient(), store: store)
+        let crosswalk: PlayerCrosswalk
+        do {
+            line("crosswalk: fetching…")
+            crosswalk = try await crosswalkStore.crosswalk()
+            line("crosswalk: \(crosswalk.count) rows")
+            line(await crosswalkStore.attribution)
+        } catch {
+            line("FAILED to load the player ID crosswalk: \(error)")
+            line()
+            line("It downloads on first run and is cached afterwards, so this needs a")
+            line("network connection once. Nothing else can resolve players without it.")
+            return
+        }
 
         let provider = SleeperProvider(
             http: URLSessionHTTPClient(),
@@ -135,14 +143,20 @@ final class DebugDumpModel {
             }
             if weekErrors > 0 { line("  \(weekErrors) week(s) could not be loaded") }
 
+            // Passing the league scopes analytics to the regular season.
             let analytics = LeagueAnalyticsBuilder.build(
-                leagueID: league.id, teams: teams, matchups: matchups
+                league: league, teams: teams, matchups: matchups
             )
 
             if analytics.weeksAnalyzed.isEmpty {
                 line("  no scoring yet this season — standings and analytics will fill in after week 1")
             } else {
-                line("  \(analytics.weeksAnalyzed.count) week(s) of scoring")
+                var scoring = "  \(analytics.weeksAnalyzed.count) week(s) of scoring"
+                if !analytics.playoffWeeksExcluded.isEmpty {
+                    scoring += " (regular season; excluded playoff week(s) "
+                        + analytics.playoffWeeksExcluded.map(String.init).joined(separator: ", ") + ")"
+                }
+                line(scoring)
                 line()
                 line("  # TEAM                      REC    PF      ALL-PLAY  LUCK    SD     GAP")
                 line("  " + String(repeating: "-", count: 68))

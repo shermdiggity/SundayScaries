@@ -1,0 +1,84 @@
+import SwiftUI
+import FantasyCore
+
+/// The signature component: exposure as a physical quantity.
+///
+/// One bar per league, stacked. A league you own him in is solid; one you don't is a
+/// hairline. Five solid bars read as a *block*; one reads as a *line*. That is weight
+/// you feel without counting, which is the whole point — no number, no label.
+///
+/// Facing a player inverts it: filled bars become outlines, so the same shape reads as
+/// absence rather than mass, and being faced everywhere feels hollow.
+struct ExposureMeter: View {
+    enum Kind {
+        /// On your roster somewhere.
+        case owned
+        /// In your starting lineup — what your week actually rides on.
+        case started
+        /// In an opponent's starting lineup.
+        case faced
+    }
+
+    let filled: Int
+    let total: Int
+    var kind: Kind = .owned
+    var barHeight: CGFloat = 8
+    var barWidth: CGFloat = 44
+
+    private var tint: Color {
+        switch kind {
+        // Both are warm — you are on the same side of these players. Reliance is the
+        // full-strength version; a bench stash is the same colour, quieter.
+        case .owned:   SWColor.accent.opacity(0.55)
+        case .started: SWColor.accent
+        case .faced:   SWColor.negative
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 2) {
+            ForEach(0..<max(total, 1), id: \.self) { index in
+                bar(isFilled: index < filled)
+            }
+        }
+        .animation(SWMotion.reveal, value: filled)
+        .accessibilityElement()
+        .accessibilityLabel(
+            {
+                switch kind {
+                case .owned:   Text("Rostered in \(filled) of \(total) leagues")
+                case .started: Text("Starting for you in \(filled) of \(total) leagues")
+                case .faced:   Text("Starting against you in \(filled) of \(total) leagues")
+                }
+            }()
+        )
+    }
+
+    @ViewBuilder
+    private func bar(isFilled: Bool) -> some View {
+        let shape = RoundedRectangle(cornerRadius: 1.5, style: .continuous)
+        switch (isFilled, kind) {
+        case (false, _):
+            shape.fill(SWColor.onSky.opacity(0.22))
+                .frame(width: barWidth, height: 2)
+        case (true, .owned), (true, .started):
+            shape.fill(tint)
+                .frame(width: barWidth, height: barHeight)
+        case (true, .faced):
+            shape.strokeBorder(tint, lineWidth: 1.5)
+                .background(shape.fill(tint.opacity(0.14)))
+                .frame(width: barWidth, height: barHeight)
+        }
+    }
+}
+
+#Preview("Concentration reads as shape") {
+    HStack(alignment: .bottom, spacing: SWSpacing.xl) {
+        ForEach([5, 4, 3, 2, 1], id: \.self) { count in
+            ExposureMeter(filled: count, total: 5)
+        }
+        ExposureMeter(filled: 4, total: 5, kind: .faced)
+    }
+    .padding(SWSpacing.xl)
+    .background(SWColor.canvas)
+}
