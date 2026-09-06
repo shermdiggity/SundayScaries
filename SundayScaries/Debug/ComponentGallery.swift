@@ -107,6 +107,10 @@ struct ComponentGallery: View {
                         ])
                     }
 
+                    section("Feedback") {
+                        FeedbackDemo()
+                    }
+
                     section("Stat cells") {
                         HStack(alignment: .top, spacing: SWSpacing.xl) {
                             StatCell(value: "118.4", caption: "Points")
@@ -348,3 +352,27 @@ struct ComponentGallery: View {
 }
 
 #Preview { ComponentGallery() }
+
+/// Every haptic the app plays, on a button each, so a moment can be felt on a device
+/// without finding the screen that fires it.
+private struct FeedbackDemo: View {
+    @State private var refreshes = 0
+    @State private var failures = 0
+    @State private var successes = 0
+    @State private var toggles = 0
+
+    var body: some View {
+        HStack(spacing: SWSpacing.md) {
+            Button("Refreshed") { refreshes += 1 }
+                .feedback(.refreshCompleted, trigger: refreshes)
+            Button("Failed") { failures += 1 }
+                .feedback(.signInFailed, trigger: failures)
+            Button("Signed in") { successes += 1 }
+                .feedback(.signInSucceeded, trigger: successes)
+            Button("Toggled") { toggles += 1 }
+                .feedback(.leagueVisibilityChanged, trigger: toggles)
+        }
+        .font(SWType.caption)
+        .buttonStyle(.bordered)
+    }
+}

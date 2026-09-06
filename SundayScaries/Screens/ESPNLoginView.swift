@@ -86,6 +86,7 @@ struct ESPNLoginView: View {
             )
             .ignoresSafeArea(edges: .bottom)
             .safeAreaInset(edge: .bottom) { finishBar }
+            .feedback(.signInSucceeded, trigger: captured) { _, new in new }
             .navigationTitle("Sign in to ESPN")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

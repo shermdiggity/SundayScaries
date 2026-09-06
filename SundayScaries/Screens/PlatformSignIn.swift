@@ -16,6 +16,7 @@ struct MFLConnectView: View {
     @State private var leagueIDs = ""
     @State private var isSigningIn = false
     @State private var failure: String?
+    @State private var signIns = 0
 
     var body: some View {
         NavigationStack {
@@ -64,6 +65,8 @@ struct MFLConnectView: View {
             }
             .navigationTitle("MyFantasyLeague")
             .navigationBarTitleDisplayMode(.inline)
+            .feedback(.signInSucceeded, trigger: signIns)
+            .feedback(.signInFailed, trigger: failure) { _, new in new != nil }
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
             .onAppear { leagueIDs = initialLeagueIDs }
         }
@@ -83,6 +86,7 @@ struct MFLConnectView: View {
                     season: WeeklyModel.currentSeason(), http: URLSessionHTTPClient()
                 )
                 onCredentials(credentials)
+                signIns += 1
                 dismiss()
             } catch let ProviderError.unauthorized(_, message) {
                 failure = message ?? String(localized: "MyFantasyLeague didn't accept that sign-in.")
@@ -113,6 +117,7 @@ struct YahooSignInView: View {
     @State private var code = ""
     @State private var isExchanging = false
     @State private var failure: String?
+    @State private var signIns = 0
     @State private var openedYahoo = false
 
     private var haveApp: Bool {
@@ -172,6 +177,8 @@ struct YahooSignInView: View {
             }
             .navigationTitle("Yahoo")
             .navigationBarTitleDisplayMode(.inline)
+            .feedback(.signInSucceeded, trigger: signIns)
+            .feedback(.signInFailed, trigger: failure) { _, new in new != nil }
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
             .onAppear {
                 // A previous app registration is worth keeping across sign-outs.
@@ -195,6 +202,7 @@ struct YahooSignInView: View {
             do {
                 let credentials = try await YahooOAuth.exchange(code: typed, clientID: id, clientSecret: secret, http: URLSessionHTTPClient())
                 onSuccess(credentials)
+                signIns += 1
                 dismiss()
             } catch let ProviderError.unexpectedStatus(_, body) {
                 failure = body ?? String(localized: "Yahoo didn't accept that code.")

@@ -161,6 +161,7 @@ struct LeagueDetailView: View {
             .buttonStyle(.plain)
             .disabled(isRefreshing)
             .accessibilityLabel(isRefreshing ? "Refreshing" : "Refresh")
+            .feedback(.refreshCompleted, trigger: isRefreshing) { old, new in old && !new }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, SWSpacing.lg)

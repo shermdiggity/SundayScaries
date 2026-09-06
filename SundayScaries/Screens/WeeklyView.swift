@@ -17,6 +17,10 @@ struct WeeklyView: View {
     @State private var showingESPNLogin = false
     @State private var showingMFLConnect = false
     @State private var showingYahooLogin = false
+    /// Outcomes of the welcome cards' connects, counted so a load the reader started can
+    /// be felt and one the poll started cannot.
+    @State private var connectSuccesses = 0
+    @State private var connectFailures = 0
     @State private var isEnteringFleaflicker = false
     @State private var fleaflickerDraft = ""
     @FocusState private var fleaflickerFieldFocused: Bool
@@ -155,6 +159,8 @@ struct WeeklyView: View {
                 AccountSheet(model: model)
             }
             .refreshable { await model.refreshAll() }
+            .feedback(.signInSucceeded, trigger: connectSuccesses)
+            .feedback(.signInFailed, trigger: connectFailures)
             .task { if model.snapshots.isEmpty { await model.load() } }
             .onAppear {
                 // One beat after launch: the launch colour becomes the live sky and the
@@ -390,7 +396,7 @@ struct WeeklyView: View {
         guard !handle.isEmpty else { return }
         fleaflickerFieldFocused = false
         model.fleaflickerHandle = handle
-        Task { await model.load() }
+        Task { await connect() }
     }
 
     /// One way in. The platform's own mark, its name, one honest line about what
@@ -421,12 +427,18 @@ struct WeeklyView: View {
         .buttonStyle(.plain)
     }
 
+    /// One load for a connect the reader just made, and one haptic for how it went.
+    private func connect() async {
+        await model.load()
+        if model.loadProblem == nil { connectSuccesses += 1 } else { connectFailures += 1 }
+    }
+
     private func connectSleeper() {
         let handle = sleeperDraft.trimmingCharacters(in: .whitespaces)
         guard !handle.isEmpty else { return }
         sleeperFieldFocused = false
         model.handle = handle
-        Task { await model.load() }
+        Task { await connect() }
     }
 
     private func weekStep(systemImage: String, enabled: Bool, action: @escaping () -> Void) -> some View {

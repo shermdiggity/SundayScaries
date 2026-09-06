@@ -11,6 +11,7 @@ import FantasyCore
 struct LeagueEditor: View {
     let model: WeeklyModel
     @Environment(\.dismiss) private var dismiss
+    @State private var visibilityToggles = 0
 
     var body: some View {
         NavigationStack {
@@ -45,6 +46,7 @@ struct LeagueEditor: View {
                 }
             }
             .environment(\.editMode, .constant(.active))
+            .feedback(.leagueVisibilityChanged, trigger: visibilityToggles)
             .navigationTitle("Your leagues")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -85,6 +87,7 @@ struct LeagueEditor: View {
 
             Button {
                 model.setHidden(!hidden, for: league.id)
+                visibilityToggles += 1
             } label: {
                 Image(systemName: hidden ? "eye.slash" : "eye")
                     .font(SWType.icon)
