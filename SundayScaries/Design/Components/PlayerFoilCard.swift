@@ -141,29 +141,31 @@ struct PlayerFoilCard: View {
     /// count, so the card never grows to fit them.
     private var leagueLines: [String] {
         func label(_ involvement: LeagueInvolvement) -> String {
-            isAgainst ? "vs. " + (involvement.opponentName ?? involvement.leagueName)
+            isAgainst ? String(localized: "vs. \(involvement.opponentName ?? involvement.leagueName)")
                 : involvement.leagueName
         }
         switch involvements.count {
         case 0:    return ["", ""]
         case 1:    return [label(involvements[0]), ""]
         case 2:    return [label(involvements[0]), label(involvements[1])]
-        default:   return [label(involvements[0]), "+\(involvements.count - 1) more"]
+        default:   return [label(involvements[0]), String(localized: "+\(involvements.count - 1) more")]
         }
     }
 
     /// "In 2 of 3 leagues" / "Starting in all 3" — plain words, no decoding required.
-    private var countLabel: String {
-        let verb = isAgainst ? "Against you in" : "Starting in"
+    private var countLabel: LocalizedStringKey {
         if count == position.totalLeagues, count > 1 {
-            return "\(verb) all \(count)"
+            return isAgainst ? "Against you in all \(count)" : "Starting in all \(count)"
         }
-        return "\(verb) \(count) of \(position.totalLeagues)"
+        return isAgainst
+            ? "Against you in \(count) of \(position.totalLeagues)"
+            : "Starting in \(count) of \(position.totalLeagues)"
     }
 
     private var accessibilityText: Text {
-        let verb = isAgainst ? "facing" : "starting"
         let leagues = involvements.map(\.leagueName).joined(separator: ", ")
-        return Text("\(position.player.name), \(position.player.position.rawValue), \(verb) in \(count) of \(position.totalLeagues) leagues: \(leagues)")
+        return isAgainst
+            ? Text("\(position.player.name), \(position.player.position.rawValue), facing in \(count) of \(position.totalLeagues) leagues: \(leagues)")
+            : Text("\(position.player.name), \(position.player.position.rawValue), starting in \(count) of \(position.totalLeagues) leagues: \(leagues)")
     }
 }

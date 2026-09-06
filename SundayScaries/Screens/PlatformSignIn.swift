@@ -85,9 +85,9 @@ struct MFLConnectView: View {
                 onCredentials(credentials)
                 dismiss()
             } catch let ProviderError.unauthorized(_, message) {
-                failure = message ?? "MyFantasyLeague didn't accept that sign-in."
+                failure = message ?? String(localized: "MyFantasyLeague didn't accept that sign-in.")
             } catch {
-                failure = "Couldn't reach MyFantasyLeague. Check the connection and try again."
+                failure = String(localized: "Couldn't reach MyFantasyLeague. Check the connection and try again.")
             }
         }
     }
@@ -197,9 +197,9 @@ struct YahooSignInView: View {
                 onSuccess(credentials)
                 dismiss()
             } catch let ProviderError.unexpectedStatus(_, body) {
-                failure = body ?? "Yahoo didn't accept that code."
+                failure = body ?? String(localized: "Yahoo didn't accept that code.")
             } catch {
-                failure = "Couldn't reach Yahoo. Check the connection and try again."
+                failure = String(localized: "Couldn't reach Yahoo. Check the connection and try again.")
             }
         }
     }

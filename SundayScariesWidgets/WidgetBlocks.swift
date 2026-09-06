@@ -82,10 +82,10 @@ struct StatusBlock: View {
     private var isSet: Bool { pending.isEmpty }
     private var tint: Color { isSet ? SWColor.positive : SWColor.accent }
 
-    var headline: String {
+    var headline: LocalizedStringKey {
         if snapshot.leagues.isEmpty { return "Open the app" }
         if isSet { return "Every lineup is set" }
-        return pending.count == 1 ? "1 lineup needs you" : "\(pending.count) lineups need you"
+        return "\(pending.count) lineups need you"
     }
 
     var body: some View {
@@ -120,7 +120,7 @@ struct StatusBlock: View {
                                     .font(SWType.glyph)
                                     .foregroundStyle(SWColor.positive)
                             } else {
-                                Text(league.issueCount == 1 ? "1 to fix" : "\(league.issueCount) to fix")
+                                Text("\(league.issueCount) to fix")
                                     .font(SWType.scoreMicro)
                                     .foregroundStyle(SWColor.accent)
                             }

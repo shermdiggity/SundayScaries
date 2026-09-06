@@ -87,7 +87,7 @@ struct SeasonOutlookRow: View {
         }
     }
 
-    private var mood: (String, Color)? {
+    private var mood: (LocalizedStringKey, Color)? {
         guard let analytics = snapshot.analytics, let team = snapshot.myTeam,
               let luck = analytics.team(team.id)?.luckIndex else { return nil }
         if luck > 0.05 { return ("Running hot", SWColor.warning) }
@@ -95,7 +95,7 @@ struct SeasonOutlookRow: View {
         return ("About right", SWColor.secondary)
     }
 
-    private func contribution(_ value: PlayerContribution, label: String, tone: Color) -> some View {
+    private func contribution(_ value: PlayerContribution, label: LocalizedStringKey, tone: Color) -> some View {
         HStack(spacing: SWSpacing.sm) {
             Headshot(player: value.player, size: 36)
             VStack(alignment: .leading, spacing: 1) {

@@ -106,9 +106,9 @@ struct LineupFaceoff: View {
         theirsValue: Double
     ) -> String {
         let format = SWFormat.score
-        let me = pair.mine?.player.name ?? "empty"
-        let them = pair.theirs?.player.name ?? "empty"
-        return "\(slotName): \(me) \(mineValue.formatted(format)), against \(them) \(theirsValue.formatted(format))"
+        let me = pair.mine?.player.name ?? String(localized: "empty")
+        let them = pair.theirs?.player.name ?? String(localized: "empty")
+        return String(localized: "\(slotName): \(me) \(mineValue.formatted(format)), against \(them) \(theirsValue.formatted(format))")
     }
 
     /// Actual points once THIS player's game has begun — not merely once some game in

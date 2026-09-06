@@ -223,7 +223,7 @@ struct ProgressRow: View {
         ))
     }
 
-    private func count(_ value: Int, _ label: String, _ tone: Color) -> some View {
+    private func count(_ value: Int, _ label: LocalizedStringKey, _ tone: Color) -> some View {
         HStack(spacing: 2) {
             Text("\(value)")
                 .font(SWType.scoreMicro)

@@ -14,8 +14,8 @@ struct Podium: View {
         let powerPoints: String
         /// What that number is called — "power pts" once games are played, "projected"
         /// before that.
-        let unit: String
-        let allPlay: String
+        let unit: LocalizedStringKey
+        let allPlay: LocalizedStringKey
         let face: PlayerRef?
         let isMine: Bool
         var id: Int { rank }
@@ -98,7 +98,7 @@ struct Podium: View {
         }
         .frame(maxWidth: .infinity)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(Text("\(entry.rank). \(entry.teamName), \(entry.powerPoints) \(entry.unit)"))
+        .accessibilityLabel(Text("\(entry.rank). \(entry.teamName), \(entry.powerPoints) \(Text(entry.unit))"))
     }
 
     private func plinthHeight(_ rank: Int) -> CGFloat {

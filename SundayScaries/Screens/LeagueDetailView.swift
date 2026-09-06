@@ -219,7 +219,7 @@ struct LeagueDetailView: View {
                     .font(SWType.scoreCaption)
                     .foregroundStyle(SWColor.primary)
                 if let projected {
-                    Text("proj " + projected.formatted(SWFormat.score))
+                    Text("proj \(projected.formatted(SWFormat.score))")
                         .font(SWType.micro)
                         .foregroundStyle(SWColor.tertiary)
                 }
@@ -475,9 +475,9 @@ struct LeagueDetailView: View {
         /// The headline number.
         let value: String
         /// What that number is called.
-        let unit: String
+        let unit: LocalizedStringKey
         /// The quieter line under the team name.
-        let detail: String
+        let detail: LocalizedStringKey
         let isMine: Bool
         var id: String { teamID }
     }

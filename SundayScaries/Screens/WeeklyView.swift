@@ -442,13 +442,11 @@ struct WeeklyView: View {
     }
 
     /// The header answers one question and one only: are my lineups set?
-    private var quietHeadline: String {
+    private var quietHeadline: LocalizedStringKey {
         if model.snapshots.isEmpty { return model.isLoading ? "" : "Nothing to show yet." }
         let leagues = model.leaguesNeedingAttention
         guard leagues > 0 else { return "Every lineup is set." }
-        return leagues == 1
-            ? "One lineup needs you."
-            : "\(Self.spelled(leagues).capitalized) lineups need you."
+        return "\(leagues) lineups need you."
     }
 
     // MARK: - Sections
@@ -519,7 +517,7 @@ struct WeeklyView: View {
                     Text("Edit leagues")
                     if hidden > 0 {
                         Text("·").foregroundStyle(SWColor.onSkySecondary.opacity(0.6))
-                        Text(hidden == 1 ? "1 hidden" : "\(hidden) hidden")
+                        Text("\(hidden) hidden")
                     }
                 }
                 .font(SWType.caption)
@@ -574,7 +572,7 @@ struct WeeklyView: View {
     // MARK: - Copy
 
     /// The sentence that leads the app. Written, not templated from fragments.
-    static func sentence(for position: PlayerPosition) -> String {
+    static func sentence(for position: PlayerPosition) -> LocalizedStringKey {
         let surname = position.player.name.split(separator: " ").last.map(String.init)
             ?? position.player.name
         if position.facedCount > position.ownedCount {

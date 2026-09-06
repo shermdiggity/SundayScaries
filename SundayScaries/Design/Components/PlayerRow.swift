@@ -104,8 +104,8 @@ struct PlayerRow: View {
     /// The line under the name carries the most important thing first: a problem beats
     /// the fixture, and the fixture beats the bare team name.
     private var meta: String? {
-        if isEmpty { return "No player set" }
-        if slot.isOnBye { return "Bye" }
+        if isEmpty { return String(localized: "No player set") }
+        if slot.isOnBye { return String(localized: "Bye") }
         if player.injuryStatus != .healthy {
             return [player.injuryStatus.displayName, nflMatchup].compactMap { $0 }.joined(separator: " · ")
         }
@@ -129,12 +129,12 @@ struct PlayerRow: View {
     }
 
     private var accessibilityText: Text {
-        var parts = [slot.slot.rawValue, isEmpty ? "empty" : player.name]
+        var parts = [slot.slot.rawValue, isEmpty ? String(localized: "empty") : player.name]
         if let meta, !isEmpty { parts.append(meta) }
         if let points = slot.points, hasStarted {
-            parts.append("\(points.formatted(SWFormat.score)) points")
+            parts.append(String(localized: "\(points.formatted(SWFormat.score)) points"))
         } else if let projection {
-            parts.append("projected \(projection.formatted(SWFormat.score))")
+            parts.append(String(localized: "projected \(projection.formatted(SWFormat.score))"))
         }
         return Text(parts.joined(separator: ", "))
     }

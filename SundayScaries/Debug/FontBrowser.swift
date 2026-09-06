@@ -63,8 +63,9 @@ struct FontBrowser: View {
                     Text(family.name)
                         .font(.custom(headerFace, size: 26))
                         .foregroundStyle(SWColor.onSky)
-                    Text("\(family.kind.rawValue) · \(family.faces.count) face\(family.faces.count == 1 ? "" : "s")"
-                        + (family.isBundled ? " · bundled" : ""))
+                    Text(family.isBundled
+                        ? "\(family.kind.rawValue) · \(family.faces.count) faces · bundled"
+                        : "\(family.kind.rawValue) · \(family.faces.count) faces")
                         .font(SWType.caption)
                         .foregroundStyle(SWColor.onSkySecondary)
                 }

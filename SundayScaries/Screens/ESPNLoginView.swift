@@ -315,7 +315,7 @@ private struct ESPNLoginWebView: UIViewRepresentable {
             toldUserItFailed = true
             log("no espn_s2 after 60s — \(names.count) other cookies present")
             Task { @MainActor in
-                self.onStatus("Still not connected — try Paste instead from the menu")
+                self.onStatus(String(localized: "Still not connected — try Paste instead from the menu"))
             }
         }
 

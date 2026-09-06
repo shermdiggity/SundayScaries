@@ -60,7 +60,7 @@ struct LineupStrip: View {
         guard !issues.isEmpty else {
             return Text("Lineup set, \(roster.starters.count) starters")
         }
-        return Text("Lineup needs attention: " + issues.map(\.summary).joined(separator: ", "))
+        return Text("Lineup needs attention: \(issues.map(\.summary).joined(separator: ", "))")
     }
 }
 

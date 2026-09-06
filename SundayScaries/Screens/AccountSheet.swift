@@ -23,7 +23,7 @@ struct AccountSheet: View {
     @State private var showingMFLConnect = false
     @State private var showingYahooLogin = false
 
-    private var leagueSummary: String {
+    private var leagueSummary: LocalizedStringKey {
         let total = model.allLeagues.count
         let hidden = model.allLeagues.count { model.isHidden($0) }
         if total == 0 { return "None yet" }
@@ -312,16 +312,16 @@ struct AccountSheet: View {
         }
     }
 
-    private func statusText(_ text: String) -> some View {
+    private func statusText(_ text: LocalizedStringKey) -> some View {
         Text(text)
             .font(SWType.caption)
             .foregroundStyle(SWColor.secondary)
     }
 
-    private var mflStatus: String {
+    private var mflStatus: LocalizedStringKey {
         if signedInToMFL { return "Signed in" }
         let count = LeagueIDs.parse(mflLeagues).count
-        return count == 0 ? "Not connected" : (count == 1 ? "1 league by ID" : "\(count) leagues by ID")
+        return count == 0 ? "Not connected" : "\(count) leagues by ID"
     }
 
     private static var version: String {
