@@ -25,12 +25,22 @@ final class PlayerInspector {
     /// opened a player from it. Its owner turns this off the moment it stops being the
     /// selected league; `open` is then a no-op.
     var isEnabled = true
+    /// Asked at tap time. A pushed screen sets this from a `NavigationStackProbe`, so a
+    /// tap that lands while the screen is being swiped away, before SwiftUI has cleared
+    /// its selection, presents nothing.
+    @ObservationIgnored var isOnStack: @MainActor () -> Bool = { true }
 
     func open(_ player: PlayerRef, in leagueID: String?) {
         guard !player.isEmptyLineupSlot else { return }
         guard isEnabled else {
             #if DEBUG
             print("[detail] ignored a tap on \(player.name): its screen is closed")
+            #endif
+            return
+        }
+        guard isOnStack() else {
+            #if DEBUG
+            print("[detail] ignored a tap on \(player.name): its screen is leaving the stack")
             #endif
             return
         }

@@ -26,6 +26,9 @@ struct LeagueDetailView: View {
     @State private var inspectedMatchup: LeagueSnapshot.MatchupPair?
     @State private var isRefreshing = false
     @State private var inspector = PlayerInspector()
+    /// UIKit's answer to "is this screen still pushed", read at tap time. See
+    /// `NavigationStackProbe`.
+    @State private var stack = StackProbe()
     /// Only the decision is stored, not the offset. Keeping the raw scroll position in
     /// state re-rendered the whole screen on every frame of every scroll.
     @State private var isCollapsed = false
@@ -92,6 +95,12 @@ struct LeagueDetailView: View {
         // A closed league takes no touches. The pop does not reliably remove this
         // screen from hit-testing in the same frame it disappears; the selection does.
         .allowsHitTesting(isActive)
+        .background {
+            NavigationStackProbe { isOnStack in
+                stack.isOnStack = isOnStack
+                inspector.isOnStack = isOnStack
+            }
+        }
         .toolbar(.hidden, for: .navigationBar)
         .sheet(item: $inspectedTeam) { team in
             TeamSheet(snapshot: snapshot, teamID: team.teamID, model: model)
@@ -111,6 +120,18 @@ struct LeagueDetailView: View {
             print("[detail] \(snapshot.league.name) closed: touches off, sheets cleared")
             #endif
         }
+    }
+
+    /// Presents only while this screen is still on the stack: a tap during the swipe
+    /// that closes it must not open a sheet from a screen that is already gone.
+    private func present(_ action: () -> Void) {
+        guard stack.isOnStack() else {
+            #if DEBUG
+            print("[detail] \(snapshot.league.name) ignored a tap: leaving the stack")
+            #endif
+            return
+        }
+        action()
     }
 
     private var topBar: some View {
@@ -371,7 +392,7 @@ struct LeagueDetailView: View {
                 VStack(spacing: 0) {
                     ForEach(schedule) { entry in
                         Button {
-                            inspectedMatchup = entry.pair
+                            present { inspectedMatchup = entry.pair }
                         } label: {
                             scheduleRow(entry)
                         }
@@ -449,7 +470,7 @@ struct LeagueDetailView: View {
 
                 ForEach(others) { pair in
                     Button {
-                        inspectedMatchup = pair
+                        present { inspectedMatchup = pair }
                     } label: {
                         // Same two blocks as your own scoreboard, in the same order:
                         // the banked points and how much is left come FIRST, because
@@ -564,13 +585,13 @@ struct LeagueDetailView: View {
                             isMine: row.isMine
                         )
                     },
-                    onSelect: { inspectedTeam = TeamSelection(teamID: $0) },
+                    onSelect: { id in present { inspectedTeam = TeamSelection(teamID: id) } },
                     idForRank: { rank in rows.first { $0.rank == rank }?.teamID }
                 )
                 .padding(.bottom, SWSpacing.md)
 
                 ForEach(rows.dropFirst(3)) { row in
-                    Button { inspectedTeam = TeamSelection(teamID: row.teamID) } label: {
+                    Button { present { inspectedTeam = TeamSelection(teamID: row.teamID) } } label: {
                         rankRow(row)
                     }
                     .buttonStyle(.plain)
@@ -660,4 +681,10 @@ struct LeagueDetailView: View {
 private struct TeamSelection: Identifiable {
     let teamID: String
     var id: String { teamID }
+}
+
+/// Holds the probe's answer without observation: it is written during a view update
+/// and read only inside a tap.
+private final class StackProbe {
+    var isOnStack: @MainActor () -> Bool = { true }
 }
