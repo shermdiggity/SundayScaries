@@ -169,8 +169,6 @@ struct LeagueDetailView: View {
 
     /// A full-width bar, not a floating pill: once the scoreboard is gone this is the
     /// scoreboard, so it carries both live totals and both projections.
-    /// The pop is scheduled on its own, not sequenced off an animation completion —
-    /// that coupling is what left the navigation stack drawing nothing.
     private var collapsedSummary: some View {
         VStack(spacing: 2) {
             HStack(spacing: SWSpacing.sm) {

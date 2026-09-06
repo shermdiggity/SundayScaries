@@ -200,7 +200,6 @@ private struct ESPNLoginWebView: UIViewRepresentable {
 
     func updateUIView(_ webView: WKWebView, context: Context) {
         // Only ever in response to a tap. This view does not navigate on its own.
-        // Both are user-initiated. Nothing here navigates on its own.
         if goHome != context.coordinator.lastGoHome {
             context.coordinator.lastGoHome = goHome
             // The fantasy page, not the sign-in page: this load mints `espn_s2`.

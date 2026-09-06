@@ -17,8 +17,6 @@ import CoreText
 /// This is debug-only: the whole file compiles out of release.
 enum FontCatalog {
 
-    // MARK: Families
-
     struct Family: Identifiable, Hashable {
         let name: String
         let faces: [String]
@@ -50,8 +48,6 @@ enum FontCatalog {
             return a.name.localizedCaseInsensitiveCompare(b.name) == .orderedAscending
         }
 
-    // MARK: Classification
-
     /// Read off the font's own descriptor rather than guessed from its name. The family
     /// class lives in the top four bits of the symbolic traits.
     private static func kind(of family: String) -> Kind {
@@ -66,8 +62,6 @@ enum FontCatalog {
         default:                                                   return .sans
         }
     }
-
-    // MARK: Weight matching
 
     /// Picks the face in `family` that best stands in for `reference`.
     ///
@@ -98,8 +92,6 @@ enum FontCatalog {
         return names.max { score($0) < score($1) } ?? family
     }
 
-    // MARK: Latin coverage
-
     /// Whether the face can actually draw Latin text.
     ///
     /// This is not hypothetical. Noto Sans Syriac ships with iOS, appears in the family
@@ -114,8 +106,6 @@ enum FontCatalog {
         let mapped = CTFontGetGlyphsForCharacters(font as CTFont, &characters, &glyphs, characters.count)
         return mapped && glyphs.allSatisfy { $0 != 0 }
     }
-
-    // MARK: Tabular figures
 
     /// True when the face's digits are all the same width.
     ///

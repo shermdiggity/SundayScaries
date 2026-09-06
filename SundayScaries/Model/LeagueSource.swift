@@ -27,8 +27,6 @@ extension LeagueSource {
     func currentWeek() async -> Int? { nil }
 }
 
-// MARK: - Sleeper
-
 struct SleeperSource: LeagueSource {
     let platform: Platform = .sleeper
     let provider: SleeperProvider
@@ -61,8 +59,6 @@ struct SleeperSource: LeagueSource {
     }
 }
 
-// MARK: - ESPN
-
 struct ESPNSource: LeagueSource {
     let platform: Platform = .espn
     let provider: ESPNProvider
@@ -89,8 +85,6 @@ struct ESPNSource: LeagueSource {
     }
 }
 
-// MARK: - MyFantasyLeague
-
 struct MFLSource: LeagueSource {
     let platform: Platform = .myFantasyLeague
     let provider: MFLProvider
@@ -114,8 +108,6 @@ struct MFLSource: LeagueSource {
     }
 }
 
-// MARK: - Fleaflicker
-
 struct FleaflickerSource: LeagueSource {
     let platform: Platform = .fleaflicker
     let provider: FleaflickerProvider
@@ -136,8 +128,6 @@ struct FleaflickerSource: LeagueSource {
     /// check and progress still work from the schedule.
     func projections(for league: League, week: Int) async -> Projections { .empty(week: week) }
 }
-
-// MARK: - Yahoo
 
 struct YahooSource: LeagueSource {
     let platform: Platform = .yahoo

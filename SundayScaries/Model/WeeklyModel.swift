@@ -509,7 +509,6 @@ final class WeeklyModel {
         return (projection(for: player), true)
     }
 
-    /// "Sun 1:00 PM" in the reader's timezone.
     func kickoff(for player: PlayerRef) -> String? {
         for snapshot in snapshots {
             if let label = snapshot.schedule.kickoffLabel(

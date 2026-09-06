@@ -193,9 +193,6 @@ struct WeeklyView: View {
                     await model.load(force: true)
                 }
             }
-            // Coming back to the app mid-game refreshes immediately rather than showing
-            // whatever was true when you left.
-            // A widget tap: the league it named, or just the app.
             .onOpenURL { url in
                 guard url.scheme == WidgetStore.urlScheme else { return }
                 if url.host == "league", let id = url.pathComponents.last, id != "/" {
@@ -627,9 +624,9 @@ struct WeeklyView: View {
     }
 }
 
-/// DEBUG instrument for the stuck-card report. Logs a card's on-screen frame whenever it
-/// moves more than a few points, but only for the cards under suspicion. Remove once the
-/// cause is confirmed.
+/// The `[zoom-diag]` frame log CLAUDE.md points at if the stuck-card symptom ever returns:
+/// a closed card moving with its neighbour on scroll is a system snapshot, one frozen in
+/// place is our layout. Logs only the cards under suspicion, and only in DEBUG.
 private struct ZoomDiagnostics: ViewModifier {
     let name: String
     let isSubject: Bool

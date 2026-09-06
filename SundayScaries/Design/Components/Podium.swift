@@ -10,8 +10,7 @@ struct Podium: View {
     struct Entry: Identifiable {
         let rank: Int
         let teamName: String
-        /// The headline number on the plinth, and what it is called. A bare number with
-        /// no label is a number nobody can argue with.
+        /// The headline number on the plinth.
         let powerPoints: String
         /// What that number is called — "power pts" once games are played, "projected"
         /// before that.

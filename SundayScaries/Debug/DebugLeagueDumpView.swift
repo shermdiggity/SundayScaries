@@ -1,13 +1,5 @@
-//
-//  DebugLeagueDumpView.swift
-//  SundayScaries
-//
-//  THROWAWAY. Milestone 1 only.
-//
-//  This exists to eyeball that the data layer works against real leagues. It is not
-//  designed, it does not use the design system (there isn't one yet), and it should be
-//  deleted the moment the real Leagues tab exists. Nothing here is a pattern to copy.
-//
+// Eyeballs the data layer against a real league, raw. Reached only from its #Preview;
+// deliberately undesigned, and nothing here is a pattern to copy.
 
 import SwiftUI
 import FantasyCore

@@ -125,5 +125,3 @@ struct SkyView: View {
         }
     }
 }
-
-// MARK: - Colour helpers
