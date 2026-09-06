@@ -56,11 +56,8 @@ struct LeagueEditor: View {
             }
             .overlay {
                 if model.allLeagues.isEmpty {
-                    ContentUnavailableView(
-                        "No leagues yet",
-                        systemImage: "square.stack.3d.up.slash",
-                        description: Text("Add an account and they'll show up here.")
-                    )
+                    StateView(kind: .empty, title: "No leagues yet", detail: Text("Add an account and they'll show up here."))
+                        .padding(SWSpacing.lg)
                 }
             }
         }

@@ -295,10 +295,10 @@ struct WeeklyView: View {
             }
 
             if let problem = model.loadProblem {
-                problem.message
-                    .font(SWType.caption)
-                    .foregroundStyle(SWColor.onSky.opacity(0.9))
-                    .fixedSize(horizontal: false, vertical: true)
+                StateView(
+                    kind: .error, title: "Not everything loaded", detail: problem.message,
+                    retry: { Task { await model.load() } }, onSky: true
+                )
             }
             if let fallback = model.seasonFallback {
                 fallback.note

@@ -723,16 +723,19 @@ final class WeeklyModel {
     /// One league, refetched in refresh mode, replaced in place. Everything else on the
     /// screen is left alone — the detail's refresh button used to reload every league,
     /// which took as long as a cold start for a screen showing one of them.
-    func refresh(leagueID: String) async {
+    /// Returns false when the snapshot on screen could not be replaced; the last good one
+    /// stays up either way.
+    @discardableResult
+    func refresh(leagueID: String) async -> Bool {
         guard let league = allLeagues.first(where: { $0.id == leagueID }),
-              let shownWeek = week ?? liveWeek else { return }
+              let shownWeek = week ?? liveWeek else { return false }
         let season = loadedSeason
-        let task = Task { [self] in
+        let task = Task<Bool, Never> { [self] in
             let (store, http) = Self.infrastructure()
             // Cached after the first load; this is a disk read.
-            guard let crosswalk = try? await CrosswalkStore(http: http, store: store).crosswalk() else { return }
+            guard let crosswalk = try? await CrosswalkStore(http: http, store: store).crosswalk() else { return false }
             let ctx = makeContext(http: http, store: store, crosswalk: crosswalk, season: season, mode: .refresh)
-            guard let source = ctx.sources.first(where: { $0.provider.platform == league.platform })?.provider else { return }
+            guard let source = ctx.sources.first(where: { $0.provider.platform == league.platform })?.provider else { return false }
             do {
                 let (snapshot, rosters) = try await Self.snapshot(
                     for: league, week: shownWeek, source: source,
@@ -750,14 +753,16 @@ final class WeeklyModel {
                 #endif
                 applyPreferences()
                 await WidgetBridge.publish(from: self)
+                return true
             } catch {
                 // A failed refresh keeps the last good snapshot, same as the full load.
                 #if DEBUG
                 print("[refresh] \(league.name) failed: \(error)")
                 #endif
+                return false
             }
         }
-        await task.value
+        return await task.value
     }
 
     private static func snapshot(

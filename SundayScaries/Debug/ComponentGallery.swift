@@ -107,6 +107,17 @@ struct ComponentGallery: View {
                         ])
                     }
 
+                    section("States") {
+                        VStack(spacing: SWSpacing.md) {
+                            StateView(kind: .empty, title: "No roster to show for this team.")
+                            StateView(
+                                kind: .error, title: "Couldn't refresh",
+                                detail: Text("Showing the last numbers that loaded."), retry: {}
+                            )
+                            StateView(kind: .error, title: "Not everything loaded", detail: Text("Couldn't find leagues for \"you\" in 2026."), retry: {}, onSky: true)
+                        }
+                    }
+
                     section("Feedback") {
                         FeedbackDemo()
                     }

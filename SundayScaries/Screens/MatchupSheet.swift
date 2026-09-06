@@ -60,9 +60,7 @@ struct MatchupSheet: View {
                                 .fill(SWColor.surface)
                         )
                     } else {
-                        Text("No lineups to show for this matchup yet.")
-                            .font(SWType.body)
-                            .foregroundStyle(SWColor.tertiary)
+                        StateView(kind: .empty, title: "No lineups to show for this matchup yet.")
                     }
                 }
                 .padding(SWSpacing.lg)

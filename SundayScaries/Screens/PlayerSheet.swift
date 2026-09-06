@@ -51,9 +51,11 @@ struct PlayerSheet: View {
                             }
                         }
                     } else {
-                        Text("No season to show yet.")
-                            .font(SWType.body)
-                            .foregroundStyle(SWColor.tertiary)
+                        StateView(
+                            kind: .empty, title: "No season to show yet.",
+                            detail: Text("Stats come from a league's scoring, so a league has to be showing."),
+                            retry: { Task { await reload() } }
+                        )
                     }
                 }
                 .padding(SWSpacing.lg)

@@ -19,7 +19,8 @@ struct LeagueDetailView: View {
     /// nothing here is hit-testable and nothing here may present.
     @Binding var selectedLeagueID: String?
     var onBack: () -> Void = {}
-    var onRefresh: () async -> Void = {}
+    var onRefresh: () async -> Bool = { true }
+    @State private var refreshFailed = false
 
     @State private var inspectedTeam: TeamSelection?
     @State private var inspectedMatchup: LeagueSnapshot.MatchupPair?
@@ -60,6 +61,12 @@ struct LeagueDetailView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: SWSpacing.xl) {
                     scoreboard
+                    if refreshFailed {
+                        StateView(
+                            kind: .error, title: "Couldn't refresh",
+                            detail: Text("Showing the last numbers that loaded. Check the connection and try again.")
+                        )
+                    }
                     lineups
                     aroundTheLeague
                     standings
@@ -136,7 +143,7 @@ struct LeagueDetailView: View {
                 guard !isRefreshing else { return }
                 isRefreshing = true
                 Task {
-                    await onRefresh()
+                    refreshFailed = await !onRefresh()
                     isRefreshing = false
                 }
             } label: {

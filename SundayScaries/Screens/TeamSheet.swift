@@ -40,9 +40,7 @@ struct TeamSheet: View {
                             }
                         }
                     } else {
-                        Text("No roster to show for this team.")
-                            .font(SWType.body)
-                            .foregroundStyle(SWColor.tertiary)
+                        StateView(kind: .empty, title: "No roster to show for this team.")
                     }
                 }
                 .padding(SWSpacing.lg)
