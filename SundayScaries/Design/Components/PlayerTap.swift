@@ -31,3 +31,25 @@ extension View {
         modifier(PlayerTap(player: player))
     }
 }
+
+/// Every screen that shows players owns a `PlayerInspector` and presents `PlayerSheet`
+/// from it. The sheet is attached FIRST so the environment values below enclose it: a
+/// sheet attached outside `.environment(...)` presents content that never sees the value.
+private struct PlayerSheetHost: ViewModifier {
+    let inspector: PlayerInspector
+    let model: WeeklyModel
+    let leagueID: String?
+
+    func body(content: Content) -> some View {
+        content
+            .sheet(item: inspector.binding) { PlayerSheet(selection: $0, model: model) }
+            .environment(\.playerInspector, inspector)
+            .environment(\.contextLeagueID, leagueID)
+    }
+}
+
+extension View {
+    func playerSheetHost(_ inspector: PlayerInspector, model: WeeklyModel, leagueID: String?) -> some View {
+        modifier(PlayerSheetHost(inspector: inspector, model: model, leagueID: leagueID))
+    }
+}

@@ -1,5 +1,6 @@
 import SwiftUI
 import FantasyCore
+import FantasyProviders
 
 /// The atom. Appears in lineups everywhere.
 ///
@@ -73,7 +74,7 @@ struct PlayerRow: View {
     @ViewBuilder
     private var trailing: some View {
         if let points = slot.points, hasStarted || points != 0 {
-            Text(points, format: .number.precision(.fractionLength(1)))
+            Text(points, format: SWFormat.score)
                 .font(SWType.score)
                 .foregroundStyle(SWColor.primary)
                 // Digits roll to the new value instead of blinking.
@@ -84,7 +85,7 @@ struct PlayerRow: View {
                 Text("proj")
                     .font(SWType.micro)
                     .foregroundStyle(SWColor.tertiary)
-                Text(projection, format: .number.precision(.fractionLength(1)))
+                Text(projection, format: SWFormat.score)
                     .font(SWType.scoreCaption)
                     .foregroundStyle(SWColor.secondary)
                     .contentTransition(.numericText())
@@ -131,10 +132,24 @@ struct PlayerRow: View {
         var parts = [slot.slot.rawValue, isEmpty ? "empty" : player.name]
         if let meta, !isEmpty { parts.append(meta) }
         if let points = slot.points, hasStarted {
-            parts.append("\(points.formatted(.number.precision(.fractionLength(1)))) points")
+            parts.append("\(points.formatted(SWFormat.score)) points")
         } else if let projection {
-            parts.append("projected \(projection.formatted(.number.precision(.fractionLength(1))))")
+            parts.append("projected \(projection.formatted(SWFormat.score))")
         }
         return Text(parts.joined(separator: ", "))
+    }
+}
+
+extension PlayerRow {
+    /// A slot from a league's rosters, with everything the row shows looked up from that
+    /// league's projections and schedule.
+    init(slot: RosterSlot, in snapshot: LeagueSnapshot, week: Int) {
+        self.init(
+            slot: slot,
+            projection: snapshot.projections.projection(for: slot.player),
+            nflMatchup: snapshot.schedule.opponentLabel(nflTeam: slot.player.nflTeam, week: week),
+            hasStarted: snapshot.schedule.gameState(nflTeam: slot.player.nflTeam, week: week) != .notStarted,
+            kickoff: snapshot.schedule.kickoffLabel(nflTeam: slot.player.nflTeam, week: week)
+        )
     }
 }

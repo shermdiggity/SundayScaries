@@ -10,7 +10,7 @@ enum StatLine {
     static func summary(_ stats: [String: Double], position: Position) -> String {
         func n(_ key: String) -> Double { stats[key] ?? 0 }
         func f(_ value: Double) -> String {
-            value.rounded() == value ? String(Int(value)) : value.formatted(.number.precision(.fractionLength(1)))
+            value.rounded() == value ? String(Int(value)) : value.formatted(SWFormat.score)
         }
         var parts: [String] = []
 

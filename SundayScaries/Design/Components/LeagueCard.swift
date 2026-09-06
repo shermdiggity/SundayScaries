@@ -182,25 +182,13 @@ struct PlatformMark: View {
     var body: some View {
         Group {
             if let url = SWColor.platformLogo(platform) {
-                CachedImage(url: url) { monogram }.scaledToFit()
+                CachedImage(url: url) { PlatformMonogram(platform: platform, size: size) }.scaledToFit()
             } else {
-                monogram
+                PlatformMonogram(platform: platform, size: size)
             }
         }
         .frame(width: size, height: size)
         .accessibilityLabel(Text(platform.displayName))
-    }
-
-    private var monogram: some View {
-        RoundedRectangle(cornerRadius: size * 0.28, style: .continuous)
-            .fill(SWColor.platform(platform))
-            .overlay {
-                Text(platform.displayName.prefix(1))
-                    // Scales with the mark, so the size is geometry rather than a
-                    // step on the type scale.
-                    .font(SWType.mark(size * 0.6))
-                    .foregroundStyle(SWColor.canvas)
-            }
     }
 }
 

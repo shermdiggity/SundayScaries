@@ -106,7 +106,7 @@ struct SeasonOutlookRow: View {
                     .font(SWType.caption)
                     .foregroundStyle(SWColor.primary)
                     .lineLimit(1)
-                Text(value.pointsPerStart, format: .number.precision(.fractionLength(1)))
+                Text(value.pointsPerStart, format: SWFormat.score)
                     .font(SWType.scoreMicro)
                     .foregroundStyle(SWColor.tertiary)
             }

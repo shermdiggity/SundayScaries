@@ -152,26 +152,28 @@ struct PlayerSheet: View {
     // MARK: Summary
 
     private func summary(_ season: PlayerSeason) -> some View {
-        let format = FloatingPointFormatStyle<Double>.number.precision(.fractionLength(1))
+        let format = SWFormat.score
         return VStack(alignment: .leading, spacing: SWSpacing.md) {
             HStack(alignment: .top, spacing: SWSpacing.xl) {
-                stat(season.totalPoints.formatted(format), "Points")
+                StatCell(value: season.totalPoints.formatted(format), caption: "Points")
                 if let average = season.averagePoints {
-                    stat(average.formatted(format), "Per game")
+                    StatCell(value: average.formatted(format), caption: "Per game")
                 }
                 if let rank = season.positionRank {
-                    stat(rank.label, "Rank", detail: "of \(rank.of)")
+                    StatCell(value: rank.label, caption: "Rank", detail: "of \(rank.of)")
                 }
                 Spacer(minLength: 0)
             }
             if let projected = season.averageProjected, let delta = season.averageVersusProjection {
                 HStack(alignment: .top, spacing: SWSpacing.xl) {
-                    stat(projected.formatted(format), "Proj. per game")
-                    stat(delta.formatted(format.sign(strategy: .always())),
-                         "vs. projection",
-                         tone: delta >= 0 ? SWColor.positive : SWColor.negative,
-                         detail: "per game")
-                    stat("\(season.gamesPlayed)", "Played")
+                    StatCell(value: projected.formatted(format), caption: "Proj. per game")
+                    StatCell(
+                        value: delta.formatted(format.sign(strategy: .always())),
+                        caption: "vs. projection",
+                        tone: delta >= 0 ? SWColor.positive : SWColor.negative,
+                        detail: "per game"
+                    )
+                    StatCell(value: "\(season.gamesPlayed)", caption: "Played")
                     Spacer(minLength: 0)
                 }
             }
@@ -179,24 +181,6 @@ struct PlayerSheet: View {
         .padding(SWSpacing.lg)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(RoundedRectangle(cornerRadius: SWRadius.md, style: .continuous).fill(SWColor.surface))
-    }
-
-    private func stat(_ value: String, _ caption: String, tone: Color = SWColor.primary, detail: String? = nil) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            HStack(alignment: .firstTextBaseline, spacing: 3) {
-                Text(value)
-                    .font(SWType.score)
-                    .foregroundStyle(tone)
-                    .contentTransition(.numericText())
-                if let detail {
-                    Text(detail).font(SWType.micro).foregroundStyle(SWColor.tertiary)
-                }
-            }
-            Text(caption)
-                .font(SWType.micro)
-                .foregroundStyle(SWColor.tertiary)
-        }
-        .accessibilityElement(children: .combine)
     }
 
     // MARK: Game log
@@ -261,18 +245,18 @@ struct PlayerSheet: View {
             VStack(alignment: .trailing, spacing: 2) {
                 if let actual = week.actual {
                     // An estimate is the same number, quieter. Nothing else changes.
-                    Text(actual.points, format: .number.precision(.fractionLength(1)))
+                    Text(actual.points, format: SWFormat.score)
                         .font(SWType.score)
                         .foregroundStyle(actual.isExact ? tone(week) : SWColor.tertiary)
                         .monospacedDigit()
                         .contentTransition(.numericText())
                     if let projected = week.projected {
-                        Text("proj \(projected.points.formatted(.number.precision(.fractionLength(1))))")
+                        Text("proj \(projected.points.formatted(SWFormat.score))")
                             .font(SWType.micro)
                             .foregroundStyle(SWColor.tertiary)
                     }
                 } else if let projected = week.projected {
-                    Text("proj \(projected.points.formatted(.number.precision(.fractionLength(1))))")
+                    Text("proj \(projected.points.formatted(SWFormat.score))")
                         .font(SWType.scoreCaption)
                         .foregroundStyle(SWColor.secondary)
                 }

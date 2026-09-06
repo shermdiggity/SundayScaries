@@ -76,9 +76,7 @@ struct MatchupSheet: View {
         }
         // Its own inspector: a sheet presented from a sheet must come from the top. And
         // the sheet is attached BEFORE the environment so that environment encloses it.
-        .sheet(item: inspector.binding) { PlayerSheet(selection: $0, model: model) }
-        .environment(\.playerInspector, inspector)
-        .environment(\.contextLeagueID, snapshot.league.id)
+        .playerSheetHost(inspector, model: model, leagueID: snapshot.league.id)
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
         .tint(SWColor.accent)

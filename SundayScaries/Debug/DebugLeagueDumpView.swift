@@ -26,9 +26,8 @@ final class DebugDumpModel {
     /// Sleeper's current season, so the field is never wrong by default.
     func loadDefaultSeason() async {
         guard season.isEmpty else { return }
-        let response = try? await URLSessionHTTPClient().get(SleeperStateProbe.url)
-        season = response.flatMap { SleeperStateProbe.season(from: $0.body) }
-            ?? SleeperStateProbe.fallbackSeason()
+        let state = try? await SleeperProvider.state(http: URLSessionHTTPClient())
+        season = state?.leagueSeason ?? state?.season ?? SleeperStateProbe.fallbackSeason()
     }
 
     func run() async {
@@ -309,14 +308,6 @@ struct DebugLeagueDumpView: View {
 /// Tiny helper so the debug view can show the right season without reaching into the
 /// provider's internals. Throwaway, like the rest of this file.
 enum SleeperStateProbe {
-    static let url = URL(string: "https://api.sleeper.app/v1/state/nfl")
-        ?? URL(fileURLWithPath: "/invalid")
-
-    static func season(from data: Data) -> String? {
-        guard let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
-        return object["league_season"] as? String ?? object["season"] as? String
-    }
-
     /// The NFL league year rolls over in March.
     static func fallbackSeason() -> String {
         let now = Date()

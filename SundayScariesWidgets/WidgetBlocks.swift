@@ -18,14 +18,20 @@ struct WidgetPlatformMark: View {
     private var resolved: Platform? { Platform(rawValue: platform) }
 
     var body: some View {
-        RoundedRectangle(cornerRadius: size * 0.28, style: .continuous)
-            .fill(resolved.map(SWColor.platform) ?? SWColor.tertiary)
-            .frame(width: size, height: size)
-            .overlay {
-                Text(resolved?.displayName.prefix(1) ?? "?")
-                    .font(SWType.mark(size * 0.6))
-                    .foregroundStyle(SWColor.canvas)
+        Group {
+            if let resolved {
+                PlatformMonogram(platform: resolved, size: size)
+            } else {
+                RoundedRectangle(cornerRadius: size * 0.28, style: .continuous)
+                    .fill(SWColor.tertiary)
+                    .overlay {
+                        Text("?")
+                            .font(SWType.mark(size * 0.6))
+                            .foregroundStyle(SWColor.canvas)
+                    }
             }
+        }
+        .frame(width: size, height: size)
     }
 }
 
@@ -62,7 +68,7 @@ struct WidgetHeadshot: View {
 }
 
 extension Double {
-    var widgetScore: String { formatted(.number.precision(.fractionLength(1))) }
+    var widgetScore: String { formatted(SWFormat.score) }
 }
 
 // MARK: - Status
@@ -198,7 +204,7 @@ struct ScoreboardBlock: View {
 
 // MARK: - Players
 
-struct PlayerRow: View {
+struct WidgetPlayerRow: View {
     let player: WidgetPlayer
     let against: Bool
 
@@ -255,7 +261,7 @@ struct PlayersBlock: View {
                     .foregroundStyle(SWColor.tertiary)
             }
             ForEach(players.prefix(rows)) { player in
-                PlayerRow(player: player, against: against)
+                WidgetPlayerRow(player: player, against: against)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

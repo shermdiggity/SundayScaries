@@ -23,11 +23,11 @@ struct MatchupBar: View {
     var body: some View {
         VStack(spacing: SWSpacing.sm) {
             HStack(alignment: .firstTextBaseline) {
-                Text(myScore, format: .number.precision(.fractionLength(1)))
+                Text(myScore, format: SWFormat.score)
                     .font(SWType.scoreLarge)
                     .foregroundStyle(SWColor.primary)
                 Spacer(minLength: SWSpacing.md)
-                Text(opponentScore, format: .number.precision(.fractionLength(1)))
+                Text(opponentScore, format: SWFormat.score)
                     .font(SWType.scoreLarge)
                     .foregroundStyle(isAhead ? SWColor.secondary : SWColor.primary)
             }
@@ -61,7 +61,7 @@ struct MatchupBar: View {
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(
-            Text("\(myName) \(myScore.formatted(.number.precision(.fractionLength(1)))), \(opponentName) \(opponentScore.formatted(.number.precision(.fractionLength(1))))")
+            Text("\(myName) \(myScore.formatted(SWFormat.score)), \(opponentName) \(opponentScore.formatted(SWFormat.score))")
         )
     }
 }

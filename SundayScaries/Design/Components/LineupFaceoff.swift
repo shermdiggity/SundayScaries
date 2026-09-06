@@ -105,7 +105,7 @@ struct LineupFaceoff: View {
         mineValue: Double,
         theirsValue: Double
     ) -> String {
-        let format = FloatingPointFormatStyle<Double>.number.precision(.fractionLength(1))
+        let format = SWFormat.score
         let me = pair.mine?.player.name ?? "empty"
         let them = pair.theirs?.player.name ?? "empty"
         return "\(slotName): \(me) \(mineValue.formatted(format)), against \(them) \(theirsValue.formatted(format))"
@@ -128,6 +128,6 @@ struct LineupFaceoff: View {
 
     private func number(_ slot: RosterSlot) -> String {
         let raw = value(slot)
-        return raw.formatted(.number.precision(.fractionLength(1)))
+        return raw.formatted(SWFormat.score)
     }
 }

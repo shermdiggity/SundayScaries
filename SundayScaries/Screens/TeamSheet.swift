@@ -25,19 +25,7 @@ struct TeamSheet: View {
                             .font(SWType.headline)
                             .foregroundStyle(SWColor.primary)
                         ForEach(Array(roster.starters.enumerated()), id: \.offset) { _, slot in
-                            PlayerRow(
-                                slot: slot,
-                                projection: snapshot.projections.projection(for: slot.player),
-                                nflMatchup: snapshot.schedule.opponentLabel(
-                                    nflTeam: slot.player.nflTeam, week: roster.week
-                                ),
-                                hasStarted: snapshot.schedule.gameState(
-                                    nflTeam: slot.player.nflTeam, week: roster.week
-                                ) != .notStarted,
-                                kickoff: snapshot.schedule.kickoffLabel(
-                                    nflTeam: slot.player.nflTeam, week: roster.week
-                                )
-                            )
+                            PlayerRow(slot: slot, in: snapshot, week: roster.week)
                         }
 
                         if !roster.bench.isEmpty {
@@ -46,20 +34,8 @@ struct TeamSheet: View {
                                 .foregroundStyle(SWColor.secondary)
                                 .padding(.top, SWSpacing.md)
                             ForEach(Array(roster.bench.enumerated()), id: \.offset) { _, slot in
-                                PlayerRow(
-                                    slot: slot,
-                                    projection: snapshot.projections.projection(for: slot.player),
-                                    nflMatchup: snapshot.schedule.opponentLabel(
-                                        nflTeam: slot.player.nflTeam, week: roster.week
-                                    ),
-                                    hasStarted: snapshot.schedule.gameState(
-                                        nflTeam: slot.player.nflTeam, week: roster.week
-                                    ) != .notStarted,
-                                    kickoff: snapshot.schedule.kickoffLabel(
-                                        nflTeam: slot.player.nflTeam, week: roster.week
-                                    )
-                                )
-                                .opacity(0.72)
+                                PlayerRow(slot: slot, in: snapshot, week: roster.week)
+                                    .opacity(0.72)
                             }
                         }
                     } else {
@@ -80,9 +56,7 @@ struct TeamSheet: View {
         }
         // Its own inspector: a sheet presented from a sheet must come from the top. And
         // the sheet is attached BEFORE the environment so that environment encloses it.
-        .sheet(item: inspector.binding) { PlayerSheet(selection: $0, model: model) }
-        .environment(\.playerInspector, inspector)
-        .environment(\.contextLeagueID, snapshot.league.id)
+        .playerSheetHost(inspector, model: model, leagueID: snapshot.league.id)
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
         .tint(SWColor.accent)
@@ -91,15 +65,15 @@ struct TeamSheet: View {
     private func stats(_ analytics: TeamAnalytics) -> some View {
         VStack(alignment: .leading, spacing: SWSpacing.md) {
             HStack(spacing: SWSpacing.xl) {
-                stat("\(analytics.powerRank)", "Power rank")
-                stat(analytics.powerScore.formatted(.number.precision(.fractionLength(1))), "Power points")
-                stat(analytics.record.summary, "Record")
+                StatCell(value: "\(analytics.powerRank)", caption: "Power rank")
+                StatCell(value: analytics.powerScore.formatted(SWFormat.score), caption: "Power points")
+                StatCell(value: analytics.record.summary, caption: "Record")
             }
             HStack(spacing: SWSpacing.xl) {
-                stat(analytics.allPlay.summary, "All-play")
-                stat(analytics.pointsFor.formatted(.number.precision(.fractionLength(0))), "Points for")
+                StatCell(value: analytics.allPlay.summary, caption: "All-play")
+                StatCell(value: analytics.pointsFor.formatted(.number.precision(.fractionLength(0))), caption: "Points for")
                 if let luck = analytics.luckIndex {
-                    stat(luck.formatted(.number.precision(.fractionLength(2)).sign(strategy: .always())), "Luck")
+                    StatCell(value: luck.formatted(.number.precision(.fractionLength(2)).sign(strategy: .always())), caption: "Luck")
                 }
             }
         }
@@ -109,17 +83,5 @@ struct TeamSheet: View {
             RoundedRectangle(cornerRadius: SWRadius.md, style: .continuous)
                 .fill(SWColor.surface)
         )
-    }
-
-    private func stat(_ value: String, _ caption: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(value)
-                .font(SWType.score)
-                .foregroundStyle(SWColor.primary)
-            Text(caption)
-                .font(SWType.micro)
-                .foregroundStyle(SWColor.tertiary)
-        }
-        .accessibilityElement(children: .combine)
     }
 }

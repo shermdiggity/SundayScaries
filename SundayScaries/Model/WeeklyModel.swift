@@ -666,10 +666,7 @@ final class WeeklyModel {
         print("[load] begin forced=\(force) quiet=\(quiet)")
         defer { print(String(format: "[load] end forced=%@ cancelled=%@ after %.2fs", String(force), String(Task.isCancelled), Date().timeIntervalSince(loadStarted))) }
 
-        let store: any SnapshotStore =
-            (try? FileSnapshotStore.applicationSupport()) ?? InMemorySnapshotStore()
-        let http = URLSessionHTTPClient()
-
+        let (store, http) = Self.infrastructure()
         let crosswalkStore = CrosswalkStore(http: http, store: store)
         let crosswalk: PlayerCrosswalk
         do {
@@ -910,6 +907,11 @@ final class WeeklyModel {
         let scoreboard: ScoreboardStore
     }
 
+    /// The disk cache, or memory when Application Support cannot be created.
+    private static func infrastructure() -> (store: any SnapshotStore, http: URLSessionHTTPClient) {
+        ((try? FileSnapshotStore.applicationSupport()) ?? InMemorySnapshotStore(), URLSessionHTTPClient())
+    }
+
     private func makeContext(
         http: any HTTPClient, store: any SnapshotStore, crosswalk: PlayerCrosswalk,
         season resolvedSeason: String, mode: FetchMode
@@ -1032,9 +1034,7 @@ final class WeeklyModel {
               let shownWeek = week ?? liveWeek else { return }
         let season = loadedSeason
         let task = Task { [self] in
-            let store: any SnapshotStore =
-                (try? FileSnapshotStore.applicationSupport()) ?? InMemorySnapshotStore()
-            let http = URLSessionHTTPClient()
+            let (store, http) = Self.infrastructure()
             // Cached after the first load; this is a disk read.
             guard let crosswalk = try? await CrosswalkStore(http: http, store: store).crosswalk() else { return }
             let ctx = makeContext(http: http, store: store, crosswalk: crosswalk, season: season, mode: .refresh)

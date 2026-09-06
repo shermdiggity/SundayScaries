@@ -129,9 +129,7 @@ struct WeeklyView: View {
             // modifier wraps the ones before it, and a sheet attached outside an
             // `.environment(...)` presents content that never sees that value — which
             // is a player sheet with no model and a skeleton that never resolves.
-            .sheet(item: inspector.binding) { PlayerSheet(selection: $0, model: model) }
-            .environment(\.playerInspector, inspector)
-            .environment(\.contextLeagueID, model.knownLeagues.first?.id)
+            .playerSheetHost(inspector, model: model, leagueID: model.knownLeagues.first?.id)
             .navigationDestination(item: $selectedLeagueID) { id in
                 if let snapshot = model.snapshots.first(where: { $0.id == id }) {
                     LeagueDetailView(

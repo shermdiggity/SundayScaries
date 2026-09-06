@@ -92,9 +92,7 @@ struct LeagueDetailView: View {
         .sheet(item: $inspectedMatchup) { pair in
             MatchupSheet(snapshot: snapshot, pair: pair, model: model)
         }
-        .sheet(item: inspector.binding) { PlayerSheet(selection: $0, model: model) }
-        .environment(\.playerInspector, inspector)
-        .environment(\.contextLeagueID, snapshot.league.id)
+        .playerSheetHost(inspector, model: model, leagueID: snapshot.league.id)
         .onChange(of: isActive, initial: true) { _, active in
             inspector.isEnabled = active
             guard !active else { return }
@@ -218,12 +216,12 @@ struct LeagueDetailView: View {
                 .foregroundStyle(SWColor.tertiary)
                 .lineLimit(1)
             HStack(spacing: 4) {
-                Text(scored, format: .number.precision(.fractionLength(1)))
+                Text(scored, format: SWFormat.score)
                     .contentTransition(.numericText())
                     .font(SWType.scoreCaption)
                     .foregroundStyle(SWColor.primary)
                 if let projected {
-                    Text("proj " + projected.formatted(.number.precision(.fractionLength(1))))
+                    Text("proj " + projected.formatted(SWFormat.score))
                         .font(SWType.micro)
                         .foregroundStyle(SWColor.tertiary)
                 }
@@ -257,14 +255,14 @@ struct LeagueDetailView: View {
 
             HStack(spacing: SWSpacing.xl) {
                 if let team = snapshot.myTeam {
-                    stat(team.record.summary, "Record")
-                    stat(team.pointsFor.formatted(.number.precision(.fractionLength(0))), "Points for")
+                    StatCell(value: team.record.summary, caption: "Record")
+                    StatCell(value: team.pointsFor.formatted(.number.precision(.fractionLength(0))), caption: "Points for")
                 }
                 if let standing = snapshot.standing {
-                    stat(LeagueCard.ordinal(standing), "Place")
+                    StatCell(value: LeagueCard.ordinal(standing), caption: "Place")
                 }
                 if let luck = luckIndex {
-                    stat(luck.formatted(.number.precision(.fractionLength(2)).sign(strategy: .always())), "Luck")
+                    StatCell(value: luck.formatted(.number.precision(.fractionLength(2)).sign(strategy: .always())), caption: "Luck")
                 }
             }
 
@@ -302,14 +300,6 @@ struct LeagueDetailView: View {
         return snapshot.analytics?.team(team.id)?.luckIndex
     }
 
-    private func stat(_ value: String, _ caption: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(value).font(SWType.score).foregroundStyle(SWColor.primary)
-            Text(caption).font(SWType.micro).foregroundStyle(SWColor.tertiary)
-        }
-        .accessibilityElement(children: .combine)
-    }
-
     // MARK: - Lineups
 
     @ViewBuilder
@@ -336,18 +326,8 @@ struct LeagueDetailView: View {
                         .foregroundStyle(SWColor.secondary)
                         .padding(.top, SWSpacing.md)
                     ForEach(Array(mine.bench.enumerated()), id: \.offset) { _, slot in
-                        PlayerRow(
-                            slot: slot,
-                            projection: snapshot.projections.projection(for: slot.player),
-                            nflMatchup: snapshot.schedule.opponentLabel(nflTeam: slot.player.nflTeam, week: mine.week),
-                            hasStarted: snapshot.schedule.gameState(
-                                nflTeam: slot.player.nflTeam, week: mine.week
-                            ) != .notStarted,
-                            kickoff: snapshot.schedule.kickoffLabel(
-                                nflTeam: slot.player.nflTeam, week: mine.week
-                            )
-                        )
-                        .opacity(0.72)
+                        PlayerRow(slot: slot, in: snapshot, week: mine.week)
+                            .opacity(0.72)
                     }
                 }
             }
@@ -400,7 +380,7 @@ struct LeagueDetailView: View {
     }
 
     private func scheduleRow(_ entry: LeagueSnapshot.ScheduleEntry) -> some View {
-        let format = FloatingPointFormatStyle<Double>.number.precision(.fractionLength(1))
+        let format = SWFormat.score
         return HStack(alignment: .firstTextBaseline, spacing: SWSpacing.md) {
             Text("Week \(entry.week)")
                 .font(SWType.scoreCaption)
@@ -536,7 +516,7 @@ struct LeagueDetailView: View {
                 RankRow(
                     teamID: pair.0,
                     rank: index + 1,
-                    value: pair.1.formatted(.number.precision(.fractionLength(1))),
+                    value: pair.1.formatted(SWFormat.score),
                     unit: "projected",
                     detail: "Week \(week) projection",
                     isMine: pair.0 == snapshot.myTeam?.id
@@ -642,7 +622,7 @@ struct LeagueDetailView: View {
 
     /// The blend is 0...1; showing it out of 100 makes it a score people can argue about.
     static func powerPoints(_ score: Double) -> String {
-        (score * 100).formatted(.number.precision(.fractionLength(1)))
+        (score * 100).formatted(SWFormat.score)
     }
 
     private func teamName(_ id: String) -> String {

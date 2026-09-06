@@ -102,7 +102,7 @@ struct PlayerFoilCard: View {
                 if let points {
                     HStack(spacing: 2) {
                         if isProjected { Text("proj").foregroundStyle(SWColor.tertiary) }
-                        Text(points, format: .number.precision(.fractionLength(1)))
+                        Text(points, format: SWFormat.score)
                             .font(SWType.scoreMicro)
                             .foregroundStyle(SWColor.primary)
                             .contentTransition(.numericText())

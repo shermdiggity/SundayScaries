@@ -107,6 +107,15 @@ struct ComponentGallery: View {
                         ])
                     }
 
+                    section("Stat cells") {
+                        HStack(alignment: .top, spacing: SWSpacing.xl) {
+                            StatCell(value: "118.4", caption: "Points")
+                            StatCell(value: "WR12", caption: "Rank", detail: "of 84")
+                            StatCell(value: "+2.1", caption: "vs. projection", tone: SWColor.positive, detail: "per game")
+                            StatCell(value: "-4.0", caption: "vs. projection", tone: SWColor.negative, detail: "per game")
+                        }
+                    }
+
                     section("Progress row") {
                         VStack(alignment: .leading, spacing: SWSpacing.md) {
                             ProgressRow(mine: Self.sampleProgress[1], theirs: Self.sampleProgress[2])

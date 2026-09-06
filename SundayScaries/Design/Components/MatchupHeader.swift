@@ -137,7 +137,7 @@ struct MatchupHeader: View {
         if let projection {
             HStack(spacing: 3) {
                 Text("proj").font(SWType.micro).foregroundStyle(SWColor.tertiary)
-                Text(projection, format: .number.precision(.fractionLength(1)))
+                Text(projection, format: SWFormat.score)
                     .font(isExpanded ? SWType.score : SWType.scoreCaption)
                     .foregroundStyle(SWColor.secondary)
                     .contentTransition(.numericText())
@@ -194,7 +194,7 @@ struct ProgressRow: View {
     private func side(_ progress: LineupProgress, alignment: HorizontalAlignment) -> some View {
         VStack(alignment: alignment, spacing: 1) {
             // The points are the headline here; the counts qualify them.
-            Text(progress.pointsScored, format: .number.precision(.fractionLength(1)))
+            Text(progress.pointsScored, format: SWFormat.score)
                 .font(isCompact ? SWType.score : SWType.scoreLarge)
                 .foregroundStyle(SWColor.primary)
                 .contentTransition(.numericText())
@@ -219,7 +219,7 @@ struct ProgressRow: View {
         .frame(maxWidth: .infinity, alignment: alignment == .leading ? .leading : .trailing)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(
-            "\(progress.pointsScored.formatted(.number.precision(.fractionLength(1)))) points, \(progress.summary)"
+            "\(progress.pointsScored.formatted(SWFormat.score)) points, \(progress.summary)"
         ))
     }
 

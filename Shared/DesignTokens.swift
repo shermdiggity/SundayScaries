@@ -224,6 +224,13 @@ enum SWType {
     static var scoreMicro: Font { voice(displayBold, 11, fallback: .bold).monospacedDigit() }
 }
 
+// MARK: - Numbers
+
+enum SWFormat {
+    /// Every score, projection and total in the app: one decimal, so a column of them holds.
+    static let score = FloatingPointFormatStyle<Double>.number.precision(.fractionLength(1))
+}
+
 // MARK: - Spacing, radius, motion
 
 enum SWSpacing {

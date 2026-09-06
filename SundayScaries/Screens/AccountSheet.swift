@@ -39,21 +39,15 @@ struct AccountSheet: View {
                 Section {
                     // Sleeper: a username, editable in place. It reads as a row about you
                     // — your handle, connected — not as a form field about a platform.
-                    HStack(spacing: SWSpacing.md) {
-                        PlatformMark(platform: .sleeper, size: 26)
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text("Sleeper")
-                                .font(SWType.bodyMedium)
-                                .foregroundStyle(SWColor.primary)
-                            TextField("Your username", text: $handle)
-                                .font(SWType.caption)
-                                .foregroundStyle(handle.isEmpty ? SWColor.tertiary : SWColor.secondary)
-                                .textInputAutocapitalization(.never)
-                                .autocorrectionDisabled()
-                                .submitLabel(.done)
-                                .onSubmit(persist)
-                        }
-                        Spacer()
+                    platformRow(.sleeper, title: "Sleeper") {
+                        TextField("Your username", text: $handle)
+                            .font(SWType.caption)
+                            .foregroundStyle(handle.isEmpty ? SWColor.tertiary : SWColor.secondary)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .submitLabel(.done)
+                            .onSubmit(persist)
+                    } trailing: {
                         if !handle.trimmingCharacters(in: .whitespaces).isEmpty {
                             Button("Disconnect", role: .destructive) {
                                 handle = ""
@@ -64,17 +58,9 @@ struct AccountSheet: View {
                         }
                     }
 
-                    HStack(spacing: SWSpacing.md) {
-                        PlatformMark(platform: .espn, size: 26)
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text("ESPN")
-                                .font(SWType.bodyMedium)
-                                .foregroundStyle(SWColor.primary)
-                            Text(signedInToESPN ? "Signed in" : "Not connected")
-                                .font(SWType.caption)
-                                .foregroundStyle(SWColor.secondary)
-                        }
-                        Spacer()
+                    platformRow(.espn, title: "ESPN") {
+                        statusText(signedInToESPN ? "Signed in" : "Not connected")
+                    } trailing: {
                         if signedInToESPN {
                             Button("Sign out", role: .destructive) {
                                 ESPNCredentialStore.clear()
@@ -92,17 +78,9 @@ struct AccountSheet: View {
 
                     // Yahoo: the one official OAuth sign-in. Hidden until the API key exists.
                     if FeatureFlags.yahooEnabled {
-                        HStack(spacing: SWSpacing.md) {
-                            PlatformMark(platform: .yahoo, size: 26)
-                            VStack(alignment: .leading, spacing: 1) {
-                                Text("Yahoo")
-                                    .font(SWType.bodyMedium)
-                                    .foregroundStyle(SWColor.primary)
-                                Text(signedInToYahoo ? "Signed in" : "Not connected")
-                                    .font(SWType.caption)
-                                    .foregroundStyle(SWColor.secondary)
-                            }
-                            Spacer()
+                        platformRow(.yahoo, title: "Yahoo") {
+                            statusText(signedInToYahoo ? "Signed in" : "Not connected")
+                        } trailing: {
                             if signedInToYahoo {
                                 Button("Sign out", role: .destructive) {
                                     YahooCredentialStore.clear()
@@ -120,17 +98,9 @@ struct AccountSheet: View {
                     }
 
                     // MyFantasyLeague: sign in, or name public leagues by id.
-                    HStack(spacing: SWSpacing.md) {
-                        PlatformMark(platform: .myFantasyLeague, size: 26)
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text("MyFantasyLeague")
-                                .font(SWType.bodyMedium)
-                                .foregroundStyle(SWColor.primary)
-                            Text(mflStatus)
-                                .font(SWType.caption)
-                                .foregroundStyle(SWColor.secondary)
-                        }
-                        Spacer()
+                    platformRow(.myFantasyLeague, title: "MyFantasyLeague") {
+                        statusText(mflStatus)
+                    } trailing: {
                         if signedInToMFL {
                             Button("Sign out", role: .destructive) {
                                 MFLCredentialStore.clear()
@@ -164,22 +134,16 @@ struct AccountSheet: View {
                     }
 
                     // Fleaflicker: the account's email. No password exists to ask for.
-                    HStack(spacing: SWSpacing.md) {
-                        PlatformMark(platform: .fleaflicker, size: 26)
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text("Fleaflicker")
-                                .font(SWType.bodyMedium)
-                                .foregroundStyle(SWColor.primary)
-                            TextField("Email on your account", text: $fleaflicker)
-                                .font(SWType.caption)
-                                .foregroundStyle(fleaflicker.isEmpty ? SWColor.tertiary : SWColor.secondary)
-                                .textInputAutocapitalization(.never)
-                                .autocorrectionDisabled()
-                                .keyboardType(.emailAddress)
-                                .submitLabel(.done)
-                                .onSubmit(persist)
-                        }
-                        Spacer()
+                    platformRow(.fleaflicker, title: "Fleaflicker") {
+                        TextField("Email on your account", text: $fleaflicker)
+                            .font(SWType.caption)
+                            .foregroundStyle(fleaflicker.isEmpty ? SWColor.tertiary : SWColor.secondary)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .keyboardType(.emailAddress)
+                            .submitLabel(.done)
+                            .onSubmit(persist)
+                    } trailing: {
                         if !fleaflicker.trimmingCharacters(in: .whitespaces).isEmpty {
                             Button("Disconnect", role: .destructive) {
                                 fleaflicker = ""
@@ -328,6 +292,30 @@ struct AccountSheet: View {
             }
         }
         .tint(SWColor.accent)
+    }
+
+    /// The platform's mark, its name, one line about its state, and one action.
+    private func platformRow(
+        _ platform: Platform, title: String,
+        @ViewBuilder detail: () -> some View, @ViewBuilder trailing: () -> some View
+    ) -> some View {
+        HStack(spacing: SWSpacing.md) {
+            PlatformMark(platform: platform, size: 26)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title)
+                    .font(SWType.bodyMedium)
+                    .foregroundStyle(SWColor.primary)
+                detail()
+            }
+            Spacer()
+            trailing()
+        }
+    }
+
+    private func statusText(_ text: String) -> some View {
+        Text(text)
+            .font(SWType.caption)
+            .foregroundStyle(SWColor.secondary)
     }
 
     private var mflStatus: String {
