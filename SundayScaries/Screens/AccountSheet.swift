@@ -4,7 +4,7 @@ import FantasyProviders
 
 /// The only thing outside the weekly view and the league view: connecting accounts.
 struct AccountSheet: View {
-    @Bindable var model: WeeklyModel
+    let model: WeeklyModel
     @Environment(\.dismiss) private var dismiss
     @State private var handle: String = ""
     @State private var espnLeagues: String = ""

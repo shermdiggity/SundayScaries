@@ -35,30 +35,28 @@ struct SWOpticalMetrics: ViewModifier {
     private static let lineHeightTolerance: CGFloat = 1.35
 
     func body(content: Content) -> some View {
-        guard let font = UIFont(name: face.name, size: face.size) else {
+        if let font = UIFont(name: face.name, size: face.size) {
+            let styled = content.font(.custom(face.name, size: face.size))
+            if Self.needsCorrection(font, size: face.size) {
+                styled
+                    // `offset` moves the glyphs without disturbing layout; the negative
+                    // padding then takes back the mark zone the glyphs never occupied.
+                    .offset(y: Self.latinBaselineFraction * font.lineHeight - font.ascender)
+                    .padding(.vertical, -max(0, font.lineHeight - Self.latinLineHeightRatio * face.size) / 2)
+            } else {
+                styled
+            }
+        } else {
             // Registration failed or the family was removed: fall back rather than
             // render something wrong.
-            return AnyView(content.font(.system(size: face.size, weight: face.fallback)))
+            content.font(.system(size: face.size, weight: face.fallback))
         }
+    }
 
+    private static func needsCorrection(_ font: UIFont, size: CGFloat) -> Bool {
         let fraction = font.ascender / font.lineHeight
-        let ratio = font.lineHeight / face.size
-        let styled = content.font(.custom(face.name, size: face.size))
-
-        guard abs(fraction - Self.latinBaselineFraction) > Self.baselineTolerance
-            || ratio > Self.lineHeightTolerance else {
-            return AnyView(styled)
-        }
-
-        let shift = Self.latinBaselineFraction * font.lineHeight - font.ascender
-        let excess = max(0, font.lineHeight - Self.latinLineHeightRatio * face.size)
-        return AnyView(
-            styled
-                // `offset` moves the glyphs without disturbing layout; the negative
-                // padding then takes back the mark zone the glyphs never occupied.
-                .offset(y: shift)
-                .padding(.vertical, -excess / 2)
-        )
+        let ratio = font.lineHeight / size
+        return abs(fraction - latinBaselineFraction) > baselineTolerance || ratio > lineHeightTolerance
     }
 }
 

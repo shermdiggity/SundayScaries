@@ -161,38 +161,10 @@ struct WeeklyView: View {
                 // clouds arrive. Background only; nothing readable is gated on it.
                 withAnimation(.easeOut(duration: 0.9)) { skyIsUp = true }
             }
-            .sheet(isPresented: $showingESPNLogin) {
-                ESPNLoginView { credentials in
-                    ESPNCredentialStore.save(credentials)
-                    Task { await model.load() }
-                }
-            }
-            .sheet(isPresented: $showingMFLConnect) {
-                MFLConnectView { credentials in
-                    MFLCredentialStore.save(credentials)
-                    Task { await model.load() }
-                } onLeagueIDs: { ids in
-                    model.mflLeagueIDs = ids
-                    Task { await model.load() }
-                }
-            }
-            .sheet(isPresented: $showingYahooLogin) {
-                YahooSignInView { credentials in
-                    YahooCredentialStore.save(credentials)
-                    Task { await model.load() }
-                }
-            }
-            // The live poll. Once a minute it asks one cheap question — is any starter
-            // in a game right now? — and only if so does it refresh. On a Tuesday this
-            // loop does nothing but sleep. On a Sunday it keeps every number within a
-            // minute of true, quietly, without a skeleton ever appearing.
-            .task {
-                while !Task.isCancelled {
-                    try? await Task.sleep(for: .seconds(60))
-                    guard !Task.isCancelled, model.hasLiveGame else { continue }
-                    await model.load(force: true)
-                }
-            }
+            .modifier(SignInSheets(
+                model: model, espn: $showingESPNLogin, mfl: $showingMFLConnect, yahoo: $showingYahooLogin
+            ))
+            .modifier(LivePoll(model: model))
             .onOpenURL { url in
                 guard url.scheme == WidgetStore.urlScheme else { return }
                 if url.host == "league", let id = url.pathComponents.last, id != "/" {
@@ -244,25 +216,23 @@ struct WeeklyView: View {
     }
 
     private var accountButton: some View {
-        Group {
-            Button { showingAccount = true } label: {
-                // Deliberately not glass: anything that samples its backdrop has to
-                // re-resolve when this screen comes back from a push, and that frame
-                // is visible.
-                Image(systemName: "person.crop.circle")
-                    .font(SWType.icon)
-                    .foregroundStyle(SWColor.onSky)
-                    .padding(SWSpacing.md)
-                    .background {
-                        Circle()
-                            .fill(SWColor.surface.opacity(0.72))
-                            .overlay { Circle().strokeBorder(SWColor.hairline, lineWidth: 1) }
-                    }
-                    .contentShape(.circle)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Accounts")
+        Button { showingAccount = true } label: {
+            // Deliberately not glass: anything that samples its backdrop has to
+            // re-resolve when this screen comes back from a push, and that frame
+            // is visible.
+            Image(systemName: "person.crop.circle")
+                .font(SWType.icon)
+                .foregroundStyle(SWColor.onSky)
+                .padding(SWSpacing.md)
+                .background {
+                    Circle()
+                        .fill(SWColor.surface.opacity(0.72))
+                        .overlay { Circle().strokeBorder(SWColor.hairline, lineWidth: 1) }
+                }
+                .contentShape(.circle)
         }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Accounts")
     }
 
     // MARK: - Hero
@@ -621,6 +591,58 @@ struct WeeklyView: View {
         let words = ["zero", "one", "two", "three", "four", "five",
                      "six", "seven", "eight", "nine", "ten"]
         return value >= 0 && value < words.count ? words[value] : String(value)
+    }
+}
+
+/// The three platform sign-ins the welcome cards open. Each saves what it was handed
+/// and reloads.
+private struct SignInSheets: ViewModifier {
+    let model: WeeklyModel
+    @Binding var espn: Bool
+    @Binding var mfl: Bool
+    @Binding var yahoo: Bool
+
+    func body(content: Content) -> some View {
+        content
+            .sheet(isPresented: $espn) {
+                ESPNLoginView { credentials in
+                    ESPNCredentialStore.save(credentials)
+                    Task { await model.load() }
+                }
+            }
+            .sheet(isPresented: $mfl) {
+                MFLConnectView { credentials in
+                    MFLCredentialStore.save(credentials)
+                    Task { await model.load() }
+                } onLeagueIDs: { ids in
+                    model.mflLeagueIDs = ids
+                    Task { await model.load() }
+                }
+            }
+            .sheet(isPresented: $yahoo) {
+                YahooSignInView { credentials in
+                    YahooCredentialStore.save(credentials)
+                    Task { await model.load() }
+                }
+            }
+    }
+}
+
+/// The live poll. Once a minute it asks one cheap question — is any starter in a game
+/// right now? — and only if so does it refresh. On a Tuesday this loop does nothing but
+/// sleep. On a Sunday it keeps every number within a minute of true, quietly, without a
+/// skeleton ever appearing.
+private struct LivePoll: ViewModifier {
+    let model: WeeklyModel
+
+    func body(content: Content) -> some View {
+        content.task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(60))
+                guard !Task.isCancelled, model.hasLiveGame else { continue }
+                await model.load(force: true)
+            }
+        }
     }
 }
 

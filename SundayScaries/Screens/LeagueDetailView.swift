@@ -21,7 +21,7 @@ struct LeagueDetailView: View {
     var onBack: () -> Void = {}
     var onRefresh: () async -> Void = {}
 
-    @State private var inspectedTeamID: String?
+    @State private var inspectedTeam: TeamSelection?
     @State private var inspectedMatchup: LeagueSnapshot.MatchupPair?
     @State private var isRefreshing = false
     @State private var inspector = PlayerInspector()
@@ -86,8 +86,8 @@ struct LeagueDetailView: View {
         // screen from hit-testing in the same frame it disappears; the selection does.
         .allowsHitTesting(isActive)
         .toolbar(.hidden, for: .navigationBar)
-        .sheet(item: $inspectedTeamID) { id in
-            TeamSheet(snapshot: snapshot, teamID: id, model: model)
+        .sheet(item: $inspectedTeam) { team in
+            TeamSheet(snapshot: snapshot, teamID: team.teamID, model: model)
         }
         .sheet(item: $inspectedMatchup) { pair in
             MatchupSheet(snapshot: snapshot, pair: pair, model: model)
@@ -97,7 +97,7 @@ struct LeagueDetailView: View {
             inspector.isEnabled = active
             guard !active else { return }
             // Nothing presents from a screen that has been closed.
-            inspectedTeamID = nil
+            inspectedTeam = nil
             inspectedMatchup = nil
             inspector.selection = nil
             #if DEBUG
@@ -550,13 +550,13 @@ struct LeagueDetailView: View {
                             isMine: row.isMine
                         )
                     },
-                    onSelect: { inspectedTeamID = $0 },
+                    onSelect: { inspectedTeam = TeamSelection(teamID: $0) },
                     idForRank: { rank in rows.first { $0.rank == rank }?.teamID }
                 )
                 .padding(.bottom, SWSpacing.md)
 
                 ForEach(rows.dropFirst(3)) { row in
-                    Button { inspectedTeamID = row.teamID } label: {
+                    Button { inspectedTeam = TeamSelection(teamID: row.teamID) } label: {
                         rankRow(row)
                     }
                     .buttonStyle(.plain)
@@ -640,6 +640,9 @@ struct LeagueDetailView: View {
     }
 }
 
-extension String: @retroactive Identifiable {
-    public var id: String { self }
+/// The team whose sheet is up. A wrapper rather than a retroactive `Identifiable` on
+/// `String`, which would have made every string in the module a sheet item.
+private struct TeamSelection: Identifiable {
+    let teamID: String
+    var id: String { teamID }
 }

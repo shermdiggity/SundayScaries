@@ -9,7 +9,7 @@ import FantasyCore
 /// screen is worse than a reliable one here. The order set here is what the weekly view
 /// shows.
 struct LeagueEditor: View {
-    @Bindable var model: WeeklyModel
+    let model: WeeklyModel
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
