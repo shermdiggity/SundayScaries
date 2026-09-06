@@ -38,11 +38,11 @@ extension WidgetSnapshot {
     static let sample = WidgetSnapshot(
         generatedAt: .now, week: 3, liveNow: true,
         leagues: [
-            WidgetLeague(id: "a", name: "Sunday Funday", platform: "sleeper", isLineupSet: true, issueCount: 0, hasMatchup: true,
+            WidgetLeague(id: "a", name: "The Sunday Scaries", platform: "sleeper", isLineupSet: true, issueCount: 0, hasMatchup: true,
                          myName: "Your team", myScore: 87.4, myProjected: 121.3, mySummary: "5 played · 4 to play",
                          opponentName: "Opponent", opponentScore: 64.1, opponentProjected: 109.8, opponentSummary: "4 played · 5 to play",
                          winProbability: 0.63, isLive: true, isFinal: false),
-            WidgetLeague(id: "b", name: "Average Joes", platform: "espn", isLineupSet: false, issueCount: 2, hasMatchup: true,
+            WidgetLeague(id: "b", name: "Backyard Brawl", platform: "espn", isLineupSet: false, issueCount: 2, hasMatchup: true,
                          myName: "Your team", myScore: 0, myProjected: 118.0, mySummary: "9 to play",
                          opponentName: "Opponent", opponentScore: 0, opponentProjected: 112.5, opponentSummary: "9 to play",
                          winProbability: 0.54, isLive: false, isFinal: false),

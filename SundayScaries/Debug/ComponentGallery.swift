@@ -61,7 +61,7 @@ struct ComponentGallery: View {
                     section("Matchup") {
                         VStack(spacing: SWSpacing.xl) {
                             MatchupBar(myName: "You", myScore: 118.4, opponentName: "Mahomies", opponentScore: 102.1)
-                            MatchupBar(myName: "You", myScore: 74.2, opponentName: "Arctic9", opponentScore: 131.8)
+                            MatchupBar(myName: "You", myScore: 74.2, opponentName: "NorthernBlitz", opponentScore: 131.8)
                             MatchupBar(myName: "You", myScore: 0, opponentName: "Not started", opponentScore: 0)
                         }
                     }
@@ -335,9 +335,9 @@ struct ComponentGallery: View {
     static var sampleFaced: [PlayerPosition] {
         [
             PlayerPosition(player: player("Jahmyr Gibbs", .rb, "DET"),
-                           ownedIn: [], facedIn: involvements(["Alpha", "Beta", "Gamma"], opponents: ["Mahomies", "Arctic9", "Dirtz"]), totalLeagues: 3),
+                           ownedIn: [], facedIn: involvements(["Alpha", "Beta", "Gamma"], opponents: ["Mahomies", "NorthernBlitz", "FumbleFree"]), totalLeagues: 3),
             PlayerPosition(player: player("Alec Pierce", .wr, "IND"),
-                           ownedIn: involvements(["Alpha"]), facedIn: involvements(["Beta"], opponents: ["Arctic9"]), totalLeagues: 3),
+                           ownedIn: involvements(["Alpha"]), facedIn: involvements(["Beta"], opponents: ["NorthernBlitz"]), totalLeagues: 3),
         ]
     }
 

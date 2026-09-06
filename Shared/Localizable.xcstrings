@@ -1,16 +1,23 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "" : {},
-    "%@ %@, %@ %@" : {},
-    "%@ all-play" : {},
-    "%@ chance to win" : {},
-    "%@ needs you to sign in again." : {},
-    "%@ points" : {},
-    "%@ points, %@" : {},
-    "%@ starts against you everywhere." : {},
-    "%@ starts against you in %@ of %@ leagues." : {},
+    "" : {
+
+    },
+    "—" : {
+
+    },
+    "?" : {
+
+    },
+    "·" : {
+
+    },
+    "%@ – %@" : {
+
+    },
     "%@ · %lld faces" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -43,6 +50,7 @@
       }
     },
     "%@ · %lld faces · bundled" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -74,7 +82,33 @@
         }
       }
     },
-    "%@ – %@" : {},
+    "%@ %@, %@ %@" : {
+
+    },
+    "%@ all-play" : {
+
+    },
+    "%@ chance to win" : {
+
+    },
+    "%@ needs you to sign in again." : {
+
+    },
+    "%@ place" : {
+
+    },
+    "%@ points" : {
+
+    },
+    "%@ points, %@" : {
+
+    },
+    "%@ starts against you everywhere." : {
+
+    },
+    "%@ starts against you in %@ of %@ leagues." : {
+
+    },
     "%@, %@, facing in %lld of %lld leagues: %@" : {
       "localizations" : {
         "en" : {
@@ -139,9 +173,15 @@
         }
       }
     },
-    "%@: %@ %@, against %@ %@" : {},
-    "%@: couldn't find %@." : {},
-    "%lld" : {},
+    "%@: %@ %@, against %@ %@" : {
+
+    },
+    "%@: couldn't find %@." : {
+
+    },
+    "%lld" : {
+
+    },
     "%lld hidden" : {
       "localizations" : {
         "en" : {
@@ -186,7 +226,9 @@
         }
       }
     },
-    "%lld lineup problems" : {},
+    "%lld lineup problems" : {
+
+    },
     "%lld lineups need you" : {
       "localizations" : {
         "en" : {
@@ -231,8 +273,12 @@
         }
       }
     },
-    "%lld of %lld" : {},
-    "%lld on bye" : {},
+    "%lld of %lld" : {
+
+    },
+    "%lld on bye" : {
+
+    },
     "%lld to fix" : {
       "localizations" : {
         "en" : {
@@ -255,90 +301,246 @@
         }
       }
     },
-    "%lld." : {},
-    "%lld. %@, %@ %@" : {},
-    "%lld:00" : {},
-    "+%lld more" : {},
-    "+%lld more in the app" : {},
-    "110.11" : {},
-    "118.4  ·  99.0  ·  102.1" : {},
-    "121-33 all-play" : {},
-    "127.48" : {},
-    "188.06" : {},
-    "92-62 all-play" : {},
-    "97-57 all-play" : {},
-    "?" : {},
-    "A public league needs no sign-in. The id is the number after /home/ in the league's address." : {},
-    "About" : {},
-    "About right" : {},
-    "Accounts" : {},
-    "Add a league by ID" : {},
-    "Add an account and they'll show up here." : {},
-    "Add leagues" : {},
-    "After you sign in, Yahoo shows a short code. Type it above." : {},
-    "Against you in %lld of %lld" : {},
-    "Against you in all %lld" : {},
-    "All" : {},
-    "Applied — tap to clear" : {},
-    "Are your lineups set, and how every matchup stands." : {},
-    "Are your lineups set, and who your Sunday rides on." : {},
-    "Around the league" : {},
-    "Back" : {},
-    "Back to sign-in page" : {},
-    "Bench" : {},
-    "Body 15" : {},
-    "Braces on the SWID are optional — they're added if missing." : {},
-    "Bye" : {},
-    "Cancel" : {},
-    "Cannot be used — no Latin alphabet" : {},
-    "Caption 13" : {},
-    "Carrying you" : {},
-    "Clear override (%@)" : {},
-    "Client ID" : {},
-    "Client Secret" : {},
-    "Code from Yahoo" : {},
-    "Connect" : {},
-    "Connecting…" : {},
-    "Cookies" : {},
-    "Correct vertical metrics" : {},
-    "Costing you" : {},
-    "Couldn't find Fleaflicker leagues for \"%@\" in %@. Use the email on the account, or the user id." : {},
-    "Couldn't find leagues for \"%@\" in %@." : {},
-    "Couldn't load the player index. It downloads once and is cached after that, so this needs a connection the first time." : {},
-    "Couldn't load your %@ leagues for %@." : {},
-    "Couldn't load your MyFantasyLeague leagues for %@. Check the league id, or sign in for a private league." : {},
-    "Couldn't load your Yahoo leagues for %@." : {},
-    "Couldn't reach MyFantasyLeague. Check the connection and try again." : {},
-    "Couldn't reach Yahoo. Check the connection and try again." : {},
-    "Dimmed points are estimates" : {},
-    "Disconnect" : {},
-    "Display 40" : {},
-    "Done" : {},
-    "Drag to reorder. This is the order on your week." : {},
-    "Edit leagues" : {},
-    "Email on your Fleaflicker account" : {},
-    "Email on your account" : {},
-    "Every league you're in. Live scores, who you're relying on, who's coming for you." : {},
-    "Every lineup is set" : {},
-    "Every lineup is set." : {},
-    "Families" : {},
-    "Filter" : {},
-    "Fonts" : {},
-    "Gallery" : {},
-    "Getting robbed" : {},
-    "Gibbs starts against you" : {},
-    "Gibbs starts against you." : {},
-    "Group" : {},
-    "Headline 19 · rounded" : {},
-    "Hidden" : {},
-    "Hidden leagues drop out of the week entirely, players included." : {},
-    "L" : {},
-    "Latin metrics — nothing to correct" : {},
-    "League IDs, comma-separated" : {},
-    "Leagues" : {},
-    "Leagues by ID" : {},
-    "Lineup needs attention: %@" : {},
-    "Lineup set" : {},
+    "%lld:00" : {
+
+    },
+    "%lld." : {
+
+    },
+    "%lld. %@, %@ %@" : {
+
+    },
+    "+%lld more" : {
+
+    },
+    "+%lld more in the app" : {
+
+    },
+    "×%lld" : {
+
+    },
+    "92-62 all-play" : {
+
+    },
+    "97-57 all-play" : {
+
+    },
+    "118.4  ·  99.0  ·  102.1" : {
+
+    },
+    "121-33 all-play" : {
+
+    },
+    "A public league needs no sign-in. The id is the number after /home/ in the league's address." : {
+
+    },
+    "About" : {
+
+    },
+    "About right" : {
+
+    },
+    "Accounts" : {
+
+    },
+    "Add a league by ID" : {
+
+    },
+    "Add an account and they'll show up here." : {
+
+    },
+    "Add leagues" : {
+
+    },
+    "After you sign in, Yahoo shows a short code. Type it above." : {
+
+    },
+    "Against you in %lld of %lld" : {
+
+    },
+    "Against you in all %lld" : {
+
+    },
+    "Are your lineups set, and how every matchup stands." : {
+
+    },
+    "Are your lineups set, and who your Sunday rides on." : {
+
+    },
+    "Around the league" : {
+
+    },
+    "Back" : {
+
+    },
+    "Back to sign-in page" : {
+
+    },
+    "Back to the current week" : {
+
+    },
+    "Bench" : {
+
+    },
+    "Body 15" : {
+
+    },
+    "Braces on the SWID are optional — they're added if missing." : {
+
+    },
+    "Bye" : {
+
+    },
+    "Cancel" : {
+
+    },
+    "Caption 13" : {
+
+    },
+    "Carrying you" : {
+
+    },
+    "Client ID" : {
+
+    },
+    "Client Secret" : {
+
+    },
+    "Code from Yahoo" : {
+
+    },
+    "Connect" : {
+
+    },
+    "Connecting…" : {
+
+    },
+    "Cookies" : {
+
+    },
+    "Costing you" : {
+
+    },
+    "Couldn't find Fleaflicker leagues for \"%@\" in %@. Use the email on the account, or the user id." : {
+
+    },
+    "Couldn't find leagues for \"%@\" in %@." : {
+
+    },
+    "Couldn't find leagues for \"you\" in 2026." : {
+
+    },
+    "Couldn't load the player index. It downloads once and is cached after that, so this needs a connection the first time." : {
+
+    },
+    "Couldn't load your %@ leagues for %@." : {
+
+    },
+    "Couldn't load your MyFantasyLeague leagues for %@. Check the league id, or sign in for a private league." : {
+
+    },
+    "Couldn't load your Yahoo leagues for %@." : {
+
+    },
+    "Couldn't reach MyFantasyLeague. Check the connection and try again." : {
+
+    },
+    "Couldn't reach Yahoo. Check the connection and try again." : {
+
+    },
+    "Couldn't refresh" : {
+
+    },
+    "Dimmed points are estimates" : {
+
+    },
+    "Disconnect" : {
+
+    },
+    "Disconnect Fleaflicker" : {
+
+    },
+    "Disconnect Sleeper" : {
+
+    },
+    "Display 40" : {
+
+    },
+    "Done" : {
+
+    },
+    "Drag to reorder. This is the order on your week." : {
+
+    },
+    "Edit leagues" : {
+
+    },
+    "Email on your account" : {
+
+    },
+    "Email on your Fleaflicker account" : {
+
+    },
+    "empty" : {
+
+    },
+    "espn_s2" : {
+
+    },
+    "Every league you're in. Live scores, who you're relying on, who's coming for you." : {
+
+    },
+    "Every lineup is set" : {
+
+    },
+    "Every lineup is set." : {
+
+    },
+    "Failed" : {
+
+    },
+    "fresh renders nothing:" : {
+
+    },
+    "Gallery" : {
+
+    },
+    "Getting robbed" : {
+
+    },
+    "Gibbs starts against you." : {
+
+    },
+    "Headline 19 · rounded" : {
+
+    },
+    "Hidden" : {
+
+    },
+    "Hidden leagues drop out of the week entirely, players included." : {
+
+    },
+    "Hide %@" : {
+
+    },
+    "L" : {
+
+    },
+    "League IDs, comma-separated" : {
+
+    },
+    "Leagues" : {
+
+    },
+    "Leagues by ID" : {
+
+    },
+    "Lineup needs attention: %@" : {
+
+    },
+    "Lineup set" : {
+
+    },
     "Lineup set, %lld starters" : {
       "localizations" : {
         "en" : {
@@ -361,51 +563,165 @@
         }
       }
     },
-    "Lineups" : {},
-    "Lineups and scores" : {},
-    "Lineups and your guys" : {},
-    "List" : {},
-    "Live" : {},
-    "Load" : {},
-    "Loading %@" : {},
-    "Loading your week" : {},
-    "MICRO 11" : {},
-    "MyFantasyLeague" : {},
-    "MyFantasyLeague didn't accept that sign-in." : {},
-    "No Latin alphabet — everything above is iOS's fallback face, not this font" : {},
-    "No families in this group" : {},
-    "No leagues found for %@." : {},
-    "No leagues yet" : {},
-    "No lineups to show for this matchup yet." : {},
-    "No player set" : {},
-    "No roster to show for this team." : {},
-    "No season to show yet." : {},
-    "No starters yet" : {},
-    "Nobody has scored yet, so this is week %lld projections. Power points take over once games are played." : {},
-    "Nobody yet" : {},
-    "Non-Latin metrics — corrected above, toggle in the menu to compare" : {},
-    "None yet" : {},
-    "Not connected" : {},
-    "Not started yet" : {},
-    "Nothing to show yet." : {},
-    "Now" : {},
-    "Once signed in, tap here to import leagues" : {},
-    "Open Yahoo sign-in" : {},
-    "Open in %@" : {},
-    "Open the app" : {},
-    "Open the app once and your leagues appear here." : {},
-    "Open this league in %@" : {},
-    "Or add a public league by ID" : {},
-    "Password" : {},
-    "Paste cookies" : {},
-    "Paste cookies instead" : {},
-    "Platforms" : {},
-    "Power points blend all-play win rate, points for and recent form." : {},
-    "Power ranking" : {},
-    "Projected ranking" : {},
-    "Proportional figures — columns will jitter" : {},
-    "Refresh" : {},
-    "Refreshing" : {},
+    "Lineups" : {
+
+    },
+    "Lineups and scores" : {
+
+    },
+    "Lineups and your guys" : {
+
+    },
+    "Live" : {
+
+    },
+    "Load" : {
+
+    },
+    "Loading %@" : {
+
+    },
+    "Loading your week" : {
+
+    },
+    "MICRO 11" : {
+
+    },
+    "More options" : {
+
+    },
+    "MyFantasyLeague" : {
+
+    },
+    "MyFantasyLeague didn't accept that sign-in." : {
+
+    },
+    "Next week" : {
+
+    },
+    "No leagues found for %@." : {
+
+    },
+    "No leagues yet" : {
+
+    },
+    "No lineups to show for this matchup yet." : {
+
+    },
+    "No player set" : {
+
+    },
+    "No roster to show for this team." : {
+
+    },
+    "No season to show yet." : {
+
+    },
+    "No starters yet" : {
+
+    },
+    "Nobody has scored yet, so this is week %lld projections. Power points take over once games are played." : {
+
+    },
+    "Nobody yet" : {
+
+    },
+    "None yet" : {
+
+    },
+    "Not connected" : {
+
+    },
+    "Not everything loaded" : {
+
+    },
+    "Not started yet" : {
+
+    },
+    "Nothing to show yet." : {
+
+    },
+    "Now" : {
+
+    },
+    "Once signed in, tap here to import leagues" : {
+
+    },
+    "Open in %@" : {
+
+    },
+    "Open the app" : {
+
+    },
+    "Open the app once and your leagues appear here." : {
+
+    },
+    "Open this league in %@" : {
+
+    },
+    "Open Yahoo sign-in" : {
+
+    },
+    "Or add a public league by ID" : {
+
+    },
+    "Password" : {
+
+    },
+    "Paste cookies" : {
+
+    },
+    "Paste cookies instead" : {
+
+    },
+    "Platforms" : {
+
+    },
+    "played" : {
+
+    },
+    "playing" : {
+
+    },
+    "Power points blend all-play win rate, points for and recent form." : {
+
+    },
+    "power pts" : {
+
+    },
+    "Power ranking" : {
+
+    },
+    "Previous week" : {
+
+    },
+    "proj" : {
+
+    },
+    "proj %@" : {
+
+    },
+    "projected" : {
+
+    },
+    "projected %@" : {
+
+    },
+    "Projected ranking" : {
+
+    },
+    "Record %@" : {
+
+    },
+    "Refresh" : {
+
+    },
+    "Refreshed" : {
+
+    },
+    "Refreshing" : {
+
+    },
     "Rostered in %lld of %lld leagues" : {
       "localizations" : {
         "en" : {
@@ -438,30 +754,99 @@
         }
       }
     },
-    "Running hot" : {},
-    "SAE Keeper FFL" : {},
-    "SWID" : {},
-    "Save" : {},
-    "Score this season with the rules of" : {},
-    "Scoreboard" : {},
-    "Scored under" : {},
-    "Scoring rules: %@" : {},
-    "Season" : {},
-    "Section header · Garamond" : {},
-    "Show and reorder" : {},
-    "Showing" : {},
-    "Showing %@ — %@ leagues haven't been created yet." : {},
-    "Shows both starting lineups" : {},
-    "Shows this player's season" : {},
-    "Sign in" : {},
-    "Sign in on Yahoo's own page. Yahoo shows a short code afterwards; type it above." : {},
-    "Sign in to ESPN" : {},
-    "Sign out" : {},
-    "Signed in" : {},
-    "Signed in to ESPN, but no %@ leagues came back. If your league is there, add its ID." : {},
-    "Signing in…" : {},
-    "Sleeper username" : {},
-    "Starters" : {},
+    "Running hot" : {
+
+    },
+    "SAE Keeper FFL" : {
+
+    },
+    "Save" : {
+
+    },
+    "Score this season with the rules of" : {
+
+    },
+    "Scoreboard" : {
+
+    },
+    "Scored under" : {
+
+    },
+    "Scoring rules: %@" : {
+
+    },
+    "Season" : {
+
+    },
+    "Section header · Garamond" : {
+
+    },
+    "Show %@" : {
+
+    },
+    "Show and reorder" : {
+
+    },
+    "Showing" : {
+
+    },
+    "Showing %@ — %@ leagues haven't been created yet." : {
+
+    },
+    "Showing the last numbers that loaded." : {
+
+    },
+    "Showing the last numbers that loaded. Check the connection and try again." : {
+
+    },
+    "Shows both starting lineups" : {
+
+    },
+    "Shows this player's season" : {
+
+    },
+    "Sign in" : {
+
+    },
+    "Sign in on Yahoo's own page. Yahoo shows a short code afterwards; type it above." : {
+
+    },
+    "Sign in to ESPN" : {
+
+    },
+    "Sign in to MyFantasyLeague" : {
+
+    },
+    "Sign in to Yahoo" : {
+
+    },
+    "Sign out" : {
+
+    },
+    "Sign out of ESPN" : {
+
+    },
+    "Sign out of MyFantasyLeague" : {
+
+    },
+    "Sign out of Yahoo" : {
+
+    },
+    "Signed in" : {
+
+    },
+    "Signed in to ESPN, but no %@ leagues came back. If your league is there, add its ID." : {
+
+    },
+    "Signing in…" : {
+
+    },
+    "Sleeper username" : {
+
+    },
+    "Starters" : {
+
+    },
     "Starting against you in %lld of %lld leagues" : {
       "localizations" : {
         "en" : {
@@ -526,59 +911,132 @@
         }
       }
     },
-    "Starting in %lld of %lld" : {},
-    "Starting in all %lld" : {},
-    "Still not connected — try Paste instead from the menu" : {},
-    "Sunday Scaries" : {},
-    "Tabular figures — columns hold" : {},
-    "The number in the league's address, after /home/. A public league needs no sign-in." : {},
-    "The season so far" : {},
-    "This week" : {},
-    "Title 26" : {},
-    "Use on the weekly view" : {},
-    "Username" : {},
-    "Version" : {},
-    "W" : {},
-    "Week %lld" : {},
-    "Week %lld projection" : {},
-    "Where to find them" : {},
-    "Whether every lineup is set, across all your leagues." : {},
-    "Who you're relying on, and how every matchup stands." : {},
-    "Who you're relying on, and who's coming for you." : {},
-    "Yahoo" : {},
-    "Yahoo didn't accept that code." : {},
-    "Yahoo's API needs an app of your own: developer.yahoo.com › Create an App. Choose Installed Application, redirect URI oob, and the Fantasy Sports (read) permission. Paste its Client ID and Client Secret here. They're kept in the keychain." : {},
-    "You" : {},
-    "You're %@-for-%@ on %@." : {},
-    "You're all-in on %@." : {},
-    "Your Guys" : {},
-    "Your Yahoo app" : {},
-    "Your bench" : {},
-    "Your guys and scores" : {},
-    "Your leagues" : {},
-    "Your leagues are found automatically. Add an ID only if one is missing — it's the number after leagueId= in the league's address." : {},
-    "Your matchup in every league." : {},
-    "Your password goes to MyFantasyLeague once, over HTTPS, and is never stored. Only the sign-in cookie is kept, in the keychain, and it lists the leagues you're in." : {},
-    "Your season" : {},
-    "Your team" : {},
-    "Your username" : {},
-    "Your whole Sunday, one screen." : {},
-    "empty" : {},
-    "espn_s2" : {},
-    "fresh renders nothing:" : {},
-    "played" : {},
-    "playing" : {},
-    "power pts" : {},
-    "proj" : {},
-    "proj %@" : {},
-    "projected" : {},
-    "projected %@" : {},
-    "to play" : {},
-    "vs." : {},
-    "vs. %@" : {},
-    "·" : {},
-    "×%lld" : {},
-    "—" : {}
+    "Starting in %lld of %lld" : {
+
+    },
+    "Starting in all %lld" : {
+
+    },
+    "Stats come from a league's scoring, so a league has to be showing." : {
+
+    },
+    "Still not connected — try Paste instead from the menu" : {
+
+    },
+    "Sunday Scaries" : {
+
+    },
+    "SWID" : {
+
+    },
+    "The number in the league's address, after /home/. A public league needs no sign-in." : {
+
+    },
+    "The season so far" : {
+
+    },
+    "This week" : {
+
+    },
+    "Title 26" : {
+
+    },
+    "to play" : {
+
+    },
+    "Toggled" : {
+
+    },
+    "Try again" : {
+
+    },
+    "Username" : {
+
+    },
+    "Version" : {
+
+    },
+    "vs." : {
+
+    },
+    "vs. %@" : {
+
+    },
+    "W" : {
+
+    },
+    "Week %lld" : {
+
+    },
+    "Week %lld projection" : {
+
+    },
+    "Where to find them" : {
+
+    },
+    "Whether every lineup is set, across all your leagues." : {
+
+    },
+    "Who you're relying on, and how every matchup stands." : {
+
+    },
+    "Who you're relying on, and who's coming for you." : {
+
+    },
+    "Yahoo" : {
+
+    },
+    "Yahoo didn't accept that code." : {
+
+    },
+    "Yahoo's API needs an app of your own: developer.yahoo.com › Create an App. Choose Installed Application, redirect URI oob, and the Fantasy Sports (read) permission. Paste its Client ID and Client Secret here. They're kept in the keychain." : {
+
+    },
+    "You" : {
+
+    },
+    "You're %@-for-%@ on %@." : {
+
+    },
+    "You're all-in on %@." : {
+
+    },
+    "Your bench" : {
+
+    },
+    "Your Guys" : {
+
+    },
+    "Your guys and scores" : {
+
+    },
+    "Your leagues" : {
+
+    },
+    "Your leagues are found automatically. Add an ID only if one is missing — it's the number after leagueId= in the league's address." : {
+
+    },
+    "Your matchup in every league." : {
+
+    },
+    "Your password goes to MyFantasyLeague once, over HTTPS, and is never stored. Only the sign-in cookie is kept, in the keychain, and it lists the leagues you're in." : {
+
+    },
+    "Your season" : {
+
+    },
+    "Your team" : {
+
+    },
+    "Your username" : {
+
+    },
+    "Your whole Sunday, one screen." : {
+
+    },
+    "Your Yahoo app" : {
+
+    }
   },
   "version" : "1.0"
 }

@@ -69,7 +69,7 @@ struct MatchupBar: View {
 #Preview {
     VStack(spacing: SWSpacing.xl) {
         MatchupBar(myName: "You", myScore: 118.4, opponentName: "Mahomies", opponentScore: 102.1)
-        MatchupBar(myName: "You", myScore: 74.2, opponentName: "Arctic9", opponentScore: 131.8)
+        MatchupBar(myName: "You", myScore: 74.2, opponentName: "NorthernBlitz", opponentScore: 131.8)
         MatchupBar(myName: "You", myScore: 0, opponentName: "Not started", opponentScore: 0)
     }
     .padding(SWSpacing.xl)
