@@ -95,11 +95,20 @@ struct LeagueDetailView: View {
         // A closed league takes no touches. The pop does not reliably remove this
         // screen from hit-testing in the same frame it disappears; the selection does.
         .allowsHitTesting(isActive)
+        // …and it SWALLOWS them rather than passing them through. With hit-testing off
+        // alone, a tap during the pop animation fell straight through the shrinking
+        // screen onto the league card underneath, whose button re-opened the league
+        // six milliseconds after it had closed.
+        .overlay {
+            if !isActive {
+                Color.clear.contentShape(.rect)
+            }
+        }
         .background {
-            NavigationStackProbe { isOnStack, describe in
-                stack.isOnStack = isOnStack
+            NavigationStackProbe { canPresent, describe in
+                stack.canPresent = canPresent
                 stack.describe = describe
-                inspector.isOnStack = isOnStack
+                inspector.canPresent = canPresent
                 inspector.describe = describe
             }
         }
@@ -125,10 +134,11 @@ struct LeagueDetailView: View {
         .onDisappear { diagLog("detail \(snapshot.league.name) onDisappear") }
     }
 
-    /// Presents only while this screen is still on the stack: a tap during the swipe
-    /// that closes it must not open a sheet from a screen that is already gone.
+    /// Presents only while this screen is on the stack and no transition is in flight:
+    /// a tap during the swipe that closes it, or a swipe too short to close it that is
+    /// handed back as a tap, must not open a sheet from a screen on its way out.
     private func present(_ action: () -> Void) {
-        let allowed = stack.isOnStack()
+        let allowed = stack.canPresent()
         diagLog("detail \(snapshot.league.name) tap (team/matchup) selected=\(selectedLeagueID ?? "nil") isActive=\(isActive) decision=\(allowed ? "PRESENT" : "REFUSE")\n   \(stack.describe())")
         guard allowed else { return }
         action()
@@ -686,6 +696,6 @@ private struct TeamSelection: Identifiable {
 /// Holds the probe's answer without observation: it is written during a view update
 /// and read only inside a tap.
 private final class StackProbe {
-    var isOnStack: @MainActor () -> Bool = { true }
+    var canPresent: @MainActor () -> Bool = { true }
     var describe: @MainActor () -> String = { "no probe" }
 }

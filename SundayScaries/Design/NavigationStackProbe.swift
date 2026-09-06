@@ -15,18 +15,21 @@ func diagLog(_ message: @autoclosure () -> String) {
     #endif
 }
 
-/// Answers, at the moment a tap lands, whether the screen it sits in is still on the
-/// navigation stack.
+/// Answers, at the moment a tap lands, whether the screen it sits in may present.
 ///
-/// The zoom transition's swipe-to-close pops the screen's controller the instant the
-/// gesture begins; SwiftUI's `navigationDestination(item:)` binding is cleared only when
-/// the pop ANIMATION completes. In between, the screen is visibly gone, still
-/// hit-testable, and still believes it is the selected league — so a tap where a player
-/// row was presented a sheet from a dead screen. Gating on the selection cannot close
-/// that window; only UIKit's stack can. `isOnStack()` walks from this view to its
-/// hosting controller and asks the navigation controller whether it still holds it.
+/// Two things UIKit knows and SwiftUI does not. First, whether the screen is still on
+/// the navigation stack: the zoom transition's swipe-to-close pops the controller before
+/// the `navigationDestination(item:)` binding clears. Second, whether a navigation
+/// transition is in flight. A short swipe-to-close that does not travel far enough is
+/// CANCELLED as a dismissal, and the same touch is then delivered as a tap on whatever
+/// row it started on — with the controller on the stack, on top, and looking perfectly
+/// alive. The console showed exactly that (`transition=true cancelled=true` on the tap
+/// that opened a sheet), and the cancelled dismissal then completed anyway and popped
+/// the screen out from under its sheet. So a tap presents only when the stack holds the
+/// screen AND no transition coordinator exists. Outside a transition UIKit has none, so
+/// nothing is refused on a settled screen.
 struct NavigationStackProbe: UIViewRepresentable {
-    let onAttach: (_ isOnStack: @escaping @MainActor () -> Bool, _ describe: @escaping @MainActor () -> String) -> Void
+    let onAttach: (_ canPresent: @escaping @MainActor () -> Bool, _ describe: @escaping @MainActor () -> String) -> Void
 
     func makeUIView(context: Context) -> ProbeView {
         let view = ProbeView()
@@ -36,11 +39,16 @@ struct NavigationStackProbe: UIViewRepresentable {
     }
 
     func updateUIView(_ view: ProbeView, context: Context) {
-        onAttach({ [weak view] in view?.isOnNavigationStack ?? false }, { [weak view] in view?.diagnostics ?? "probe gone" })
+        onAttach({ [weak view] in view?.canPresent ?? false }, { [weak view] in view?.diagnostics ?? "probe gone" })
     }
 
     final class ProbeView: UIView {
         override var intrinsicContentSize: CGSize { .zero }
+
+        /// On the stack, and not mid-transition. See the type's note.
+        var canPresent: Bool {
+            isOnNavigationStack && nearestController?.navigationController?.transitionCoordinator == nil
+        }
 
         /// True while some ancestor controller is in its navigation controller's stack.
         /// A view with no navigation controller at all (a sheet) is presented, not
@@ -86,7 +94,7 @@ struct NavigationStackProbe: UIViewRepresentable {
             return [
                 "t=\(diagStamp()) window=\(window != nil) alpha=\(alpha) hidden=\(hidden) transformed=\(transformed) frameInWindow=\(frame) screen=\(window?.bounds.size ?? .zero)",
                 "chain=\(chain.joined(separator: " > "))",
-                "nav=\(nav != nil) stack=\(nav?.viewControllers.count ?? -1) onStack=\(isOnNavigationStack) topIsMine=\(topIsMine) transition=\(nav?.transitionCoordinator != nil) interactive=\(nav?.transitionCoordinator?.isInteractive ?? false) cancelled=\(nav?.transitionCoordinator?.isCancelled ?? false) movingFromParent=\(controller?.isMovingFromParent ?? false) beingDismissed=\(controller?.isBeingDismissed ?? false)",
+                "nav=\(nav != nil) stack=\(nav?.viewControllers.count ?? -1) onStack=\(isOnNavigationStack) canPresent=\(canPresent) topIsMine=\(topIsMine) transition=\(nav?.transitionCoordinator != nil) interactive=\(nav?.transitionCoordinator?.isInteractive ?? false) cancelled=\(nav?.transitionCoordinator?.isCancelled ?? false) movingFromParent=\(controller?.isMovingFromParent ?? false) beingDismissed=\(controller?.isBeingDismissed ?? false)",
             ].joined(separator: "\n   ")
         }
         #endif

@@ -39,9 +39,9 @@ final class PlayerInspector {
         didSet { diagLog("inspector \(owner) isEnabled -> \(isEnabled)") }
     }
     /// Asked at tap time. A pushed screen sets this from a `NavigationStackProbe`, so a
-    /// tap that lands while the screen is being swiped away, before SwiftUI has cleared
-    /// its selection, presents nothing.
-    @ObservationIgnored var isOnStack: @MainActor () -> Bool = { true }
+    /// tap that lands while the screen is being swiped away — or one that IS the swipe,
+    /// cancelled and handed back as a tap — presents nothing.
+    @ObservationIgnored var canPresent: @MainActor () -> Bool = { true }
     @ObservationIgnored var describe: @MainActor () -> String = { "no probe" }
 
     func open(_ player: PlayerRef, in leagueID: String?) {
@@ -50,8 +50,8 @@ final class PlayerInspector {
             diagLog("inspector \(owner) REFUSED \(player.name): disabled (its screen is closed)\n   \(describe())")
             return
         }
-        let allowed = isOnStack()
-        diagLog("inspector \(owner) tap on \(player.name) enabled=\(isEnabled) decision=\(allowed ? "PRESENT" : "REFUSE (not on stack)")\n   \(describe())")
+        let allowed = canPresent()
+        diagLog("inspector \(owner) tap on \(player.name) enabled=\(isEnabled) decision=\(allowed ? "PRESENT" : "REFUSE (popped, or a transition is in flight)")\n   \(describe())")
         guard allowed else { return }
         selection = Selection(player: player, leagueID: leagueID)
     }
