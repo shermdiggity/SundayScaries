@@ -163,7 +163,12 @@ struct WeeklyView: View {
             .refreshable { await model.refreshAll() }
             .feedback(.signInSucceeded, trigger: connectSuccesses)
             .feedback(.signInFailed, trigger: connectFailures)
-            .task { if model.snapshots.isEmpty { await model.load() } }
+            .task {
+                if model.snapshots.isEmpty { await model.load() }
+                #if DEBUG
+                openDebugDestination()
+                #endif
+            }
             .onAppear {
                 // One beat after launch: the launch colour becomes the live sky and the
                 // clouds arrive. Background only; nothing readable is gated on it.
@@ -178,23 +183,6 @@ struct WeeklyView: View {
                 if url.host == "league", let id = url.pathComponents.last, id != "/" {
                     selectedLeagueID = id
                 }
-                #if DEBUG
-                // sundayscaries://debug/player/<leagueID>/<canonicalID>, /debug/account,
-                // /debug/editor: for driving screenshots on a simulator, nothing else.
-                if url.host == "debug" {
-                    let parts = url.pathComponents.filter { $0 != "/" }
-                    switch parts.first {
-                    case "account": showingAccount = true
-                    case "editor": showingLeagueEditor = true
-                    case "player" where parts.count == 3:
-                        let (leagueID, canonicalID) = (parts[1], parts[2])
-                        let player = model.snapshots.first { $0.id == leagueID }?.rosters
-                            .flatMap(\.slots).first { $0.player.canonicalID == canonicalID }?.player
-                        if let player { inspector.open(player, in: leagueID) }
-                    default: break
-                    }
-                }
-                #endif
             }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .background {
@@ -451,6 +439,26 @@ struct WeeklyView: View {
         }
         .buttonStyle(.plain)
     }
+
+    #if DEBUG
+    /// Drives screenshots on a simulator, nothing else. Launch with
+    /// `-sw.debugOpen league/<id>`, `player/<leagueID>/<canonicalID>`, `account` or
+    /// `editor`; the argument lands in UserDefaults' argument domain.
+    private func openDebugDestination() {
+        guard let path = UserDefaults.standard.string(forKey: "sw.debugOpen") else { return }
+        let parts = path.split(separator: "/").map(String.init)
+        switch parts.first {
+        case "league" where parts.count == 2: selectedLeagueID = parts[1]
+        case "account": showingAccount = true
+        case "editor": showingLeagueEditor = true
+        case "player" where parts.count == 3:
+            let player = model.snapshots.first { $0.id == parts[1] }?.rosters
+                .flatMap(\.slots).first { $0.player.canonicalID == parts[2] }?.player
+            if let player { inspector.open(player, in: parts[1]) }
+        default: break
+        }
+    }
+    #endif
 
     /// One load for a connect the reader just made, and one haptic for how it went.
     private func connect() async {

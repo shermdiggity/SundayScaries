@@ -48,13 +48,15 @@ struct LeagueCard: View {
     }
 
     /// Derived from the league's id, so every league keeps a stable identity colour
-    /// without anyone choosing one by hand.
+    /// without anyone choosing one by hand. Not `hashValue`: that is seeded per launch,
+    /// and the colour changed every time the app opened.
     private var accent: Color {
         let hues: [Color] = [
             SWColor.accent, SWColor.positive, SWColor.position(.wr),
             SWColor.position(.te), SWColor.position(.k), SWColor.position(.rb),
         ]
-        return hues[abs(snapshot.league.id.hashValue) % hues.count]
+        let stable = snapshot.league.id.unicodeScalars.reduce(0) { ($0 &* 31) &+ Int($1.value) }
+        return hues[abs(stable) % hues.count]
     }
 
     private var header: some View {
