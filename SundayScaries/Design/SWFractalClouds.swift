@@ -74,21 +74,21 @@ struct SWFractalClouds: View {
                     height: proxy.size.height / Self.resolutionDivisor
                 )
                 .colorEffect(
-                ShaderLibrary.swFractalClouds(
-                    .boundingRect,
-                    .float(elapsed),
-                    .float(speed),
-                    .float(zoom),
-                    .float(driftX),
-                    .float(driftY),
-                    .float(warp),
-                    .float(coverage),
-                    .color(skyColor),
-                    .color(cloudColor),
-                    .color(warmTint),
-                    .float(warmth)
+                    ShaderLibrary.swFractalClouds(
+                        .boundingRect,
+                        .float(elapsed),
+                        .float(speed),
+                        .float(zoom),
+                        .float(driftX),
+                        .float(driftY),
+                        .float(warp),
+                        .float(coverage),
+                        .color(skyColor),
+                        .color(cloudColor),
+                        .color(warmTint),
+                        .float(warmth)
+                    )
                 )
-            )
                 .scaleEffect(Self.resolutionDivisor, anchor: .topLeading)
         }
     }

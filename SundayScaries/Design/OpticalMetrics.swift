@@ -46,7 +46,7 @@ struct SWOpticalMetrics: ViewModifier {
         let styled = content.font(.custom(face.name, size: face.size))
 
         guard abs(fraction - Self.latinBaselineFraction) > Self.baselineTolerance
-                || ratio > Self.lineHeightTolerance else {
+            || ratio > Self.lineHeightTolerance else {
             return AnyView(styled)
         }
 

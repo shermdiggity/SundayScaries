@@ -73,7 +73,7 @@ enum SWColor {
     /// the shrinking rectangle is already the colour of the card it becomes.
     static func leagueFlat(_ platform: Platform, over sky: Color) -> Color {
         sky.mixed(with: self.platform(platform), by: 0.30)
-           .mixed(with: surfaceRaised, by: 0.28)
+            .mixed(with: surfaceRaised, by: 0.28)
     }
 
     /// Each platform's own mark, served from its own CDN. Used nominatively — to say
@@ -173,6 +173,7 @@ enum SWType {
     #endif
 
     // MARK: The two display-voice tokens
+
     //
     // These are the weekly view's own voice — the hero line and the headers that
     // introduce a group. They are the only tokens with a `Face`, because only they go
@@ -193,15 +194,15 @@ enum SWType {
 
     // MARK: Interface
 
-    static var title: Font      { voice(displayBold, 26, fallback: .bold) }
-    static var headline: Font   { voice(displayBold, 19, fallback: .semibold) }
-    static var section: Font    { voice(displayMedium, 15, fallback: .medium) }
-    static var body: Font       { voice(displayMedium, 15, fallback: .medium) }
+    static var title: Font { voice(displayBold, 26, fallback: .bold) }
+    static var headline: Font { voice(displayBold, 19, fallback: .semibold) }
+    static var section: Font { voice(displayMedium, 15, fallback: .medium) }
+    static var body: Font { voice(displayMedium, 15, fallback: .medium) }
     static var bodyMedium: Font { voice(displayBold, 15, fallback: .semibold) }
-    static var caption: Font    { voice(displayMedium, 13, fallback: .medium) }
-    static var micro: Font      { voice(displayBold, 11, fallback: .bold) }
+    static var caption: Font { voice(displayMedium, 13, fallback: .medium) }
+    static var micro: Font { voice(displayBold, 11, fallback: .bold) }
     /// The league card's title line: the most prominent interface text in the app.
-    static var cardTitle: Font  { voice(displayBold, 19, fallback: .bold) }
+    static var cardTitle: Font { voice(displayBold, 19, fallback: .bold) }
 
     /// Sized to the mark they sit in rather than to a step on the scale, so they scale
     /// with the circle that contains them.
@@ -217,10 +218,10 @@ enum SWType {
 
     // MARK: Numbers
 
-    static var score: Font        { voice(displayBold, 18, fallback: .bold).monospacedDigit() }
-    static var scoreLarge: Font   { voice(displayBold, 34, fallback: .heavy).monospacedDigit() }
+    static var score: Font { voice(displayBold, 18, fallback: .bold).monospacedDigit() }
+    static var scoreLarge: Font { voice(displayBold, 34, fallback: .heavy).monospacedDigit() }
     static var scoreCaption: Font { voice(displayBold, 13, fallback: .semibold).monospacedDigit() }
-    static var scoreMicro: Font   { voice(displayBold, 11, fallback: .bold).monospacedDigit() }
+    static var scoreMicro: Font { voice(displayBold, 11, fallback: .bold).monospacedDigit() }
 }
 
 // MARK: - Spacing, radius, motion

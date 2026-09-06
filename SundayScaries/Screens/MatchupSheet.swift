@@ -29,12 +29,12 @@ struct MatchupSheet: View {
                         }
                         MatchupHeader(snapshot: snapshot, pair: pair, isExpanded: true)
                     }
-                        .padding(SWSpacing.lg)
-                        .frame(maxWidth: .infinity)
-                        .background(
-                            RoundedRectangle(cornerRadius: SWRadius.md, style: .continuous)
-                                .fill(SWColor.surface)
-                        )
+                    .padding(SWSpacing.lg)
+                    .frame(maxWidth: .infinity)
+                    .background(
+                        RoundedRectangle(cornerRadius: SWRadius.md, style: .continuous)
+                            .fill(SWColor.surface)
+                    )
 
                     if let left = pair.leftRoster, !left.starters.isEmpty {
                         VStack(alignment: .leading, spacing: SWSpacing.md) {

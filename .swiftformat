@@ -1,0 +1,44 @@
+# SwiftFormat — SundayScaries. Run as `swiftformat --lint .` in CI; format locally with
+# `swiftformat .`. Identical to ../FantasyKit/.swiftformat apart from the exclusions.
+--swiftversion 6.0
+--indent 4
+--commas always
+--trimwhitespace always
+--maxwidth none
+--wraparguments preserve
+--wrapparameters preserve
+--wrapcollections preserve
+--stripunusedargs closure-only
+--self remove
+--header ignore
+
+# Options set to match conventions this codebase already follows (each one verified
+# against a preview diff on 2026-09-05, not assumed):
+#   --ifdef no-indent          code inside `#if DEBUG` is not indented
+#   --ranges no-space          ranges are written `1...3`
+#   --decimalgrouping ignore   `86_400` is the author's grouping; leave numbers alone
+#   --semicolons inline        one-line test rows use `let a: A; let b: B`; only trailing ones go
+--ifdef no-indent
+--ranges no-space
+--decimalgrouping ignore
+--semicolons inline
+
+# Disabled on purpose. SwiftFormat 0.63's defaults reflow statement bodies and rewrite
+# code, which is a migration, not a lint. The rules below either fight a convention this
+# codebase uses deliberately or change more than whitespace:
+#   blankLinesAtStartOfScope   type and suite bodies open with a blank line here
+#   consecutiveSpaces          aligned `case` tables and trailing comments are deliberate
+#   wrap*Bodies                one-line `if x { return }` guards are idiomatic Swift
+#   wrapMultilineStatementBraces, wrapIfExpressionBodies   same family
+#   docComments                turns // into /// by heuristic; comment style is a review call
+#   hoistTry, hoistAwait, conditionalAssignment, preferKeyPath   semantic-adjacent rewrites
+#   opaqueGenericParameters, redundantPublic, redundantThrows, redundantAsync   change API shape
+#   redundantSwiftUIGroup      view identity is load-bearing here (CLAUDE.md §6); no auto-unwrapping
+#   sortImports                @testable imports are grouped after plain imports on purpose
+#   noForceTryInTests, noForceUnwrapInTests   force unwrapping is allowed in tests (CLAUDE.md §1)
+#   modifierOrder              SwiftLint owns modifier order (`nonisolated public`); the two
+#                              defaults disagree and `--fix` passes would ping-pong six files
+#   redundantLet               `let _ = x` inside a SwiftUI `body` is a statement; the bare `_ = x` it
+#                              rewrites to is an expression the ViewBuilder rejects (broke WeeklyView)
+--disable blankLinesAtStartOfScope,consecutiveSpaces,wrapIfStatementBodies,wrapPropertyBodies,wrapFunctionBodies,wrapLoopBodies,wrapIfExpressionBodies,wrapMultilineStatementBraces,docComments,hoistTry,hoistAwait,conditionalAssignment,preferKeyPath,opaqueGenericParameters,redundantPublic,redundantThrows,redundantAsync,redundantSwiftUIGroup,sortImports,noForceTryInTests,noForceUnwrapInTests,modifierOrder,redundantLet
+--exclude SundayScaries/Design/Fonts,DerivedData,.build

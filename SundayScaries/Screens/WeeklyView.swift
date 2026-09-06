@@ -120,7 +120,6 @@ struct WeeklyView: View {
                     scroll.fromRest = fromRest
                 }
 
-
                 topBar
             }
             .toolbar(.hidden, for: .navigationBar)
@@ -138,6 +137,7 @@ struct WeeklyView: View {
                     LeagueDetailView(
                         snapshot: snapshot,
                         model: model,
+                        selectedLeagueID: $selectedLeagueID,
                         onBack: { selectedLeagueID = nil },
                         onRefresh: { await model.refresh(leagueID: id) }
                     )
@@ -276,7 +276,7 @@ struct WeeklyView: View {
     /// is that the atmosphere and a single sentence do the work.
     private var hero: some View {
         VStack(alignment: .leading, spacing: SWSpacing.lg) {
-            if model.isLoading && model.snapshots.isEmpty {
+            if model.isLoading, model.snapshots.isEmpty {
                 HeroSkeleton()
             }
 
@@ -490,7 +490,7 @@ struct WeeklyView: View {
 
     @ViewBuilder
     private var leagues: some View {
-        if model.knownLeagues.isEmpty && model.isLoading {
+        if model.knownLeagues.isEmpty, model.isLoading {
             // Nothing is known yet, not even how many leagues there are.
             SWShimmer {
                 VStack(spacing: SWSpacing.lg) {

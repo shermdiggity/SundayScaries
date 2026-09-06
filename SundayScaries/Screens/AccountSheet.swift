@@ -30,13 +30,12 @@ struct AccountSheet: View {
         return hidden == 0 ? "\(total)" : "\(total - hidden) of \(total)"
     }
 
-
-
-
     var body: some View {
         NavigationStack {
             List {
+
                 // MARK: Connected
+
                 Section {
                     // Sleeper: a username, editable in place. It reads as a row about you
                     // — your handle, connected — not as a form field about a platform.
@@ -93,31 +92,31 @@ struct AccountSheet: View {
 
                     // Yahoo: the one official OAuth sign-in. Hidden until the API key exists.
                     if FeatureFlags.yahooEnabled {
-                    HStack(spacing: SWSpacing.md) {
-                        PlatformMark(platform: .yahoo, size: 26)
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text("Yahoo")
-                                .font(SWType.bodyMedium)
-                                .foregroundStyle(SWColor.primary)
-                            Text(signedInToYahoo ? "Signed in" : "Not connected")
-                                .font(SWType.caption)
-                                .foregroundStyle(SWColor.secondary)
-                        }
-                        Spacer()
-                        if signedInToYahoo {
-                            Button("Sign out", role: .destructive) {
-                                YahooCredentialStore.clear()
-                                signedInToYahoo = false
-                                didSignInThisSession = true
+                        HStack(spacing: SWSpacing.md) {
+                            PlatformMark(platform: .yahoo, size: 26)
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text("Yahoo")
+                                    .font(SWType.bodyMedium)
+                                    .foregroundStyle(SWColor.primary)
+                                Text(signedInToYahoo ? "Signed in" : "Not connected")
+                                    .font(SWType.caption)
+                                    .foregroundStyle(SWColor.secondary)
                             }
-                            .font(SWType.caption)
-                            .buttonStyle(.borderless)
-                        } else {
-                            Button("Sign in") { showingYahooLogin = true }
-                                .font(SWType.bodyMedium)
+                            Spacer()
+                            if signedInToYahoo {
+                                Button("Sign out", role: .destructive) {
+                                    YahooCredentialStore.clear()
+                                    signedInToYahoo = false
+                                    didSignInThisSession = true
+                                }
+                                .font(SWType.caption)
                                 .buttonStyle(.borderless)
+                            } else {
+                                Button("Sign in") { showingYahooLogin = true }
+                                    .font(SWType.bodyMedium)
+                                    .buttonStyle(.borderless)
+                            }
                         }
-                    }
                     }
 
                     // MyFantasyLeague: sign in, or name public leagues by id.
@@ -216,6 +215,7 @@ struct AccountSheet: View {
                 }
 
                 // MARK: Your week
+
                 Section {
                     Button {
                         showingLeagueEditor = true
@@ -255,6 +255,7 @@ struct AccountSheet: View {
                 }
 
                 // MARK: About
+
                 Section {
                     // Where the data comes from belongs here, at the bottom of a screen
                     // about the app — not under every week on the main screen.

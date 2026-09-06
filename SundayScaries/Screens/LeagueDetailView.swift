@@ -11,6 +11,13 @@ struct LeagueDetailView: View {
     let snapshot: LeagueSnapshot
     /// For the player sheet. Explicit, because the environment did not carry it here.
     let model: WeeklyModel
+    /// The weekly view's selection, so this screen knows the moment it stops being the
+    /// league on show. After the zoom transition's swipe-to-close, the popped screen
+    /// keeps receiving touches for a beat after it has visibly gone — a quick tap on
+    /// the weekly view landed on this screen's lineup and opened a player sheet from a
+    /// league that was already closed. Once the selection is no longer this league,
+    /// nothing here is hit-testable and nothing here may present.
+    @Binding var selectedLeagueID: String?
     var onBack: () -> Void = {}
     var onRefresh: () async -> Void = {}
 
@@ -22,9 +29,10 @@ struct LeagueDetailView: View {
     /// state re-rendered the whole screen on every frame of every scroll.
     @State private var isCollapsed = false
 
-
     private var palette: SkyPalette { Sky.palette() }
     private var week: Int { snapshot.week }
+    /// True only while this league is the one the weekly view has open.
+    private var isActive: Bool { selectedLeagueID == snapshot.id }
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -74,6 +82,9 @@ struct LeagueDetailView: View {
 
             topBar
         }
+        // A closed league takes no touches. The pop does not reliably remove this
+        // screen from hit-testing in the same frame it disappears; the selection does.
+        .allowsHitTesting(isActive)
         .toolbar(.hidden, for: .navigationBar)
         .sheet(item: $inspectedTeamID) { id in
             TeamSheet(snapshot: snapshot, teamID: id, model: model)
@@ -84,6 +95,17 @@ struct LeagueDetailView: View {
         .sheet(item: inspector.binding) { PlayerSheet(selection: $0, model: model) }
         .environment(\.playerInspector, inspector)
         .environment(\.contextLeagueID, snapshot.league.id)
+        .onChange(of: isActive, initial: true) { _, active in
+            inspector.isEnabled = active
+            guard !active else { return }
+            // Nothing presents from a screen that has been closed.
+            inspectedTeamID = nil
+            inspectedMatchup = nil
+            inspector.selection = nil
+            #if DEBUG
+            print("[detail] \(snapshot.league.name) closed: touches off, sheets cleared")
+            #endif
+        }
     }
 
     private var topBar: some View {
@@ -271,7 +293,6 @@ struct LeagueDetailView: View {
                 }
                 .accessibilityLabel("Open this league in \(snapshot.league.platform.displayName)")
             }
-
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -406,8 +427,8 @@ struct LeagueDetailView: View {
                     .monospacedDigit()
             } else if entry.isCurrent {
                 Text(entry.pair.hasKickedOff
-                     ? "\(entry.myScore.formatted(format)) – \(entry.theirScore.formatted(format))"
-                     : "This week")
+                    ? "\(entry.myScore.formatted(format)) – \(entry.theirScore.formatted(format))"
+                    : "This week")
                     .font(SWType.scoreCaption)
                     .foregroundStyle(SWColor.accent)
                     .monospacedDigit()
@@ -450,12 +471,12 @@ struct LeagueDetailView: View {
                             }
                             MatchupHeader(snapshot: snapshot, pair: pair)
                         }
-                            .padding(SWSpacing.md)
-                            .background(
-                                RoundedRectangle(cornerRadius: SWRadius.md, style: .continuous)
-                                    .fill(SWColor.primary.opacity(0.07))
-                            )
-                            .contentShape(RoundedRectangle(cornerRadius: SWRadius.md, style: .continuous))
+                        .padding(SWSpacing.md)
+                        .background(
+                            RoundedRectangle(cornerRadius: SWRadius.md, style: .continuous)
+                                .fill(SWColor.primary.opacity(0.07))
+                        )
+                        .contentShape(RoundedRectangle(cornerRadius: SWRadius.md, style: .continuous))
                     }
                     .buttonStyle(.plain)
                     .accessibilityHint("Shows both starting lineups")
@@ -532,8 +553,8 @@ struct LeagueDetailView: View {
                     .font(SWType.headline)
                     .foregroundStyle(SWColor.primary)
                 Text(isProjectedOnly
-                     ? "Nobody has scored yet, so this is week \(week) projections. Power points take over once games are played."
-                     : "Power points blend all-play win rate, points for and recent form.")
+                    ? "Nobody has scored yet, so this is week \(week) projections. Power points take over once games are played."
+                    : "Power points blend all-play win rate, points for and recent form.")
                     .font(SWType.caption)
                     .foregroundStyle(SWColor.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -565,8 +586,8 @@ struct LeagueDetailView: View {
 
                 if !isProjectedOnly, let analytics = snapshot.analytics {
                     Text(analytics.weights.disclosure
-                            .map { "\($0.label) \(Int($0.weight * 100))%" }
-                            .joined(separator: " · "))
+                        .map { "\($0.label) \(Int($0.weight * 100))%" }
+                        .joined(separator: " · "))
                         .font(SWType.micro)
                         .foregroundStyle(SWColor.tertiary)
                         .padding(.top, SWSpacing.sm)

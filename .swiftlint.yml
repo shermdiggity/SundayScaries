@@ -1,0 +1,104 @@
+# SwiftLint — SundayScaries (app, widget extension, and the Shared folder both link).
+#
+# The built-in default rule set is on. Below: the opt-in rules worth having, thresholds
+# tuned to this codebase, and custom rules that encode the design-system laws from
+# CLAUDE.md §6 / design-system.md §5 (no raw hex colours, no ad-hoc system font sizes,
+# no AsyncImage) so they fail lint instead of waiting for a reviewer.
+#
+# Mirrors ../FantasyKit/.swiftlint.yml rule for rule; only the paths and the
+# SwiftUI-specific additions differ.
+
+included:
+  - SundayScaries
+  - Shared
+  - SundayScariesWidgets
+excluded:
+  - SundayScaries/Design/Fonts
+  - DerivedData
+  - .build
+
+disabled_rules:
+  - trailing_comma
+
+opt_in_rules:
+  # CLAUDE.md §1: no `!` on optionals, no `try!`, no `as!`.
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  # Structured concurrency: a `Task { try … }` that drops its error is a silent failure.
+  - unhandled_throwing_task
+  # SwiftUI-specific.
+  - private_swiftui_state
+  - accessibility_label_for_image
+  - accessibility_trait_for_button
+  # Correctness and clarity.
+  - identical_operands
+  - yoda_condition
+  - legacy_multiple
+  - fatal_error_message
+  - redundant_nil_coalescing
+  - lower_acl_than_parent
+  # Idiomatic collection use.
+  - contains_over_filter_count
+  - contains_over_filter_is_empty
+  - contains_over_first_not_nil
+  - contains_over_range_nil_comparison
+  # empty_count is deliberately NOT enabled: its autocorrect rewrites `x.count == 0` to
+  # `x.isEmpty` without knowing whether the type has `isEmpty`. It broke the build on
+  # `RawProjections` and `Projections` (count, no isEmpty) on 2026-09-05.
+  - empty_collection_literal
+  - empty_string
+  - first_where
+  - last_where
+  - sorted_first_last
+  - flatmap_over_map_reduce
+  - reduce_into
+  - toggle_bool
+  # Whitespace and form.
+  - closure_spacing
+  - operator_usage_whitespace
+  - period_spacing
+  - vertical_whitespace_closing_braces
+  - unneeded_parentheses_in_closure_argument
+  - modifier_order
+  - explicit_init
+  - prefer_zero_over_explicit_init
+
+# Thresholds.
+line_length:
+  warning: 120
+  error: 200
+  ignores_comments: true
+  ignores_urls: true
+identifier_name:
+  # `id`, `dx`, `w` are legitimate names; the casing checks are what matter here.
+  min_length:
+    warning: 1
+  max_length:
+    warning: 50
+    error: 60
+nesting:
+  type_level:
+    warning: 2
+  function_level:
+    warning: 3
+# trailing_comma is disabled below: SwiftFormat (--commas always) owns trailing commas.
+# SwiftLint's mandatory_comma also demands one when the closing bracket shares the last
+# element's line (`"ten",]`), which SwiftFormat then removes; the two would ping-pong.
+# file_length, type_body_length, function_body_length, cyclomatic_complexity: defaults.
+
+custom_rules:
+  no_raw_hex_colour:
+    name: "No raw hex colours — use SWColor"
+    regex: 'Color\(hex'
+    severity: error
+    excluded_match_kinds: [comment, doccomment]
+  no_system_font_size:
+    name: "No .font(.system(size:)) — use SWType"
+    regex: '\.font\(\.system\(size'
+    severity: error
+    excluded_match_kinds: [comment, doccomment]
+  no_async_image:
+    name: "Images go through ImageCache / CachedImage, never AsyncImage"
+    regex: '\bAsyncImage\('
+    severity: error
+    excluded_match_kinds: [comment, doccomment]

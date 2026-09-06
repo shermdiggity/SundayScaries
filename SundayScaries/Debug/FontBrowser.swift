@@ -64,7 +64,7 @@ struct FontBrowser: View {
                         .font(.custom(headerFace, size: 26))
                         .foregroundStyle(SWColor.onSky)
                     Text("\(family.kind.rawValue) · \(family.faces.count) face\(family.faces.count == 1 ? "" : "s")"
-                         + (family.isBundled ? " · bundled" : ""))
+                        + (family.isBundled ? " · bundled" : ""))
                         .font(SWType.caption)
                         .foregroundStyle(SWColor.onSkySecondary)
                 }
@@ -90,8 +90,8 @@ struct FontBrowser: View {
                     applied = isApplied ? "" : family.name
                 } label: {
                     Text(isApplied ? "Applied — tap to clear"
-                         : FontCatalog.hasLatin(heroFace) ? "Use on the weekly view"
-                         : "Cannot be used — no Latin alphabet")
+                        : FontCatalog.hasLatin(heroFace) ? "Use on the weekly view"
+                        : "Cannot be used — no Latin alphabet")
                         .font(SWType.bodyMedium)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, SWSpacing.md)
@@ -150,8 +150,8 @@ struct FontBrowser: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(native
-                         ? "Latin metrics — nothing to correct"
-                         : "Non-Latin metrics — corrected above, toggle in the menu to compare")
+                        ? "Latin metrics — nothing to correct"
+                        : "Non-Latin metrics — corrected above, toggle in the menu to compare")
                         .font(SWType.caption)
                         .foregroundStyle(native ? SWColor.accent : SWColor.onSkySecondary)
                     Text(String(format: "baseline %.0f%% of line box (Latin ≈ 78%%) · line box %.2f em (Latin ≈ 1.2)",

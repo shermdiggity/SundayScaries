@@ -42,15 +42,13 @@ enum FontCatalog {
     static let bundledFamilies: Set<String> = ["EB Garamond"]
 
     /// Sorted so the faces we ship come first — they are the ones being judged against.
-    static let all: [Family] = {
-        UIFont.familyNames
-            .map { Family(name: $0, faces: UIFont.fontNames(forFamilyName: $0).sorted(), kind: kind(of: $0)) }
-            .filter { !$0.faces.isEmpty }
-            .sorted { a, b in
-                if a.isBundled != b.isBundled { return a.isBundled }
-                return a.name.localizedCaseInsensitiveCompare(b.name) == .orderedAscending
-            }
-    }()
+    static let all: [Family] = UIFont.familyNames
+        .map { Family(name: $0, faces: UIFont.fontNames(forFamilyName: $0).sorted(), kind: kind(of: $0)) }
+        .filter { !$0.faces.isEmpty }
+        .sorted { a, b in
+            if a.isBundled != b.isBundled { return a.isBundled }
+            return a.name.localizedCaseInsensitiveCompare(b.name) == .orderedAscending
+        }
 
     // MARK: Classification
 
@@ -90,17 +88,9 @@ enum FontCatalog {
                 s -= 100
             }
             if wantsBold {
-                if n.contains("semibold") || n.contains("demibold") { s += 60 }
-                else if n.contains("bold")                          { s += 80 }
-                else if n.contains("black") || n.contains("heavy")  { s += 40 }
-                else if n.contains("medium")                        { s += 30 }
-                else                                                { s += 10 }
+                if n.contains("semibold") || n.contains("demibold") { s += 60 } else if n.contains("bold") { s += 80 } else if n.contains("black") || n.contains("heavy") { s += 40 } else if n.contains("medium") { s += 30 } else { s += 10 }
             } else {
-                if n.contains("semibold") || n.contains("demibold") { s += 80 }
-                else if n.contains("medium")                        { s += 70 }
-                else if n.contains("bold")                          { s += 40 }
-                else if n.contains("light") || n.contains("thin")   { s += 5 }
-                else                                                { s += 50 }
+                if n.contains("semibold") || n.contains("demibold") { s += 80 } else if n.contains("medium") { s += 70 } else if n.contains("bold") { s += 40 } else if n.contains("light") || n.contains("thin") { s += 5 } else { s += 50 }
             }
             return s
         }

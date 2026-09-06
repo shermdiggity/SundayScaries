@@ -8,7 +8,7 @@ import FantasyCore
 /// noise. Only stale and failed are worth a person's attention.
 struct SyncBadge: View {
     let state: SyncState
-    var reference: Date = Date()
+    var reference: Date = .init()
 
     var body: some View {
         switch state {

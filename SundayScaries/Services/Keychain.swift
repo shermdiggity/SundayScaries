@@ -2,7 +2,11 @@ import Foundation
 import Security
 import FantasyProviders
 
-/// The keychain, for the only secrets this app holds: ESPN's session cookies.
+/// The keychain, for the only secrets this app holds: platform session credentials.
+///
+/// `nonisolated` (the app defaults to MainActor isolation): the Security calls are
+/// thread-safe and a provider hands a refreshed token back from a non-main context, so
+/// nothing here may be pinned to the main actor.
 ///
 /// Deliberately not `UserDefaults`. A cookie that reads a private league is a live
 /// credential — it is exactly as sensitive as the password that produced it, and
@@ -11,7 +15,7 @@ import FantasyProviders
 /// `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly` keeps the item off backups and off
 /// other devices, so a restored phone asks for a fresh sign-in rather than silently
 /// carrying someone's ESPN session onto new hardware.
-enum Keychain {
+nonisolated enum Keychain {
     static func set(_ value: String, for key: String) {
         let data = Data(value.utf8)
         var query = baseQuery(key)
@@ -46,7 +50,7 @@ enum Keychain {
 }
 
 /// Where ESPN's harvested cookies live between launches.
-enum ESPNCredentialStore {
+nonisolated enum ESPNCredentialStore {
     private static let swidKey = "espn.swid"
     private static let s2Key = "espn.s2"
 
@@ -68,32 +72,34 @@ enum ESPNCredentialStore {
     }
 }
 
-
 /// The MyFantasyLeague user cookie: a documented login token, good for the season. The
 /// password that produced it went to MFL once over HTTPS and was never kept.
-enum MFLCredentialStore {
+nonisolated enum MFLCredentialStore {
     private static let cookieKey = "mfl.userCookie"
 
     static var current: MFLCredentials? {
         guard let cookie = Keychain.string(for: cookieKey), !cookie.isEmpty else { return nil }
         return MFLCredentials(userCookie: cookie)
     }
+
     static func save(_ credentials: MFLCredentials) { Keychain.set(credentials.userCookie, for: cookieKey) }
     static func clear() { Keychain.remove(cookieKey) }
 }
 
 /// Yahoo's OAuth tokens plus the app's own client id and secret, as one keychain item.
 /// The provider refreshes the access token itself and hands the new set back here.
-enum YahooCredentialStore {
+nonisolated enum YahooCredentialStore {
     private static let key = "yahoo.credentials"
 
     static var current: YahooCredentials? {
         guard let json = Keychain.string(for: key), let data = json.data(using: .utf8) else { return nil }
         return try? JSONDecoder().decode(YahooCredentials.self, from: data)
     }
+
     static func save(_ credentials: YahooCredentials) {
         guard let data = try? JSONEncoder().encode(credentials), let json = String(data: data, encoding: .utf8) else { return }
         Keychain.set(json, for: key)
     }
+
     static func clear() { Keychain.remove(key) }
 }

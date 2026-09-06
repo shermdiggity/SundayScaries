@@ -172,7 +172,7 @@ private struct ESPNLoginWebView: UIViewRepresentable {
     /// there is nothing to grant and nothing to chase.
     private static let userAgent =
         "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 "
-        + "(KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1"
+            + "(KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1"
 
     func makeCoordinator() -> Coordinator { Coordinator(onStatus: onStatus, onCapture: onCapture) }
 
@@ -283,12 +283,12 @@ private struct ESPNLoginWebView: UIViewRepresentable {
                 let s2 = espn.first { $0.name == "espn_s2" }?.value
 
                 guard let swid, let s2, !swid.isEmpty, !s2.isEmpty else {
-                    self.reportChanges(Set(espn.map(\.name)))
+                    reportChanges(Set(espn.map(\.name)))
                     return
                 }
 
-                self.finished = true
-                self.log("captured both cookies")
+                finished = true
+                log("captured both cookies")
                 // The observer fires off the main actor; the UI update must not.
                 Task { @MainActor in
                     self.onCapture(ESPNCredentials(swid: swid, espnS2: s2))
@@ -309,7 +309,7 @@ private struct ESPNLoginWebView: UIViewRepresentable {
 
             let now = Date()
             guard let firstSeen else {
-                self.firstSeen = now
+                firstSeen = now
                 return
             }
             guard now.timeIntervalSince(firstSeen) > 60, !toldUserItFailed else { return }
@@ -332,7 +332,7 @@ private struct ESPNLoginWebView: UIViewRepresentable {
                     $0.displayName.contains("espn") || $0.displayName.contains("go.com")
                         || $0.displayName.contains("disney")
                 }
-                store.removeData(ofTypes: types, for: espn) { }
+                store.removeData(ofTypes: types, for: espn) {}
             }
         }
 

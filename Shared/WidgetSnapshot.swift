@@ -65,6 +65,7 @@ enum WidgetStore {
     static var container: URL? {
         FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: groupID)
     }
+
     static var snapshotURL: URL? { container?.appendingPathComponent("widget-snapshot.json") }
     static var headshotsDirectory: URL? { container?.appendingPathComponent("headshots", isDirectory: true) }
 
@@ -93,5 +94,6 @@ enum WidgetStore {
         components.path = "/\(id)"
         return components.url
     }
+
     static var homeURL: URL? { URL(string: "\(urlScheme)://home") }
 }

@@ -48,8 +48,7 @@ final class DebugDumpModel {
         // Anything outside a league's own block is genuinely fatal, so it stays in one
         // do/catch. Everything per-league is isolated below.
         let store: any SnapshotStore
-        do { store = try FileSnapshotStore.applicationSupport() }
-        catch { store = InMemorySnapshotStore(); line("cache: falling back to memory (\(error))") }
+        do { store = try FileSnapshotStore.applicationSupport() } catch { store = InMemorySnapshotStore(); line("cache: falling back to memory (\(error))") }
 
         // The crosswalk is downloaded and cached, not bundled — FantasyKit ships no
         // player data of its own. First run needs a network; after that it is local.
@@ -138,8 +137,7 @@ final class DebugDumpModel {
             var matchups: [Matchup] = []
             var weekErrors = 0
             for week in 1...(league.currentWeek ?? 1) {
-                do { matchups += try await provider.matchups(league: league, week: week) }
-                catch { weekErrors += 1 }
+                do { matchups += try await provider.matchups(league: league, week: week) } catch { weekErrors += 1 }
             }
             if weekErrors > 0 { line("  \(weekErrors) week(s) could not be loaded") }
 
@@ -270,6 +268,7 @@ private extension String {
     func padded(to width: Int) -> String {
         count >= width ? String(prefix(width)) : self + String(repeating: " ", count: width - count)
     }
+
     func leftPadded(to width: Int) -> String {
         count >= width ? String(suffix(width)) : String(repeating: " ", count: width - count) + self
     }

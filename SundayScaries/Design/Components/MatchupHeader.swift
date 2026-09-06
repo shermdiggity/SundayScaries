@@ -162,7 +162,6 @@ struct MatchupHeader: View {
             .prefix(3)
             .map(\.player)
     }
-
 }
 
 /// How far through the week each side is, above the matchup it qualifies.
@@ -192,7 +191,6 @@ struct ProgressRow: View {
         )
     }
 
-    @ViewBuilder
     private func side(_ progress: LineupProgress, alignment: HorizontalAlignment) -> some View {
         VStack(alignment: alignment, spacing: 1) {
             // The points are the headline here; the counts qualify them.
@@ -247,7 +245,7 @@ struct WinBar: View {
     var isLive: Bool = false
     /// Whose odds these are, when it is not obvious — "Shou Me The Money 62% to win".
     /// Nil in your own matchup, where "to win" already means you.
-    var subject: String? = nil
+    var subject: String?
 
     var body: some View {
         VStack(spacing: SWSpacing.xs) {

@@ -19,8 +19,8 @@ struct LeagueCard: View {
                 note("Couldn't refresh this league.", tone: SWColor.negative)
             case .undrafted:
                 note(snapshot.isPreDraftCarryover
-                     ? "Not drafted yet — last season's keepers"
-                     : "Not drafted yet", tone: SWColor.secondary)
+                    ? "Not drafted yet — last season's keepers"
+                    : "Not drafted yet", tone: SWColor.secondary)
             case .noTeam:
                 note("No team of yours in this league", tone: SWColor.tertiary)
             case .noMatchup:
@@ -182,8 +182,7 @@ struct PlatformMark: View {
     var body: some View {
         Group {
             if let url = SWColor.platformLogo(platform) {
-                CachedImage(url: url) { monogram }
-                    .aspectRatio(contentMode: .fit)
+                CachedImage(url: url) { monogram }.scaledToFit()
             } else {
                 monogram
             }

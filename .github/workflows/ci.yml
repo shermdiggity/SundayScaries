@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# The app depends on FantasyKit by LOCAL PATH (../FantasyKit, see project.pbxproj), so
+# both repos are checked out side by side under the workspace and the relative path
+# resolves exactly as it does on a developer's Mac. FANTASYKIT_REPO must name the
+# FantasyKit repository; if it is private, FANTASYKIT_TOKEN needs a token that can read it.
+env:
+  FANTASYKIT_REPO: ${{ github.repository_owner }}/FantasyKit
+
+jobs:
+  build:
+    name: Build (iOS Simulator)
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: SundayScaries
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ env.FANTASYKIT_REPO }}
+          token: ${{ secrets.FANTASYKIT_TOKEN || github.token }}
+          path: FantasyKit
+
+      - name: Show toolchain
+        run: xcodebuild -version && swift --version
+
+      # Schemes are not shared in the project; `-list` makes Xcode autocreate them.
+      - name: Resolve schemes and packages
+        working-directory: SundayScaries
+        run: xcodebuild -list -project SundayScaries.xcodeproj
+
+      - name: Build
+        working-directory: SundayScaries
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project SundayScaries.xcodeproj \
+            -scheme SundayScaries \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            | tee build.log | grep -E 'error:|warning:|BUILD (SUCCEEDED|FAILED)' || true
+          grep -q 'BUILD SUCCEEDED' build.log
+
+      # No test step: the project has no test target (Pass-1 inventory). Add one and
+      # replace this comment with `xcodebuild test -scheme SundayScaries -destination
+      # 'platform=iOS Simulator,name=iPhone 16 Pro'`.
+
+  lint:
+    name: Lint
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install linters
+        run: |
+          brew list swiftlint >/dev/null 2>&1 || brew install swiftlint
+          brew list swiftformat >/dev/null 2>&1 || brew install swiftformat
+          swiftlint version && swiftformat --version
+      - name: SwiftLint
+        run: swiftlint lint --strict --reporter github-actions-logging
+      - name: SwiftFormat (lint only)
+        run: swiftformat --lint .

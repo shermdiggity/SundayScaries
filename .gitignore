@@ -1,0 +1,12 @@
+# Created 2026-09-05 (verification-harness sweep). Until now this repo ignored nothing
+# except two entries in .git/info/exclude, which does not travel with a clone.
+.DS_Store
+xcuserdata/
+*.xcuserstate
+*.xcuserdatad
+DerivedData/
+.build/
+.swiftpm/
+*.swp
+*.profraw
+*.profdata

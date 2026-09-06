@@ -263,6 +263,7 @@ final class WeeklyModel {
         let kind: ScoringKind
         var id: String { leagueID }
     }
+
     private(set) var scoringOptions: [ScoringOption] = []
     /// What the picker shows. A league you have put away is not one you want to score by.
     var visibleScoringOptions: [ScoringOption] {
@@ -405,6 +406,7 @@ final class WeeklyModel {
         get { UserDefaults.standard.string(forKey: Self.mflLeaguesKey) ?? "" }
         set { UserDefaults.standard.set(newValue, forKey: Self.mflLeaguesKey) }
     }
+
     var isSignedInToMFL: Bool { MFLCredentialStore.current != nil }
     var hasMFL: Bool { !ESPNProvider.leagueIDs(from: mflLeagueIDs).isEmpty || isSignedInToMFL }
 
@@ -413,6 +415,7 @@ final class WeeklyModel {
         get { UserDefaults.standard.string(forKey: Self.fleaflickerKey) ?? "" }
         set { UserDefaults.standard.set(newValue, forKey: Self.fleaflickerKey) }
     }
+
     var hasFleaflicker: Bool { !fleaflickerHandle.trimmingCharacters(in: .whitespaces).isEmpty }
 
     var hasYahoo: Bool { FeatureFlags.yahooEnabled && YahooCredentialStore.current != nil }
@@ -427,6 +430,7 @@ final class WeeklyModel {
         default:               ""
         }
     }
+
     /// Signing in is enough on its own: with no ids typed, the provider asks ESPN which
     /// leagues this account plays in. Requiring an id here meant signing in did nothing
     /// at all, which is how this first went wrong.
@@ -514,6 +518,7 @@ final class WeeklyModel {
         }
         return nil
     }
+
     var counterExposed: [PlayerPosition] { Portfolio.counterExposed(positions) }
 
     // MARK: A player's season
@@ -825,10 +830,10 @@ final class WeeklyModel {
         for await (league, outcome) in outcomes {
             let resolved: LeagueSnapshot
             switch outcome {
-            case .success(let snapshot):
+            case let .success(snapshot):
                 resolved = snapshot.0
                 if let rosters = snapshot.1 { portfolioInput.append(rosters) }
-            case .failure(let error):
+            case let .failure(error):
                 // A refresh that fails keeps what was on screen. Last known good beats a
                 // failure card, especially mid-game.
                 if quiet, let existing = allSnapshots.first(where: { $0.id == league.id }) {
@@ -896,7 +901,6 @@ final class WeeklyModel {
         await WidgetBridge.publish(from: self)
     }
 
-
     /// Everything a load needs to talk to the platforms, built fresh for one load so the
     /// fetch mode is fixed for its whole duration. Shared by the full load and the
     /// single-league refresh so the two can never drift apart.
@@ -928,7 +932,7 @@ final class WeeklyModel {
         )
         self.statsStore = statsStore
         self.projectionStore = projectionStore
-        self.loadedSeason = resolvedSeason
+        loadedSeason = resolvedSeason
 
         let sleeperProvider = SleeperProvider(
             http: http, store: store,

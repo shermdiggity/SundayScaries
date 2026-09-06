@@ -19,9 +19,21 @@ final class PlayerInspector {
     }
 
     var selection: Selection?
+    /// False once the screen that owns this inspector has been closed. A league detail
+    /// popped by the zoom transition's swipe stays hit-testable for a beat after it has
+    /// visibly gone, so a quick tap on the weekly view landed on the dead detail and
+    /// opened a player from it. Its owner turns this off the moment it stops being the
+    /// selected league; `open` is then a no-op.
+    var isEnabled = true
 
     func open(_ player: PlayerRef, in leagueID: String?) {
         guard !player.isEmptyLineupSlot else { return }
+        guard isEnabled else {
+            #if DEBUG
+            print("[detail] ignored a tap on \(player.name): its screen is closed")
+            #endif
+            return
+        }
         selection = Selection(player: player, leagueID: leagueID)
     }
 

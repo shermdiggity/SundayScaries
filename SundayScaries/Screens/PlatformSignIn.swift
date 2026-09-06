@@ -166,8 +166,8 @@ struct YahooSignInView: View {
                     Text("Sign in")
                 } footer: {
                     Text(openedYahoo
-                         ? "After you sign in, Yahoo shows a short code. Type it above."
-                         : "Sign in on Yahoo's own page. Yahoo shows a short code afterwards; type it above.")
+                        ? "After you sign in, Yahoo shows a short code. Type it above."
+                        : "Sign in on Yahoo's own page. Yahoo shows a short code afterwards; type it above.")
                 }
             }
             .navigationTitle("Yahoo")

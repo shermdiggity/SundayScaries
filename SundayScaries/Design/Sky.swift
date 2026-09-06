@@ -30,15 +30,15 @@ enum Sky {
     /// Anchors through the day, interpolated between so the sky drifts rather than
     /// snapping between states.
     private static let anchors: [(hour: Double, palette: SkyPalette)] = [
-        (0,  SkyPalette(sky: .hex(0x080B16), cloud: .hex(0x4A5273), warmTint: .hex(0x140C06), warmth: 0.40, coverage:  0.04, scrim: 0.12)),
-        (5,  SkyPalette(sky: .hex(0x1B2145), cloud: .hex(0x7E6A85), warmTint: .hex(0x3A1C10), warmth: 0.90, coverage:  0.03, scrim: 0.36)),
-        (7,  SkyPalette(sky: .hex(0x4A4463), cloud: .hex(0xE0A98A), warmTint: .hex(0x6B2E14), warmth: 1.10, coverage:  0.05, scrim: 0.58)),
-        (10, SkyPalette(sky: .hex(0x5A86B8), cloud: .hex(0xEDF1F7), warmTint: .hex(0x241608), warmth: 0.25, coverage:  0.02, scrim: 0.72)),
-        (13, SkyPalette(sky: .hex(0x4E8FD0), cloud: .hex(0xFFFFFF), warmTint: .hex(0x1A1206), warmth: 0.15, coverage:  0.00, scrim: 0.78)),
-        (17, SkyPalette(sky: .hex(0x7A7196), cloud: .hex(0xF2C48C), warmTint: .hex(0x7A3A12), warmth: 1.00, coverage:  0.06, scrim: 0.66)),
-        (19, SkyPalette(sky: .hex(0x3B3358), cloud: .hex(0xC98A72), warmTint: .hex(0x5E2410), warmth: 1.00, coverage:  0.04, scrim: 0.46)),
-        (21, SkyPalette(sky: .hex(0x121630), cloud: .hex(0x5A5F84), warmTint: .hex(0x22110A), warmth: 0.55, coverage:  0.03, scrim: 0.18)),
-        (24, SkyPalette(sky: .hex(0x080B16), cloud: .hex(0x4A5273), warmTint: .hex(0x140C06), warmth: 0.40, coverage:  0.04, scrim: 0.12)),
+        (0, SkyPalette(sky: .hex(0x080B16), cloud: .hex(0x4A5273), warmTint: .hex(0x140C06), warmth: 0.40, coverage: 0.04, scrim: 0.12)),
+        (5, SkyPalette(sky: .hex(0x1B2145), cloud: .hex(0x7E6A85), warmTint: .hex(0x3A1C10), warmth: 0.90, coverage: 0.03, scrim: 0.36)),
+        (7, SkyPalette(sky: .hex(0x4A4463), cloud: .hex(0xE0A98A), warmTint: .hex(0x6B2E14), warmth: 1.10, coverage: 0.05, scrim: 0.58)),
+        (10, SkyPalette(sky: .hex(0x5A86B8), cloud: .hex(0xEDF1F7), warmTint: .hex(0x241608), warmth: 0.25, coverage: 0.02, scrim: 0.72)),
+        (13, SkyPalette(sky: .hex(0x4E8FD0), cloud: .hex(0xFFFFFF), warmTint: .hex(0x1A1206), warmth: 0.15, coverage: 0.00, scrim: 0.78)),
+        (17, SkyPalette(sky: .hex(0x7A7196), cloud: .hex(0xF2C48C), warmTint: .hex(0x7A3A12), warmth: 1.00, coverage: 0.06, scrim: 0.66)),
+        (19, SkyPalette(sky: .hex(0x3B3358), cloud: .hex(0xC98A72), warmTint: .hex(0x5E2410), warmth: 1.00, coverage: 0.04, scrim: 0.46)),
+        (21, SkyPalette(sky: .hex(0x121630), cloud: .hex(0x5A5F84), warmTint: .hex(0x22110A), warmth: 0.55, coverage: 0.03, scrim: 0.18)),
+        (24, SkyPalette(sky: .hex(0x080B16), cloud: .hex(0x4A5273), warmTint: .hex(0x140C06), warmth: 0.40, coverage: 0.04, scrim: 0.12)),
     ]
 
     static func palette(at date: Date = Date(), calendar: Calendar = .current) -> SkyPalette {
@@ -48,7 +48,7 @@ enum Sky {
         for index in 0..<(anchors.count - 1) {
             let lower = anchors[index]
             let upper = anchors[index + 1]
-            if hour >= lower.hour && hour <= upper.hour {
+            if hour >= lower.hour, hour <= upper.hour {
                 let span = upper.hour - lower.hour
                 let t = span > 0 ? (hour - lower.hour) / span : 0
                 return .lerp(lower.palette, upper.palette, t)

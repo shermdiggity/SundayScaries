@@ -49,8 +49,7 @@ struct WidgetHeadshot: View {
             Circle().fill(SWColor.surfaceRaised)
             if let image {
                 Image(uiImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
+                    .resizable().scaledToFill()
             } else {
                 Text(initials)
                     .font(SWType.initials(size * 0.38))

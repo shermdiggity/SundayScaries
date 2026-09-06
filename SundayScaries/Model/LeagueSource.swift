@@ -40,9 +40,11 @@ struct SleeperSource: LeagueSource {
     func matchups(league: League, week: Int) async throws -> [Matchup] {
         try await provider.matchups(league: league, week: week)
     }
+
     func rosters(in league: League, week: Int) async throws -> [Roster] {
         try await provider.rosters(in: league, week: week)
     }
+
     func currentWeek() async -> Int? { try? await provider.currentWeek() }
     func scoringRules(for league: League) async -> ScoringRuleSet? {
         await provider.scoringRules(for: league).map(ScoringRuleSet.sleeper)
@@ -71,6 +73,7 @@ struct ESPNSource: LeagueSource {
     func matchups(league: League, week: Int) async throws -> [Matchup] {
         try await provider.matchups(league: league, week: week)
     }
+
     func rosters(in league: League, week: Int) async throws -> [Roster] {
         try await provider.rosters(in: league, week: week)
     }
@@ -86,7 +89,6 @@ struct ESPNSource: LeagueSource {
     }
 }
 
-
 // MARK: - MyFantasyLeague
 
 struct MFLSource: LeagueSource {
@@ -99,9 +101,11 @@ struct MFLSource: LeagueSource {
     func matchups(league: League, week: Int) async throws -> [Matchup] {
         try await provider.matchups(league: league, week: week)
     }
+
     func rosters(in league: League, week: Int) async throws -> [Roster] {
         try await provider.rosters(in: league, week: week)
     }
+
     func scoringRules(for league: League) async -> ScoringRuleSet? { nil }
 
     /// MFL publishes one projection per player under the league's own scoring.
@@ -122,9 +126,11 @@ struct FleaflickerSource: LeagueSource {
     func matchups(league: League, week: Int) async throws -> [Matchup] {
         try await provider.matchups(league: league, week: week)
     }
+
     func rosters(in league: League, week: Int) async throws -> [Roster] {
         try await provider.rosters(in: league, week: week)
     }
+
     func scoringRules(for league: League) async -> ScoringRuleSet? { nil }
     /// Fleaflicker's public API carries actual points but no projections; the lineup
     /// check and progress still work from the schedule.
@@ -143,9 +149,11 @@ struct YahooSource: LeagueSource {
     func matchups(league: League, week: Int) async throws -> [Matchup] {
         try await provider.matchups(league: league, week: week)
     }
+
     func rosters(in league: League, week: Int) async throws -> [Roster] {
         try await provider.rosters(in: league, week: week)
     }
+
     func scoringRules(for league: League) async -> ScoringRuleSet? { nil }
     /// Per-player projections ride on the roster (`projectedPoints`); a league total is
     /// not derived here.

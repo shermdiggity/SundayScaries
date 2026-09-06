@@ -142,7 +142,7 @@ struct PlayerFoilCard: View {
     private var leagueLines: [String] {
         func label(_ involvement: LeagueInvolvement) -> String {
             isAgainst ? "vs. " + (involvement.opponentName ?? involvement.leagueName)
-                      : involvement.leagueName
+                : involvement.leagueName
         }
         switch involvements.count {
         case 0:    return ["", ""]
