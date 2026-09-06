@@ -15,7 +15,7 @@ struct PlatformMonogram: View {
                     // Scales with the mark, so the size is geometry rather than a
                     // step on the type scale.
                     .font(SWType.mark(size * 0.6))
-                    .foregroundStyle(SWColor.canvas)
+                    .foregroundStyle(SWColor.onPlatform(platform))
             }
     }
 }

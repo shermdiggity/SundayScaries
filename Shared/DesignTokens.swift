@@ -21,7 +21,8 @@ enum SWColor {
     // Content.
     static let primary   = Color(red: 0.976, green: 0.969, blue: 0.957)
     static let secondary = Color(red: 0.976, green: 0.969, blue: 0.957).opacity(0.68)
-    static let tertiary  = Color(red: 0.976, green: 0.969, blue: 0.957).opacity(0.42)
+    /// 50% clears WCAG AA (4.9 on the raised surface); 42% did not.
+    static let tertiary  = Color(red: 0.976, green: 0.969, blue: 0.957).opacity(0.50)
 
     /// Content sitting directly on the sky, which can be bright at midday. Always
     /// paired with `Sky.scrim` so the contrast holds in every state.
@@ -36,7 +37,7 @@ enum SWColor {
     static let launch = Color("LaunchBackground")
     static let negative = Color(red: 0.965, green: 0.427, blue: 0.408)
     static let warning  = Color(red: 1.000, green: 0.761, blue: 0.290)
-    static let neutral  = Color(red: 0.976, green: 0.969, blue: 0.957).opacity(0.42)
+    static let neutral  = Color(red: 0.976, green: 0.969, blue: 0.957).opacity(0.50)
 
     /// A game in progress.
     static let live = Color(red: 0.937, green: 0.616, blue: 0.286)
@@ -55,6 +56,15 @@ enum SWColor {
         case .myFantasyLeague:  Color(red: 0.20, green: 0.45, blue: 0.75)
         case .fleaflicker:      Color(red: 0.25, green: 0.60, blue: 0.35)
         case .cbs:              Color(red: 0.10, green: 0.40, blue: 0.80)
+        }
+    }
+
+    /// The ink for a letter set on a platform's own colour: whichever of the app's two
+    /// inks clears it. Canvas on Yahoo purple was 2.9 to 1.
+    static func onPlatform(_ platform: Platform) -> Color {
+        switch platform {
+        case .sleeper, .fleaflicker:            canvas
+        case .yahoo, .espn, .myFantasyLeague, .cbs: primary
         }
     }
 
