@@ -93,6 +93,7 @@ struct LeagueEditor: View {
                     .font(SWType.icon)
                     .foregroundStyle(hidden ? SWColor.tertiary : SWColor.accent)
             }
+            .accessibilityLabel(hidden ? Text("Show \(league.name)") : Text("Hide \(league.name)"))
             // Without this the row's drag handle swallows the tap.
             .buttonStyle(.borderless)
         }

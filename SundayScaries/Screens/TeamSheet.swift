@@ -24,6 +24,7 @@ struct TeamSheet: View {
                         Text("Starters")
                             .font(SWType.headline)
                             .foregroundStyle(SWColor.primary)
+                            .accessibilityAddTraits(.isHeader)
                         ForEach(Array(roster.starters.enumerated()), id: \.offset) { _, slot in
                             PlayerRow(slot: slot, in: snapshot, week: roster.week)
                         }

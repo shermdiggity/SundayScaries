@@ -80,8 +80,10 @@ struct LeagueCard: View {
                 if let team = snapshot.myTeam {
                     HStack(spacing: SWSpacing.xs) {
                         Text(team.record.summary)
+                            .accessibilityLabel(Text("Record \(team.record.summary)"))
                         if let standing = snapshot.standing {
                             Text(Self.ordinal(standing)).foregroundStyle(accent)
+                                .accessibilityLabel(Text("\(Self.ordinal(standing)) place"))
                         }
                     }
                     .font(SWType.scoreCaption)
@@ -209,6 +211,7 @@ struct LineupCheck: View {
         .padding(.horizontal, 6)
         .padding(.vertical, 4)
         .background(Capsule().fill(isSet ? SWColor.positive : SWColor.warning))
+        .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(isSet ? "Lineup set" : "\(issueCount) lineup problems"))
     }
 }

@@ -79,6 +79,7 @@ struct PlayerSheet: View {
                 Text(player.name)
                     .font(SWType.title)
                     .foregroundStyle(SWColor.primary)
+                    .accessibilityAddTraits(.isHeader)
                     .lineLimit(2)
                 HStack(spacing: SWSpacing.xs) {
                     Text(player.position.rawValue).foregroundStyle(SWColor.position(player.position))
@@ -127,6 +128,7 @@ struct PlayerSheet: View {
                         Image(systemName: "chevron.up.chevron.down")
                             .font(SWType.glyph)
                             .foregroundStyle(SWColor.secondary)
+                            .accessibilityHidden(true)
                     }
                     .padding(.horizontal, SWSpacing.md)
                     .padding(.vertical, SWSpacing.sm)
@@ -191,6 +193,7 @@ struct PlayerSheet: View {
                 Text("Season")
                     .font(SWType.headline)
                     .foregroundStyle(SWColor.primary)
+                    .accessibilityAddTraits(.isHeader)
                 Spacer()
                 // The whole rule for estimates, in one line, shown only when it applies.
                 if season.hasApproximations {

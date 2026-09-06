@@ -104,6 +104,7 @@ struct ESPNLoginView: View {
                         Button("Paste cookies instead") { showingManual = true }
                     } label: {
                         Image(systemName: "ellipsis.circle")
+                            .accessibilityLabel("More options")
                     }
                 }
             }

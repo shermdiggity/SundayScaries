@@ -49,6 +49,7 @@ struct MatchupSheet: View {
                             .font(SWType.micro)
                             .foregroundStyle(SWColor.tertiary)
                             .lineLimit(1)
+                            .accessibilityElement(children: .combine)
 
                             LineupFaceoff(snapshot: snapshot, mine: left, theirs: pair.rightRoster)
                         }

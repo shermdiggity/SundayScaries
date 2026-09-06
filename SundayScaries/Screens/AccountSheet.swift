@@ -55,6 +55,7 @@ struct AccountSheet: View {
                             }
                             .font(SWType.caption)
                             .buttonStyle(.borderless)
+                            .accessibilityLabel("Disconnect Sleeper")
                         }
                     }
 
@@ -69,10 +70,12 @@ struct AccountSheet: View {
                             }
                             .font(SWType.caption)
                             .buttonStyle(.borderless)
+                            .accessibilityLabel("Sign out of ESPN")
                         } else {
                             Button("Sign in") { showingESPNLogin = true }
                                 .font(SWType.bodyMedium)
                                 .buttonStyle(.borderless)
+                                .accessibilityLabel("Sign in to ESPN")
                         }
                     }
 
@@ -89,10 +92,12 @@ struct AccountSheet: View {
                                 }
                                 .font(SWType.caption)
                                 .buttonStyle(.borderless)
+                                .accessibilityLabel("Sign out of Yahoo")
                             } else {
                                 Button("Sign in") { showingYahooLogin = true }
                                     .font(SWType.bodyMedium)
                                     .buttonStyle(.borderless)
+                                    .accessibilityLabel("Sign in to Yahoo")
                             }
                         }
                     }
@@ -109,10 +114,12 @@ struct AccountSheet: View {
                             }
                             .font(SWType.caption)
                             .buttonStyle(.borderless)
+                            .accessibilityLabel("Sign out of MyFantasyLeague")
                         } else {
                             Button(mflLeagues.isEmpty ? "Connect" : "Sign in") { showingMFLConnect = true }
                                 .font(SWType.bodyMedium)
                                 .buttonStyle(.borderless)
+                                .accessibilityLabel("Sign in to MyFantasyLeague")
                         }
                     }
                     if !mflLeagues.isEmpty || signedInToMFL {
@@ -151,6 +158,7 @@ struct AccountSheet: View {
                             }
                             .font(SWType.caption)
                             .buttonStyle(.borderless)
+                            .accessibilityLabel("Disconnect Fleaflicker")
                         }
                     }
 
@@ -195,6 +203,7 @@ struct AccountSheet: View {
                             Image(systemName: "chevron.right")
                                 .font(SWType.glyph)
                                 .foregroundStyle(SWColor.tertiary)
+                                .accessibilityHidden(true)
                         }
                     }
                     .disabled(model.allLeagues.isEmpty)

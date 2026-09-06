@@ -257,7 +257,7 @@ struct WeeklyView: View {
                 // platform has flipped and another has not, this is what keeps every
                 // card describing the same seven days.
                 HStack(spacing: SWSpacing.sm) {
-                    weekStep(systemImage: "chevron.left", enabled: model.canStepBack) {
+                    weekStep(systemImage: "chevron.left", label: "Previous week", enabled: model.canStepBack) {
                         Task { await model.show(week: week - 1) }
                     }
                     Text("Week \(week)")
@@ -265,11 +265,12 @@ struct WeeklyView: View {
                         .foregroundStyle(SWColor.onSkySecondary)
                         .monospacedDigit()
                         .contentTransition(.numericText())
-                    weekStep(systemImage: "chevron.right", enabled: model.canStepForward) {
+                    weekStep(systemImage: "chevron.right", label: "Next week", enabled: model.canStepForward) {
                         Task { await model.show(week: week + 1) }
                     }
                     if !model.isOnLiveWeek {
                         Button("Now") { Task { await model.show(week: nil) } }
+                            .accessibilityLabel("Back to the current week")
                             .font(SWType.caption)
                             .foregroundStyle(SWColor.onSky)
                             .buttonStyle(.plain)
@@ -283,6 +284,7 @@ struct WeeklyView: View {
                 Text(quietHeadline)
                     .swVoice(SWType.displayFace)
                     .foregroundStyle(SWColor.onSky)
+                    .accessibilityAddTraits(.isHeader)
                     .shadow(color: .black.opacity(0.35), radius: 6, y: 1)
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
@@ -419,6 +421,7 @@ struct WeeklyView: View {
                 Image(systemName: "chevron.right")
                     .font(SWType.glyph)
                     .foregroundStyle(SWColor.tertiary)
+                    .accessibilityHidden(true)
             }
             .padding(SWSpacing.lg)
             .leagueSurface(platform)
@@ -441,7 +444,7 @@ struct WeeklyView: View {
         Task { await connect() }
     }
 
-    private func weekStep(systemImage: String, enabled: Bool, action: @escaping () -> Void) -> some View {
+    private func weekStep(systemImage: String, label: LocalizedStringKey, enabled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: systemImage)
                 .font(SWType.glyph)
@@ -451,6 +454,7 @@ struct WeeklyView: View {
         }
         .buttonStyle(.plain)
         .disabled(!enabled)
+        .accessibilityLabel(label)
     }
 
     /// The header answers one question and one only: are my lineups set?
@@ -525,7 +529,7 @@ struct WeeklyView: View {
                 showingLeagueEditor = true
             } label: {
                 HStack(spacing: SWSpacing.xs) {
-                    Image(systemName: "slider.horizontal.3").font(SWType.micro)
+                    Image(systemName: "slider.horizontal.3").font(SWType.micro).accessibilityHidden(true)
                     Text("Edit leagues")
                     if hidden > 0 {
                         Text("·").foregroundStyle(SWColor.onSkySecondary.opacity(0.6))
@@ -572,6 +576,7 @@ struct WeeklyView: View {
                     .swVoice(SWType.sectionHeaderFace)
                     // On the sky, like the hero — not the card text colour.
                     .foregroundStyle(SWColor.onSky)
+                    .accessibilityAddTraits(.isHeader)
 
                 ForEach(withOutlook) { snapshot in
                     SeasonOutlookRow(snapshot: snapshot)

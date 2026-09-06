@@ -95,6 +95,7 @@ struct StatusBlock: View {
                     .font(SWType.icon)
                     .foregroundStyle(tint)
                     .frame(width: 24, height: 24)
+                    .accessibilityHidden(true)
                 Text("Week \(snapshot.week)")
                     .font(SWType.caption)
                     .foregroundStyle(SWColor.secondary)
@@ -119,6 +120,7 @@ struct StatusBlock: View {
                                 Image(systemName: "checkmark")
                                     .font(SWType.glyph)
                                     .foregroundStyle(SWColor.positive)
+                                    .accessibilityLabel("Lineup set")
                             } else {
                                 Text("\(league.issueCount) to fix")
                                     .font(SWType.scoreMicro)
@@ -177,6 +179,7 @@ struct ScoreboardRow: View {
                 }
             }
         }
+        .accessibilityElement(children: .combine)
     }
 }
 

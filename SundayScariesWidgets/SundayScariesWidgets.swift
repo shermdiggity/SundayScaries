@@ -67,8 +67,10 @@ private struct LineupStatusView: View {
                 AccessoryWidgetBackground()
                 if entry.isEmpty {
                     Image(systemName: "football")
+                        .accessibilityLabel("Open the app")
                 } else if pending == 0 {
                     Image(systemName: "checkmark").font(SWType.icon)
+                        .accessibilityLabel("Every lineup is set")
                 } else {
                     Text("\(pending)").font(SWType.scoreLarge)
                 }

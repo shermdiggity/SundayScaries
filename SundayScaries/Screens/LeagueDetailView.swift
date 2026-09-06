@@ -238,6 +238,7 @@ struct LeagueDetailView: View {
                 Text(snapshot.league.name)
                     .font(SWType.title)
                     .foregroundStyle(SWColor.primary)
+                    .accessibilityAddTraits(.isHeader)
                     .lineLimit(2)
                 Spacer(minLength: SWSpacing.sm)
                 if snapshot.league.status.hasDrafted, snapshot.myTeam != nil {
@@ -316,6 +317,7 @@ struct LeagueDetailView: View {
                 .font(SWType.micro)
                 .foregroundStyle(SWColor.tertiary)
                 .lineLimit(1)
+                .accessibilityElement(children: .combine)
 
                 LineupFaceoff(snapshot: snapshot, mine: mine, theirs: snapshot.opponentRoster)
 
@@ -350,6 +352,7 @@ struct LeagueDetailView: View {
                     Text("Your season")
                         .font(SWType.headline)
                         .foregroundStyle(SWColor.primary)
+                        .accessibilityAddTraits(.isHeader)
                     Spacer()
                     if let team = snapshot.myTeam {
                         Text(team.record.summary)
@@ -415,6 +418,7 @@ struct LeagueDetailView: View {
                 Image(systemName: "chevron.right")
                     .font(SWType.glyph)
                     .foregroundStyle(SWColor.tertiary)
+                    .accessibilityHidden(true)
             }
         }
         .padding(.vertical, SWSpacing.sm)
@@ -434,6 +438,7 @@ struct LeagueDetailView: View {
                 Text("Around the league")
                     .font(SWType.headline)
                     .foregroundStyle(SWColor.primary)
+                    .accessibilityAddTraits(.isHeader)
 
                 ForEach(others) { pair in
                     Button {
@@ -531,6 +536,7 @@ struct LeagueDetailView: View {
                 Text(isProjectedOnly ? "Projected ranking" : "Power ranking")
                     .font(SWType.headline)
                     .foregroundStyle(SWColor.primary)
+                    .accessibilityAddTraits(.isHeader)
                 Text(isProjectedOnly
                     ? "Nobody has scored yet, so this is week \(week) projections. Power points take over once games are played."
                     : "Power points blend all-play win rate, points for and recent form.")
@@ -613,6 +619,7 @@ struct LeagueDetailView: View {
             Image(systemName: "chevron.right")
                 .font(SWType.glyph)
                 .foregroundStyle(SWColor.tertiary)
+                .accessibilityHidden(true)
         }
         .padding(.vertical, SWSpacing.sm)
         .contentShape(.rect)
