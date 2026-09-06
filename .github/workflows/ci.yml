@@ -10,37 +10,23 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# The app depends on FantasyKit by LOCAL PATH (../FantasyKit, see project.pbxproj), so
-# both repos are checked out side by side under the workspace and the relative path
-# resolves exactly as it does on a developer's Mac. FANTASYKIT_REPO must name the
-# FantasyKit repository; if it is private, FANTASYKIT_TOKEN needs a token that can read it.
-env:
-  FANTASYKIT_REPO: ${{ github.repository_owner }}/FantasyKit
-
+# FantasyKit is a Swift package resolved from GitHub at the version pinned in
+# Package.resolved, so this checkout is all the build needs.
 jobs:
   build:
     name: Build (iOS Simulator)
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
-        with:
-          path: SundayScaries
-      - uses: actions/checkout@v4
-        with:
-          repository: ${{ env.FANTASYKIT_REPO }}
-          token: ${{ secrets.FANTASYKIT_TOKEN || github.token }}
-          path: FantasyKit
 
       - name: Show toolchain
         run: xcodebuild -version && swift --version
 
       # Schemes are not shared in the project; `-list` makes Xcode autocreate them.
       - name: Resolve schemes and packages
-        working-directory: SundayScaries
         run: xcodebuild -list -project SundayScaries.xcodeproj
 
       - name: Build
-        working-directory: SundayScaries
         run: |
           set -o pipefail
           xcodebuild build \
