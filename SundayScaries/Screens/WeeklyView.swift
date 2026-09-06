@@ -7,7 +7,7 @@ import FantasyCore
 /// leagues you can still do something about, then the portfolio, then the retrospective.
 struct WeeklyView: View {
     @State private var model = WeeklyModel()
-    @State private var inspector = PlayerInspector()
+    @State private var inspector = PlayerInspector(owner: "weekly")
     /// False for the first frame only. The launch screen is the flat `SWColor.launch`;
     /// the sky fades in over it, so launch and first frame are one continuous motion.
     /// The TYPE is never part of this — it is on screen from frame one.
@@ -31,6 +31,9 @@ struct WeeklyView: View {
     @State private var showingAccount = false
     @State private var showingLeagueEditor = false
     @State private var selectedLeagueID: String?
+    #if DEBUG
+    @State private var debugDestinationOpened = false
+    #endif
     /// Which card is the zoom transition's source RIGHT NOW. Set on tap, kept through
     /// the push and the whole pop animation, then retired.
     ///
@@ -203,7 +206,7 @@ struct WeeklyView: View {
                 guard selected == nil, let closing = transitionSourceID else { return }
                 #if DEBUG
                 diagnoseID = closing
-                print("[zoom-diag] closed \(closing) — scroll now; watching it and the card below")
+                diagLog("weekly: selectedLeagueID -> nil (was \(closing)); the zoom source is held for 0.7s")
                 #endif
                 // Long enough for the pop animation to have finished, whatever its
                 // curve; short enough that a tap on another card is not affected. If the
@@ -445,6 +448,11 @@ struct WeeklyView: View {
     /// `-sw.debugOpen league/<id>`, `player/<leagueID>/<canonicalID>`, `account` or
     /// `editor`; the argument lands in UserDefaults' argument domain.
     private func openDebugDestination() {
+        // Once per launch: this runs from the root's `.task`, which fires again every
+        // time a pushed screen pops back to it — and re-opening the league then would
+        // put a fresh detail on screen the instant the closed one left.
+        guard !debugDestinationOpened else { return }
+        debugDestinationOpened = true
         guard let path = UserDefaults.standard.string(forKey: "sw.debugOpen") else { return }
         let parts = path.split(separator: "/").map(String.init)
         switch parts.first {

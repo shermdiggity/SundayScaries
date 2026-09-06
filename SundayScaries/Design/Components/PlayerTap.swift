@@ -42,7 +42,11 @@ private struct PlayerSheetHost: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .sheet(item: inspector.binding) { PlayerSheet(selection: $0, model: model) }
+            .sheet(item: inspector.binding) { selection in
+                PlayerSheet(selection: selection, model: model)
+                    .onAppear { diagLog("SHEET ON SCREEN for \(selection.player.name), presented by inspector \(inspector.owner)") }
+                    .onDisappear { diagLog("sheet for \(selection.player.name) gone (owner \(inspector.owner))") }
+            }
             .environment(\.playerInspector, inspector)
             .environment(\.contextLeagueID, leagueID)
     }

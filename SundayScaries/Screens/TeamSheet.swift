@@ -8,7 +8,7 @@ struct TeamSheet: View {
     let snapshot: LeagueSnapshot
     let teamID: String
     let model: WeeklyModel
-    @State private var inspector = PlayerInspector()
+    @State private var inspector = PlayerInspector(owner: "team")
 
     private var team: Team? { snapshot.teams.first { $0.id == teamID } }
     private var roster: Roster? { snapshot.rosters.first { $0.teamID == teamID } }

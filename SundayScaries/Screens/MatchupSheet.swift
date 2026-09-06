@@ -13,7 +13,7 @@ struct MatchupSheet: View {
     let snapshot: LeagueSnapshot
     let pair: LeagueSnapshot.MatchupPair
     let model: WeeklyModel
-    @State private var inspector = PlayerInspector()
+    @State private var inspector = PlayerInspector(owner: "matchup")
 
     private var week: Int { pair.matchup.week }
 

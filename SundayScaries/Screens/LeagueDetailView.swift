@@ -25,7 +25,7 @@ struct LeagueDetailView: View {
     @State private var inspectedTeam: TeamSelection?
     @State private var inspectedMatchup: LeagueSnapshot.MatchupPair?
     @State private var isRefreshing = false
-    @State private var inspector = PlayerInspector()
+    @State private var inspector = PlayerInspector(owner: "detail")
     /// UIKit's answer to "is this screen still pushed", read at tap time. See
     /// `NavigationStackProbe`.
     @State private var stack = StackProbe()
@@ -96,9 +96,11 @@ struct LeagueDetailView: View {
         // screen from hit-testing in the same frame it disappears; the selection does.
         .allowsHitTesting(isActive)
         .background {
-            NavigationStackProbe { isOnStack in
+            NavigationStackProbe { isOnStack, describe in
                 stack.isOnStack = isOnStack
+                stack.describe = describe
                 inspector.isOnStack = isOnStack
+                inspector.describe = describe
             }
         }
         .toolbar(.hidden, for: .navigationBar)
@@ -110,27 +112,25 @@ struct LeagueDetailView: View {
         }
         .playerSheetHost(inspector, model: model, leagueID: snapshot.league.id)
         .onChange(of: isActive, initial: true) { _, active in
+            diagLog("detail \(snapshot.league.name) isActive -> \(active) (selected=\(selectedLeagueID ?? "nil"))")
             inspector.isEnabled = active
             guard !active else { return }
             // Nothing presents from a screen that has been closed.
             inspectedTeam = nil
             inspectedMatchup = nil
             inspector.selection = nil
-            #if DEBUG
-            print("[detail] \(snapshot.league.name) closed: touches off, sheets cleared")
-            #endif
+            diagLog("detail \(snapshot.league.name) closed: touches off, sheets cleared")
         }
+        .onAppear { diagLog("detail \(snapshot.league.name) onAppear") }
+        .onDisappear { diagLog("detail \(snapshot.league.name) onDisappear") }
     }
 
     /// Presents only while this screen is still on the stack: a tap during the swipe
     /// that closes it must not open a sheet from a screen that is already gone.
     private func present(_ action: () -> Void) {
-        guard stack.isOnStack() else {
-            #if DEBUG
-            print("[detail] \(snapshot.league.name) ignored a tap: leaving the stack")
-            #endif
-            return
-        }
+        let allowed = stack.isOnStack()
+        diagLog("detail \(snapshot.league.name) tap (team/matchup) selected=\(selectedLeagueID ?? "nil") isActive=\(isActive) decision=\(allowed ? "PRESENT" : "REFUSE")\n   \(stack.describe())")
+        guard allowed else { return }
         action()
     }
 
@@ -687,4 +687,5 @@ private struct TeamSelection: Identifiable {
 /// and read only inside a tap.
 private final class StackProbe {
     var isOnStack: @MainActor () -> Bool = { true }
+    var describe: @MainActor () -> String = { "no probe" }
 }

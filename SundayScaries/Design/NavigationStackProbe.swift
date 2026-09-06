@@ -1,6 +1,20 @@
 import SwiftUI
 import UIKit
 
+/// One clock for every `[detail-diag]` line, so the order of a swipe, a pop and a tap can
+/// be read straight off the console. Seconds within the hour, to the millisecond.
+func diagStamp() -> String {
+    let t = Date().timeIntervalSince1970
+    return String(format: "%.3f", t.truncatingRemainder(dividingBy: 1000))
+}
+
+/// DEBUG-only console line for the dismissal diagnosis. Compiles to nothing in release.
+func diagLog(_ message: @autoclosure () -> String) {
+    #if DEBUG
+    print("[detail-diag] \(diagStamp()) \(message())")
+    #endif
+}
+
 /// Answers, at the moment a tap lands, whether the screen it sits in is still on the
 /// navigation stack.
 ///
@@ -12,7 +26,7 @@ import UIKit
 /// that window; only UIKit's stack can. `isOnStack()` walks from this view to its
 /// hosting controller and asks the navigation controller whether it still holds it.
 struct NavigationStackProbe: UIViewRepresentable {
-    let onAttach: (_ isOnStack: @escaping @MainActor () -> Bool) -> Void
+    let onAttach: (_ isOnStack: @escaping @MainActor () -> Bool, _ describe: @escaping @MainActor () -> String) -> Void
 
     func makeUIView(context: Context) -> ProbeView {
         let view = ProbeView()
@@ -22,7 +36,7 @@ struct NavigationStackProbe: UIViewRepresentable {
     }
 
     func updateUIView(_ view: ProbeView, context: Context) {
-        onAttach { [weak view] in view?.isOnNavigationStack ?? false }
+        onAttach({ [weak view] in view?.isOnNavigationStack ?? false }, { [weak view] in view?.diagnostics ?? "probe gone" })
     }
 
     final class ProbeView: UIView {
@@ -43,6 +57,39 @@ struct NavigationStackProbe: UIViewRepresentable {
             }
             return !sawNavigation
         }
+
+        #if DEBUG
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            diagLog("probe window=\(window != nil) \(window == nil ? "(detail LEFT the window)" : "(detail ENTERED the window)")")
+        }
+
+        /// Everything that could explain why a tap reached this screen.
+        var diagnostics: String {
+            var alpha: CGFloat = 1, hidden = false, transformed = false, view: UIView? = self
+            while let current = view {
+                alpha *= current.alpha
+                hidden = hidden || current.isHidden
+                if !current.transform.isIdentity { transformed = true }
+                view = current.superview
+            }
+            let controller = nearestController
+            var chain: [String] = []
+            var cursor = controller
+            while let current = cursor { chain.append(String(describing: type(of: current))); cursor = current.parent }
+            let nav = controller?.navigationController
+            let top = nav?.topViewController
+            var topIsMine = false
+            cursor = controller
+            while let current = cursor { if current === top { topIsMine = true }; cursor = current.parent }
+            let frame = window.map { convert(bounds, to: $0) } ?? .zero
+            return [
+                "t=\(diagStamp()) window=\(window != nil) alpha=\(alpha) hidden=\(hidden) transformed=\(transformed) frameInWindow=\(frame) screen=\(window?.bounds.size ?? .zero)",
+                "chain=\(chain.joined(separator: " > "))",
+                "nav=\(nav != nil) stack=\(nav?.viewControllers.count ?? -1) onStack=\(isOnNavigationStack) topIsMine=\(topIsMine) transition=\(nav?.transitionCoordinator != nil) interactive=\(nav?.transitionCoordinator?.isInteractive ?? false) cancelled=\(nav?.transitionCoordinator?.isCancelled ?? false) movingFromParent=\(controller?.isMovingFromParent ?? false) beingDismissed=\(controller?.isBeingDismissed ?? false)",
+            ].joined(separator: "\n   ")
+        }
+        #endif
 
         private var nearestController: UIViewController? {
             var responder: UIResponder? = self
