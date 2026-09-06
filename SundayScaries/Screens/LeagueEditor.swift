@@ -89,6 +89,8 @@ struct LeagueEditor: View {
                 Image(systemName: hidden ? "eye.slash" : "eye")
                     .font(SWType.icon)
                     .foregroundStyle(hidden ? SWColor.tertiary : SWColor.accent)
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(.rect)
             }
             .accessibilityLabel(hidden ? Text("Show \(league.name)") : Text("Hide \(league.name)"))
             // Without this the row's drag handle swallows the tap.

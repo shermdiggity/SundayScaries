@@ -275,6 +275,9 @@ struct WeeklyView: View {
                             .accessibilityLabel("Back to the current week")
                             .font(SWType.caption)
                             .foregroundStyle(SWColor.onSky)
+                            .frame(minWidth: 44, minHeight: 44)
+                            .contentShape(.rect)
+                            .padding(.vertical, -11)
                             .buttonStyle(.plain)
                             .padding(.leading, SWSpacing.xs)
                     }
@@ -451,8 +454,9 @@ struct WeeklyView: View {
             Image(systemName: systemImage)
                 .font(SWType.glyph)
                 .foregroundStyle(enabled ? SWColor.onSky : SWColor.onSkySecondary.opacity(0.35))
-                .frame(width: 22, height: 22)
+                .frame(width: 44, height: 44)
                 .contentShape(.rect)
+                .padding(-11)
         }
         .buttonStyle(.plain)
         .disabled(!enabled)

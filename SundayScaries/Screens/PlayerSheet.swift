@@ -137,7 +137,8 @@ struct PlayerSheet: View {
                     .padding(.horizontal, SWSpacing.md)
                     .padding(.vertical, SWSpacing.sm)
                     .background(Capsule().fill(SWColor.surface))
-                    .contentShape(Capsule())
+                    .frame(minHeight: 44)
+                    .contentShape(.rect)
                 }
                 .accessibilityLabel("Scoring rules: \(option.name)")
             }
