@@ -65,7 +65,7 @@ final class DebugDumpModel {
             season: season
         )
 
-        if let week = try? await provider.currentWeek() {
+        if let week = await provider.currentWeek() {
             line("sleeper says the current week is \(week)")
         }
         line()

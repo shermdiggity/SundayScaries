@@ -53,8 +53,7 @@ final class WeeklyModel {
     /// Kept from the last load so the player sheet can read a season without rebuilding
     /// the stack. Both cache to disk, so a season opened twice costs nothing the second
     /// time.
-    private var statsStore: SleeperStatsStore?
-    private var projectionStore: SleeperProjectionStore?
+    private var playerSeasons: PlayerSeasonService?
     private var loadedSeason: String = ""
 
     var handle: String {
@@ -309,7 +308,7 @@ final class WeeklyModel {
     /// rules. The stats and projections come from one league-agnostic feed and are
     /// cached per week, so the first sheet of the day fetches and the rest are instant.
     func playerSeason(for player: PlayerRef, under leagueID: String) async -> PlayerSeason? {
-        guard let statsStore, let projectionStore else { return nil }
+        guard let playerSeasons else { return nil }
         guard let snapshot = allSnapshots.first(where: { $0.id == leagueID }) else { return nil }
         let option = scoringOptions.first { $0.leagueID == leagueID }
         // The platform's real current week bounds what has been played, whatever week
@@ -334,50 +333,11 @@ final class WeeklyModel {
             leagueProjected[currentWeek] = own
         }
 
-        var stats: [Int: [String: Double]] = [:]
-        var projections: [Int: [String: Double]] = [:]
-        var statWeeks: [RawStats] = []
-        if let id = player.canonicalID {
-            // Every week at once. Sequentially this was up to thirty-five round trips.
-            let played = Array(1...max(1, currentWeek))
-            let fetchedStats = await withTaskGroup(of: RawStats.self, returning: [RawStats].self) { group in
-                for week in played {
-                    group.addTask { await statsStore.stats(season: season, week: week, currentWeek: currentWeek) }
-                }
-                var all: [RawStats] = []
-                for await raw in group { all.append(raw) }
-                return all.sorted { $0.week < $1.week }
-            }
-            // Projections only through the current week: the platforms publish week by
-            // week, and a season-long forecast from another source is not this league's.
-            let fetchedProjections = await withTaskGroup(of: RawProjections.self, returning: [RawProjections].self) { group in
-                for week in played {
-                    group.addTask { await projectionStore.rawProjections(season: season, week: week) }
-                }
-                var all: [RawProjections] = []
-                for await raw in group { all.append(raw) }
-                return all
-            }
-            statWeeks = fetchedStats
-            for raw in fetchedStats { if let line = raw.stats(for: id) { stats[raw.week] = line } }
-            for raw in fetchedProjections { if let line = raw.stats(for: id) { projections[raw.week] = line } }
-        }
-
-        var positionRank: PositionRank?
-        if let id = player.canonicalID, !statWeeks.isEmpty {
-            positionRank = PositionRanker.rank(
-                canonicalID: id, position: player.position, weeks: statWeeks,
-                rules: option?.rules, fallbackKind: option?.kind ?? snapshot.league.scoringKind
-            )
-        }
-        return PlayerSeasonBuilder.build(
-            player: player, weeks: weeks,
-            stats: stats, projections: projections,
+        return await playerSeasons.season(
+            for: player, season: season, weeks: weeks, throughWeek: currentWeek,
             leagueScored: leagueScored, leagueProjected: leagueProjected,
-            throughWeek: currentWeek,
             rules: option?.rules, fallbackKind: option?.kind ?? snapshot.league.scoringKind,
-            schedule: snapshot.schedule, now: Date(),
-            positionRank: positionRank
+            schedule: snapshot.schedule
         )
     }
 
@@ -486,22 +446,22 @@ final class WeeklyModel {
         // A platform that fails must never cost you the other one, so each is gathered
         // separately and its error is remembered rather than thrown.
         var leagues: [League] = []
-        var sourceOfLeague: [String: any LeagueSource] = [:]
+        var sourceOfLeague: [String: any PlatformProvider] = [:]
         var failures: [String] = []
         for source in sources {
             do {
-                let found = try await source.leagues()
+                let found = try await source.provider.leagues(for: source.account)
                 #if DEBUG
-                print("[load] \(source.platform.rawValue): \(found.count) leagues — \(found.map(\.name))")
+                print("[load] \(source.provider.platform.rawValue): \(found.count) leagues — \(found.map(\.name))")
                 #endif
-                for league in found { sourceOfLeague[league.id] = source }
+                for league in found { sourceOfLeague[league.id] = source.provider }
                 leagues += found
             } catch {
                 #if DEBUG
-                print("[load] \(source.platform.rawValue) FAILED: \(error)")
+                print("[load] \(source.provider.platform.rawValue) FAILED: \(error)")
                 #endif
-                failures.append(Self.describe(error, platform: source.platform, season: resolvedSeason,
-                                              handle: handle(for: source.platform)))
+                failures.append(Self.describe(error, platform: source.provider.platform, season: resolvedSeason,
+                                              handle: handle(for: source.provider.platform)))
             }
         }
 
@@ -550,7 +510,7 @@ final class WeeklyModel {
         // The leading week: the furthest any platform has got. Sleeper's `/state` is read
         // live; a league's own week may lag it by a morning — which is exactly the case
         // showing every league on ONE week is for.
-        let platformWeek = await sources.first?.currentWeek()
+        let platformWeek = await sources.first?.provider.currentWeek()
         liveWeek = [platformWeek, leagues.compactMap(\.currentWeek).max()].compactMap { $0 }.max()
         let shownWeek = max(1, min(viewedWeek ?? liveWeek ?? 1, liveWeek ?? Int.max))
         week = shownWeek
@@ -689,8 +649,14 @@ final class WeeklyModel {
     /// Everything a load needs to talk to the platforms, built fresh for one load so the
     /// fetch mode is fixed for its whole duration. Shared by the full load and the
     /// single-league refresh so the two can never drift apart.
+    /// A platform the reader has connected: its provider, and the account to read as.
+    private struct PlatformSource {
+        let provider: any PlatformProvider
+        let account: LinkedAccount
+    }
+
     private struct LoadContext {
-        let sources: [any LeagueSource]
+        let sources: [PlatformSource]
         let scheduleStore: ByeWeekStore
         let scoreboard: ScoreboardStore
     }
@@ -704,103 +670,43 @@ final class WeeklyModel {
         http: any HTTPClient, store: any SnapshotStore, crosswalk: PlayerCrosswalk,
         season resolvedSeason: String, mode: FetchMode
     ) -> LoadContext {
-        // One limiter and one player directory shared by every store, so the catalog is
-        // fetched once and every id resolves through the same path.
-        let sharedLimiter = TokenBucket.sleeperDefault()
-        let directory = SleeperPlayerDirectory(http: http, store: store, limiter: sharedLimiter)
-        let projectionStore = SleeperProjectionStore(
-            http: http, store: store,
-            limiter: sharedLimiter,
-            resolver: IdentityResolver(crosswalk: crosswalk),
-            directory: directory,
-            fetchMode: mode
-        )
-        let statsStore = SleeperStatsStore(
-            http: http, store: store, limiter: sharedLimiter,
-            resolver: IdentityResolver(crosswalk: crosswalk), directory: directory,
-            fetchMode: mode
-        )
-        self.statsStore = statsStore
-        self.projectionStore = projectionStore
+        let kit = ProviderContext(http: http, store: store, crosswalk: crosswalk, season: resolvedSeason, fetchMode: mode)
+        playerSeasons = kit.playerSeasons
         loadedSeason = resolvedSeason
 
-        let sleeperProvider = SleeperProvider(
-            http: http, store: store,
-            resolver: IdentityResolver(crosswalk: crosswalk),
-            season: resolvedSeason,
-            limiter: sharedLimiter,
-            directory: directory,
-            fetchMode: mode
-        )
-
-        let scheduleStore = ByeWeekStore(http: http, store: store)
-        // Live game states, so "in progress" and "final" are the platform's word rather
-        // than the clock's guess. Shared by every league: it is about NFL games.
-        let scoreboard = ScoreboardStore(http: http, store: store)
-
-        // One source per configured platform. ESPN gets its own rate limiter inside its
-        // provider, so a slow or angry ESPN can never starve Sleeper.
-        var sources: [any LeagueSource] = []
+        var sources: [PlatformSource] = []
         if hasSleeper {
-            sources.append(SleeperSource(
-                provider: sleeperProvider,
-                projectionStore: projectionStore,
+            sources.append(PlatformSource(
+                provider: kit.sleeper(),
                 account: LinkedAccount(platform: .sleeper, handle: handle)
             ))
         }
         if hasESPN {
-            sources.append(ESPNSource(
-                provider: ESPNProvider(
-                    http: http, store: store,
-                    resolver: IdentityResolver(crosswalk: crosswalk),
-                    season: resolvedSeason,
-                    credentials: ESPNCredentialStore.current,
-                    fetchMode: mode
-                ),
+            sources.append(PlatformSource(
+                provider: kit.espn(credentials: ESPNCredentialStore.current),
                 account: LinkedAccount(platform: .espn, handle: espnLeagueIDs)
             ))
         }
         if hasMFL {
-            sources.append(MFLSource(
-                provider: MFLProvider(
-                    http: http, store: store,
-                    resolver: IdentityResolver(crosswalk: crosswalk),
-                    season: resolvedSeason,
-                    credentials: MFLCredentialStore.current,
-                    byeWeeks: scheduleStore,
-                    fetchMode: mode
-                ),
+            sources.append(PlatformSource(
+                provider: kit.myFantasyLeague(credentials: MFLCredentialStore.current),
                 account: LinkedAccount(platform: .myFantasyLeague, handle: mflLeagueIDs)
             ))
         }
         if hasFleaflicker {
-            sources.append(FleaflickerSource(
-                provider: FleaflickerProvider(
-                    http: http, store: store,
-                    resolver: IdentityResolver(crosswalk: crosswalk),
-                    season: resolvedSeason,
-                    byeWeeks: scheduleStore,
-                    fetchMode: mode
-                ),
+            sources.append(PlatformSource(
+                provider: kit.fleaflicker(),
                 account: LinkedAccount(platform: .fleaflicker, handle: fleaflickerHandle)
             ))
         }
         if FeatureFlags.yahooEnabled, let yahoo = YahooCredentialStore.current {
-            sources.append(YahooSource(
-                provider: YahooProvider(
-                    http: http, store: store,
-                    resolver: IdentityResolver(crosswalk: crosswalk),
-                    season: resolvedSeason,
-                    credentials: yahoo,
-                    byeWeeks: scheduleStore,
-                    fetchMode: mode,
-                    // A refreshed token is a new credential; it goes back to the keychain.
-                    onCredentialsRefreshed: { YahooCredentialStore.save($0) }
-                ),
+            sources.append(PlatformSource(
+                // A refreshed token is a new credential; it goes back to the keychain.
+                provider: kit.yahoo(credentials: yahoo, onCredentialsRefreshed: { YahooCredentialStore.save($0) }),
                 account: LinkedAccount(platform: .yahoo, handle: "me")
             ))
         }
-        return LoadContext(sources: sources, scheduleStore: scheduleStore, scoreboard: scoreboard)
+        return LoadContext(sources: sources, scheduleStore: kit.schedule, scoreboard: kit.scoreboard)
     }
 
     /// The pull on the weekly view. The work runs in a task the MODEL owns, not the one
@@ -826,7 +732,7 @@ final class WeeklyModel {
             // Cached after the first load; this is a disk read.
             guard let crosswalk = try? await CrosswalkStore(http: http, store: store).crosswalk() else { return }
             let ctx = makeContext(http: http, store: store, crosswalk: crosswalk, season: season, mode: .refresh)
-            guard let source = ctx.sources.first(where: { $0.platform == league.platform }) else { return }
+            guard let source = ctx.sources.first(where: { $0.provider.platform == league.platform })?.provider else { return }
             do {
                 let (snapshot, rosters) = try await Self.snapshot(
                     for: league, week: shownWeek, source: source,
@@ -857,7 +763,7 @@ final class WeeklyModel {
     private static func snapshot(
         for league: League,
         week shown: Int,
-        source: any LeagueSource,
+        source: any PlatformProvider,
         scheduleStore: ByeWeekStore,
         scoreboard: ScoreboardStore,
         mode: FetchMode
