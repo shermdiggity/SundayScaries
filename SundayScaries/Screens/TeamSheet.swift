@@ -7,6 +7,8 @@ import FantasyProviders
 struct TeamSheet: View {
     let snapshot: LeagueSnapshot
     let teamID: String
+    let model: WeeklyModel
+    @State private var inspector = PlayerInspector()
 
     private var team: Team? { snapshot.teams.first { $0.id == teamID } }
     private var roster: Roster? { snapshot.rosters.first { $0.teamID == teamID } }
@@ -76,6 +78,11 @@ struct TeamSheet: View {
             .navigationTitle(team?.displayName ?? "Team")
             .navigationBarTitleDisplayMode(.inline)
         }
+        // Its own inspector: a sheet presented from a sheet must come from the top. And
+        // the sheet is attached BEFORE the environment so that environment encloses it.
+        .sheet(item: inspector.binding) { PlayerSheet(selection: $0, model: model) }
+        .environment(\.playerInspector, inspector)
+        .environment(\.contextLeagueID, snapshot.league.id)
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
         .tint(SWColor.accent)

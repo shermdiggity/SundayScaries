@@ -71,6 +71,17 @@ struct PlayerFoilCard: View {
                 .padding(SWSpacing.sm)
         }
         .frame(height: 108)
+        .overlay(alignment: .bottomLeading) {
+            // The meter shows the shape of the concentration; this says the number out
+            // loud. On its own the meter never answered "of how many?".
+            Text(countLabel)
+                .font(SWType.micro)
+                .foregroundStyle(SWColor.canvas)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 3)
+                .background(Capsule().fill(tint))
+                .padding(SWSpacing.sm)
+        }
     }
 
     private var details: some View {
@@ -94,36 +105,60 @@ struct PlayerFoilCard: View {
                         Text(points, format: .number.precision(.fractionLength(1)))
                             .font(SWType.scoreMicro)
                             .foregroundStyle(SWColor.primary)
+                            .contentTransition(.numericText())
                     }
                 }
             }
             .font(SWType.micro)
 
-            if let kickoff {
-                Text(kickoff)
-                    .font(SWType.micro)
-                    .foregroundStyle(SWColor.tertiary)
-                    .lineLimit(1)
-            }
+            // Every line below is RESERVED whether or not it has content. A player in
+            // four leagues used to make a taller card than one in a single league, so a
+            // row of these stepped up and down like a bar chart. The card is a fixed
+            // object; what varies is what is written on it.
+            Text(kickoff ?? " ")
+                .font(SWType.micro)
+                .foregroundStyle(SWColor.tertiary)
+                .lineLimit(1)
+                .opacity(kickoff == nil ? 0 : 1)
 
             Rectangle().fill(SWColor.hairline).frame(height: 1).padding(.vertical, 2)
 
-            ForEach(involvements.prefix(2)) { involvement in
-                Text(isAgainst
-                     ? "vs. " + (involvement.opponentName ?? involvement.leagueName)
-                     : involvement.leagueName)
+            ForEach(Array(leagueLines.enumerated()), id: \.offset) { _, line in
+                Text(line.isEmpty ? " " : line)
                     .font(SWType.micro)
-                    .foregroundStyle(SWColor.secondary)
+                    .foregroundStyle(line.hasPrefix("+") ? SWColor.tertiary : SWColor.secondary)
                     .lineLimit(1)
-            }
-            if involvements.count > 2 {
-                Text("+\(involvements.count - 2) more")
-                    .font(SWType.micro)
-                    .foregroundStyle(SWColor.tertiary)
+                    .opacity(line.isEmpty ? 0 : 1)
             }
         }
         .padding(SWSpacing.md)
-        .frame(maxWidth: .infinity, minHeight: 116, alignment: .topLeading)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .frame(height: 116)
+        .clipped()
+    }
+
+    /// Always exactly two lines. Three or more leagues collapse to one name plus a
+    /// count, so the card never grows to fit them.
+    private var leagueLines: [String] {
+        func label(_ involvement: LeagueInvolvement) -> String {
+            isAgainst ? "vs. " + (involvement.opponentName ?? involvement.leagueName)
+                      : involvement.leagueName
+        }
+        switch involvements.count {
+        case 0:    return ["", ""]
+        case 1:    return [label(involvements[0]), ""]
+        case 2:    return [label(involvements[0]), label(involvements[1])]
+        default:   return [label(involvements[0]), "+\(involvements.count - 1) more"]
+        }
+    }
+
+    /// "In 2 of 3 leagues" / "Starting in all 3" — plain words, no decoding required.
+    private var countLabel: String {
+        let verb = isAgainst ? "Against you in" : "Starting in"
+        if count == position.totalLeagues, count > 1 {
+            return "\(verb) all \(count)"
+        }
+        return "\(verb) \(count) of \(position.totalLeagues)"
     }
 
     private var accessibilityText: Text {

@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import FantasyCore
 
 // Every colour, size, duration and font in this app resolves through this file.
@@ -30,6 +31,9 @@ enum SWColor {
     // Meaning. Tonal rather than poster-bright: a saturated accent sprayed across a
     // page is the fastest way to look templated.
     static let positive = Color(red: 0.388, green: 0.831, blue: 0.545)
+    /// The launch screen's one flat colour (an asset, so the launch screen can use it
+    /// too). The app's first frame starts here and fades into the live sky.
+    static let launch = Color("LaunchBackground")
     static let negative = Color(red: 0.965, green: 0.427, blue: 0.408)
     static let warning  = Color(red: 1.000, green: 0.761, blue: 0.290)
     static let neutral  = Color(red: 0.976, green: 0.969, blue: 0.957).opacity(0.42)
@@ -77,6 +81,8 @@ enum SWColor {
     static func platformLogo(_ platform: Platform) -> URL? {
         switch platform {
         case .sleeper: URL(string: "https://sleepercdn.com/images/v2/logos/sleeper.png")
+        case .espn:    URL(string: "https://a.espncdn.com/i/espn/espn_logos/espn_red.png")
+        case .myFantasyLeague: URL(string: "https://www.myfantasyleague.com/apple-touch-icon.png")
         default:       nil
         }
     }
@@ -100,54 +106,121 @@ enum SWColor {
 
 // MARK: - Type
 
-/// Two faces, each doing the job it is good at.
+/// One face, throughout: **Helvetica Neue**.
 ///
-/// **EB Garamond** (self-hosted, SIL Open Font License) carries the identity.
+/// It ships with iOS, so there is nothing to bundle, register or license, and no
+/// fallback to design around. Hierarchy comes from size and weight alone, which is the
+/// whole idea — a single family used with conviction reads as a decision, where a
+/// display face paired with a separate interface face reads as two.
 ///
-/// Apple Garamond — the face this was specified as — is Apple's own discontinued
-/// corporate font, a customised ITC Garamond that was never shipped to third parties
-/// and cannot be licensed. EB Garamond is a genuine Garamond revival, it is freely
-/// redistributable (unlike the ITF faces, so this one may live in a public repo), and
-/// it is the closest honest substitute.
+/// Weights: Helvetica Neue has no semibold and no heavy, so SF's `.semibold` maps to
+/// Medium in running text and Bold in headings, and `.heavy` maps to Bold. Those are
+/// the real faces in the family — nothing here asks for a weight that would be
+/// synthesised.
 ///
-/// **SF Rounded** carries everything else. Rounded rather than standard because the
-/// whole app should feel played-with, not audited — and every number in a column stays
-/// `.monospacedDigit()`, which is the highest-leverage typographic decision in a
+/// Numbers keep `.monospacedDigit()`, the highest-leverage typographic decision in a
 /// live-scoring app: proportional digits make columns jitter as scores update.
+/// Helvetica Neue's digits are already uniform width (556 units, every one), so the
+/// columns hold.
+///
+/// SF Symbols are the one exception and stay on the system face: a symbol is a drawn
+/// glyph, not type, and it is designed against SF's metrics.
+///
+/// EB Garamond preceded this and is still bundled in `Design/Fonts/`, now unreferenced.
 enum SWType {
-    private static let display_ = "EBGaramond-SemiBold"
-    private static let displayBold = "EBGaramond-Bold"
-    private static let displayRegular = "EBGaramond-Medium"
+    private static let displayBold = "HelveticaNeue-Bold"
+    private static let displayMedium = "HelveticaNeue-Medium"
+
+    /// A resolved display face: the PostScript name actually being rendered, its size,
+    /// and what to fall back to. Carried as a value because the optical-metrics
+    /// correction has to measure the real face, which a `Font` will not surrender.
+    struct Face {
+        let name: String
+        let size: CGFloat
+        let fallback: Font.Weight
+    }
 
     /// Falls back to the system face if registration failed, so a broken bundle looks
     /// plain rather than wrong.
-    private static func serif(_ name: String, _ size: CGFloat, fallback: Font.Weight) -> Font {
-        FontRegistrar.displayFaceAvailable
-            ? .custom(name, size: size)
+    private static func voice(_ name: String, _ size: CGFloat, fallback: Font.Weight) -> Font {
+        let resolved = resolvedName(name)
+        return UIFont(name: resolved, size: size) != nil
+            ? .custom(resolved, size: size)
             : .system(size: size, weight: fallback)
     }
 
-    // Garamond sits small on the body and reads light, so every size steps up.
-    static var display: Font  { serif(displayBold, 46, fallback: .bold) }
-    static var title: Font    { serif(displayBold, 31, fallback: .bold) }
-    static var headline: Font { serif(display_, 23, fallback: .semibold) }
-    static var section: Font  { serif(displayRegular, 18, fallback: .medium) }
+    /// The debug font browser can swap the display family out from under the app, so a
+    /// candidate is judged on the real screen instead of on a specimen sheet.
+    private static func resolvedName(_ name: String) -> String {
+        #if DEBUG && FONT_BROWSER
+        if let family = debugFaceOverride {
+            return FontCatalog.face(in: family, like: name)
+        }
+        #endif
+        return name
+    }
 
-    static let body       = Font.system(size: 15, weight: .medium, design: .rounded)
-    static let bodyMedium = Font.system(size: 15, weight: .semibold, design: .rounded)
-    static let caption    = Font.system(size: 13, weight: .medium, design: .rounded)
-    static let micro      = Font.system(size: 11, weight: .bold, design: .rounded)
-    /// The one icon size in the app.
-    static let icon       = Font.system(size: 20, weight: .bold, design: .rounded)
-    /// Small glyphs that sit inside a control — a checkmark, a chevron.
-    static let glyph      = Font.system(size: 10, weight: .black, design: .rounded)
+    #if DEBUG && FONT_BROWSER
+    /// Where `FontBrowser` parks the family it wants previewed. `UserDefaults` rather
+    /// than a static var so there is no shared mutable state to isolate, and so the
+    /// choice survives a relaunch while you sleep on it.
+    static let debugFaceKey = "sw.debug.displayFamily"
+
+    private static var debugFaceOverride: String? {
+        let name = UserDefaults.standard.string(forKey: debugFaceKey) ?? ""
+        return name.isEmpty ? nil : name
+    }
+    #endif
+
+    // MARK: The two display-voice tokens
+    //
+    // These are the weekly view's own voice — the hero line and the headers that
+    // introduce a group. They are the only tokens with a `Face`, because only they go
+    // through `.swVoice(_:)`, which needs to measure the real face to correct a
+    // typeface whose line box was not cut for Latin.
+
+    /// The weekly view's hero line, and nothing else.
+    static var display: Font { voice(displayBold, 46, fallback: .bold) }
+    static var displayFace: Face { Face(name: resolvedName(displayBold), size: 46, fallback: .bold) }
+
+    /// The weekly view's section headers — "Riding on", "Up against", "The season so
+    /// far".
+    // Bold, and a clear step above the card title (Bold 19). Set Medium at 23 it was
+    // OUTWEIGHED by the cards it introduces — the sections' own titles read as the
+    // headers and these read as captions, the hierarchy exactly inverted.
+    static var sectionHeader: Font { voice(displayBold, 30, fallback: .bold) }
+    static var sectionHeaderFace: Face { Face(name: resolvedName(displayBold), size: 30, fallback: .bold) }
+
+    // MARK: Interface
+
+    static var title: Font      { voice(displayBold, 26, fallback: .bold) }
+    static var headline: Font   { voice(displayBold, 19, fallback: .semibold) }
+    static var section: Font    { voice(displayMedium, 15, fallback: .medium) }
+    static var body: Font       { voice(displayMedium, 15, fallback: .medium) }
+    static var bodyMedium: Font { voice(displayBold, 15, fallback: .semibold) }
+    static var caption: Font    { voice(displayMedium, 13, fallback: .medium) }
+    static var micro: Font      { voice(displayBold, 11, fallback: .bold) }
     /// The league card's title line: the most prominent interface text in the app.
-    static let cardTitle  = Font.system(size: 19, weight: .bold, design: .rounded)
+    static var cardTitle: Font  { voice(displayBold, 19, fallback: .bold) }
 
-    static let score        = Font.system(size: 18, weight: .bold, design: .rounded).monospacedDigit()
-    static let scoreLarge   = Font.system(size: 34, weight: .heavy, design: .rounded).monospacedDigit()
-    static let scoreCaption = Font.system(size: 13, weight: .semibold, design: .rounded).monospacedDigit()
-    static let scoreMicro   = Font.system(size: 11, weight: .bold, design: .rounded).monospacedDigit()
+    /// Sized to the mark they sit in rather than to a step on the scale, so they scale
+    /// with the circle that contains them.
+    static func mark(_ size: CGFloat) -> Font { voice(displayBold, size, fallback: .black) }
+    static func initials(_ size: CGFloat) -> Font { voice(displayMedium, size, fallback: .semibold) }
+
+    // SF Symbols only. A symbol is a drawn glyph, not type, and it is cut against SF's
+    // own metrics — setting it in Helvetica Neue would only misalign it.
+    /// The one icon size in the app.
+    static let icon  = Font.system(size: 20, weight: .bold, design: .rounded)
+    /// Small glyphs that sit inside a control — a checkmark, a chevron.
+    static let glyph = Font.system(size: 10, weight: .black, design: .rounded)
+
+    // MARK: Numbers
+
+    static var score: Font        { voice(displayBold, 18, fallback: .bold).monospacedDigit() }
+    static var scoreLarge: Font   { voice(displayBold, 34, fallback: .heavy).monospacedDigit() }
+    static var scoreCaption: Font { voice(displayBold, 13, fallback: .semibold).monospacedDigit() }
+    static var scoreMicro: Font   { voice(displayBold, 11, fallback: .bold).monospacedDigit() }
 }
 
 // MARK: - Spacing, radius, motion

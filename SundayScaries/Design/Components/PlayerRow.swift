@@ -63,6 +63,7 @@ struct PlayerRow: View {
         }
         .padding(.vertical, SWSpacing.sm)
         .contentShape(.rect)
+        .playerTappable(player)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityText)
     }
@@ -75,6 +76,8 @@ struct PlayerRow: View {
             Text(points, format: .number.precision(.fractionLength(1)))
                 .font(SWType.score)
                 .foregroundStyle(SWColor.primary)
+                // Digits roll to the new value instead of blinking.
+                .contentTransition(.numericText())
                 .frame(minWidth: 56, alignment: .trailing)
         } else if let projection {
             HStack(spacing: 2) {
@@ -84,6 +87,7 @@ struct PlayerRow: View {
                 Text(projection, format: .number.precision(.fractionLength(1)))
                     .font(SWType.scoreCaption)
                     .foregroundStyle(SWColor.secondary)
+                    .contentTransition(.numericText())
             }
             .frame(minWidth: 56, alignment: .trailing)
         } else {

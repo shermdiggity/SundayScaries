@@ -56,9 +56,24 @@ struct SWFractalClouds: View {
         }
     }
 
+    /// Rendered at half resolution, then scaled up.
+    ///
+    /// The shader normalises its own coordinates (`uv = position / size`), so halving the
+    /// view it draws into produces an IDENTICAL pattern from a quarter of the fragments.
+    /// Two five-octave FBM evaluations per pixel across a full phone screen is several
+    /// million noise samples per frame, and it was the largest single cost on the weekly
+    /// view; clouds are soft enough that the upscale is invisible, and if anything it
+    /// smooths them.
+    private static let resolutionDivisor: CGFloat = 2
+
     private func canvas(elapsed: Float) -> some View {
-        cloudColor
-            .colorEffect(
+        GeometryReader { proxy in
+            cloudColor
+                .frame(
+                    width: proxy.size.width / Self.resolutionDivisor,
+                    height: proxy.size.height / Self.resolutionDivisor
+                )
+                .colorEffect(
                 ShaderLibrary.swFractalClouds(
                     .boundingRect,
                     .float(elapsed),
@@ -74,5 +89,7 @@ struct SWFractalClouds: View {
                     .float(warmth)
                 )
             )
+                .scaleEffect(Self.resolutionDivisor, anchor: .topLeading)
+        }
     }
 }

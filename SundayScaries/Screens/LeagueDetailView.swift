@@ -9,21 +9,31 @@ import FantasyProviders
 /// see what you are up against — and then the ranking.
 struct LeagueDetailView: View {
     let snapshot: LeagueSnapshot
+    /// For the player sheet. Explicit, because the environment did not carry it here.
+    let model: WeeklyModel
     var onBack: () -> Void = {}
     var onRefresh: () async -> Void = {}
 
     @State private var inspectedTeamID: String?
+    @State private var inspectedMatchup: LeagueSnapshot.MatchupPair?
+    @State private var isRefreshing = false
+    @State private var inspector = PlayerInspector()
     /// Only the decision is stored, not the offset. Keeping the raw scroll position in
     /// state re-rendered the whole screen on every frame of every scroll.
     @State private var isCollapsed = false
 
 
     private var palette: SkyPalette { Sky.palette() }
-    private var week: Int { snapshot.myRoster?.week ?? snapshot.league.currentWeek ?? 1 }
+    private var week: Int { snapshot.week }
 
     var body: some View {
         ZStack(alignment: .top) {
-            StaticSky(palette: palette).ignoresSafeArea()
+            // Same two layers as the weekly view, for the same reason.
+            palette.sky
+                .ignoresSafeArea()
+
+            StaticSky(palette: palette)
+                .ignoresSafeArea()
 
             // The card that opened this screen is a pane of glass tinted to its
             // platform. Washing the screen in the same colour means the card expands
@@ -43,7 +53,9 @@ struct LeagueDetailView: View {
                 VStack(alignment: .leading, spacing: SWSpacing.xl) {
                     scoreboard
                     lineups
+                    aroundTheLeague
                     standings
+                    mySchedule
                 }
                 .padding(.horizontal, SWSpacing.lg)
                 .padding(.top, 56)
@@ -51,7 +63,6 @@ struct LeagueDetailView: View {
             }
             .scrollIndicators(.hidden)
             .scrollContentBackground(.hidden)
-            .refreshable { await onRefresh() }
             // Hysteresis: collapse at 160, expand again at 120, so a scroll that
             // hovers near the threshold cannot flicker the bar in and out.
             .onScrollGeometryChange(for: Bool.self) { geometry in
@@ -65,8 +76,14 @@ struct LeagueDetailView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .sheet(item: $inspectedTeamID) { id in
-            TeamSheet(snapshot: snapshot, teamID: id)
+            TeamSheet(snapshot: snapshot, teamID: id, model: model)
         }
+        .sheet(item: $inspectedMatchup) { pair in
+            MatchupSheet(snapshot: snapshot, pair: pair, model: model)
+        }
+        .sheet(item: inspector.binding) { PlayerSheet(selection: $0, model: model) }
+        .environment(\.playerInspector, inspector)
+        .environment(\.contextLeagueID, snapshot.league.id)
     }
 
     private var topBar: some View {
@@ -90,6 +107,40 @@ struct LeagueDetailView: View {
             } else {
                 Spacer(minLength: 0)
             }
+
+            // A button, because pull-to-refresh cannot live here. This screen is a zoom
+            // destination, and the zoom's interactive dismissal is ALSO a downward drag
+            // from the top — so pulling to refresh kept closing the league instead. One
+            // gesture, one meaning: dragging down dismisses; this refreshes.
+            Button {
+                guard !isRefreshing else { return }
+                isRefreshing = true
+                Task {
+                    await onRefresh()
+                    isRefreshing = false
+                }
+            } label: {
+                Group {
+                    if isRefreshing {
+                        // A real spinner while it works. The pulsing arrow was too quiet
+                        // to tell that anything had happened.
+                        ProgressView()
+                            .tint(SWColor.onSky)
+                            .frame(width: 20, height: 20)
+                    } else {
+                        Image(systemName: "arrow.clockwise")
+                            .font(SWType.icon)
+                            .foregroundStyle(SWColor.onSky)
+                            .frame(width: 20, height: 20)
+                    }
+                }
+                .padding(SWSpacing.md)
+                .glassEffect(.regular, in: .circle)
+                .contentShape(.circle)
+            }
+            .buttonStyle(.plain)
+            .disabled(isRefreshing)
+            .accessibilityLabel(isRefreshing ? "Refreshing" : "Refresh")
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, SWSpacing.lg)
@@ -146,6 +197,7 @@ struct LeagueDetailView: View {
                 .lineLimit(1)
             HStack(spacing: 4) {
                 Text(scored, format: .number.precision(.fractionLength(1)))
+                    .contentTransition(.numericText())
                     .font(SWType.scoreCaption)
                     .foregroundStyle(SWColor.primary)
                 if let projected {
@@ -192,6 +244,32 @@ struct LeagueDetailView: View {
                 if let luck = luckIndex {
                     stat(luck.formatted(.number.precision(.fractionLength(2)).sign(strategy: .always())), "Luck")
                 }
+            }
+
+            // Straight to the league on its own platform — the app if it is installed,
+            // the site if not — for the things this app deliberately does not do, like
+            // setting a lineup. One quiet row, the platform's own mark, an outward arrow.
+            if let destination = PlatformLinks.league(snapshot.league, teamID: snapshot.myTeam?.id) {
+                Link(destination: destination) {
+                    HStack(spacing: SWSpacing.sm) {
+                        PlatformMark(platform: snapshot.league.platform, size: 18)
+                        Text("Open in \(snapshot.league.platform.displayName)")
+                            .font(SWType.bodyMedium)
+                            .foregroundStyle(SWColor.primary)
+                        Spacer(minLength: SWSpacing.sm)
+                        Image(systemName: "arrow.up.right")
+                            .font(SWType.glyph)
+                            .foregroundStyle(SWColor.secondary)
+                    }
+                    .padding(.horizontal, SWSpacing.md)
+                    .padding(.vertical, SWSpacing.sm)
+                    .background(
+                        RoundedRectangle(cornerRadius: SWRadius.sm, style: .continuous)
+                            .fill(SWColor.primary.opacity(0.07))
+                    )
+                    .contentShape(.rect(cornerRadius: SWRadius.sm))
+                }
+                .accessibilityLabel("Open this league in \(snapshot.league.platform.displayName)")
             }
 
         }
@@ -250,6 +328,137 @@ struct LeagueDetailView: View {
                         )
                         .opacity(0.72)
                     }
+                }
+            }
+            .padding(SWSpacing.lg)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .glassEffect(.regular.tint(SWColor.leagueTint(snapshot.league.platform)), in: .rect(cornerRadius: SWRadius.lg))
+        }
+    }
+
+    // MARK: - Your season
+
+    /// Every week of your schedule: the result where it has been played, the opponent
+    /// where it has not. Tap a week to open that matchup — past weeks with the lineups
+    /// that actually played, future ones with the two teams.
+    @ViewBuilder
+    private var mySchedule: some View {
+        let schedule = snapshot.mySchedule
+        if !schedule.isEmpty {
+            VStack(alignment: .leading, spacing: SWSpacing.md) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text("Your season")
+                        .font(SWType.headline)
+                        .foregroundStyle(SWColor.primary)
+                    Spacer()
+                    if let team = snapshot.myTeam {
+                        Text(team.record.summary)
+                            .font(SWType.scoreCaption)
+                            .foregroundStyle(SWColor.secondary)
+                    }
+                }
+
+                VStack(spacing: 0) {
+                    ForEach(schedule) { entry in
+                        Button {
+                            inspectedMatchup = entry.pair
+                        } label: {
+                            scheduleRow(entry)
+                        }
+                        .buttonStyle(.plain)
+                        if entry.id != schedule.last?.id {
+                            Rectangle().fill(SWColor.hairline).frame(height: 1)
+                        }
+                    }
+                }
+            }
+            .padding(SWSpacing.lg)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .glassEffect(.regular.tint(SWColor.leagueTint(snapshot.league.platform)), in: .rect(cornerRadius: SWRadius.lg))
+        }
+    }
+
+    private func scheduleRow(_ entry: LeagueSnapshot.ScheduleEntry) -> some View {
+        let format = FloatingPointFormatStyle<Double>.number.precision(.fractionLength(1))
+        return HStack(alignment: .firstTextBaseline, spacing: SWSpacing.md) {
+            Text("Week \(entry.week)")
+                .font(SWType.scoreCaption)
+                .foregroundStyle(entry.isCurrent ? SWColor.accent : SWColor.tertiary)
+                .monospacedDigit()
+                .frame(width: 60, alignment: .leading)
+
+            Text(entry.opponent?.displayName ?? "—")
+                .font(SWType.bodyMedium)
+                .foregroundStyle(SWColor.primary)
+                .lineLimit(1)
+
+            Spacer(minLength: SWSpacing.sm)
+
+            if let won = entry.won {
+                // Result first, because that is what a schedule is for.
+                Text(won ? "W" : "L")
+                    .font(SWType.scoreCaption)
+                    .foregroundStyle(won ? SWColor.positive : SWColor.negative)
+                    .frame(width: 16)
+                Text("\(entry.myScore.formatted(format)) – \(entry.theirScore.formatted(format))")
+                    .font(SWType.scoreCaption)
+                    .foregroundStyle(SWColor.secondary)
+                    .monospacedDigit()
+            } else if entry.isCurrent {
+                Text(entry.pair.hasKickedOff
+                     ? "\(entry.myScore.formatted(format)) – \(entry.theirScore.formatted(format))"
+                     : "This week")
+                    .font(SWType.scoreCaption)
+                    .foregroundStyle(SWColor.accent)
+                    .monospacedDigit()
+            } else {
+                Image(systemName: "chevron.right")
+                    .font(SWType.glyph)
+                    .foregroundStyle(SWColor.tertiary)
+            }
+        }
+        .padding(.vertical, SWSpacing.sm)
+        .contentShape(.rect)
+        .accessibilityElement(children: .combine)
+    }
+
+    // MARK: - Around the league
+
+    /// Every other game this week, each in the same block your own scoreboard uses, so
+    /// the whole league reads in one visual language. Tapping one opens both lineups.
+    @ViewBuilder
+    private var aroundTheLeague: some View {
+        let others = snapshot.otherMatchups
+        if !others.isEmpty {
+            VStack(alignment: .leading, spacing: SWSpacing.md) {
+                Text("Around the league")
+                    .font(SWType.headline)
+                    .foregroundStyle(SWColor.primary)
+
+                ForEach(others) { pair in
+                    Button {
+                        inspectedMatchup = pair
+                    } label: {
+                        // Same two blocks as your own scoreboard, in the same order:
+                        // the banked points and how much is left come FIRST, because
+                        // they change what the projection underneath means.
+                        VStack(spacing: SWSpacing.sm) {
+                            let left = snapshot.progress(for: pair.leftRoster)
+                            let right = snapshot.progress(for: pair.rightRoster)
+                            if left.total > 0 || right.total > 0 {
+                                ProgressRow(mine: left, theirs: right, isCompact: true)
+                            }
+                            MatchupHeader(snapshot: snapshot, pair: pair)
+                        }
+                            .padding(SWSpacing.md)
+                            .background(
+                                RoundedRectangle(cornerRadius: SWRadius.md, style: .continuous)
+                                    .fill(SWColor.primary.opacity(0.07))
+                            )
+                            .contentShape(RoundedRectangle(cornerRadius: SWRadius.md, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Shows both starting lineups")
                 }
             }
             .padding(SWSpacing.lg)

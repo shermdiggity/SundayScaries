@@ -64,11 +64,18 @@ struct LeagueCard: View {
             // Your team first, then the league it plays in — the order you think about
             // them in.
             VStack(alignment: .leading, spacing: 0) {
+                // Two lines rather than an ellipsis. A team called "Kupp of Ambition"
+                // in "Sigma Alpha Epsilon Keeper Dynasty" is not a rare case, and
+                // shaving the end off it hides the very thing the line exists to say.
+                // The height is reserved for two lines either way, so a short name and
+                // a long one leave every card the same size and nothing reflows when
+                // real data replaces a skeleton.
                 Text(title)
                     .font(SWType.cardTitle)
                     .foregroundStyle(SWColor.primary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.75)
+                    .lineLimit(2, reservesSpace: true)
+                    .minimumScaleFactor(0.8)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 if let team = snapshot.myTeam {
                     HStack(spacing: SWSpacing.xs) {
@@ -175,13 +182,8 @@ struct PlatformMark: View {
     var body: some View {
         Group {
             if let url = SWColor.platformLogo(platform) {
-                AsyncImage(url: url) { phase in
-                    if case let .success(image) = phase {
-                        image.resizable().aspectRatio(contentMode: .fit)
-                    } else {
-                        monogram
-                    }
-                }
+                CachedImage(url: url) { monogram }
+                    .aspectRatio(contentMode: .fit)
             } else {
                 monogram
             }
@@ -195,8 +197,9 @@ struct PlatformMark: View {
             .fill(SWColor.platform(platform))
             .overlay {
                 Text(platform.displayName.prefix(1))
-                    // Scales with the mark, so this one is geometry rather than a token.
-                    .font(.system(size: size * 0.6, weight: .black, design: .rounded))
+                    // Scales with the mark, so the size is geometry rather than a
+                    // step on the type scale.
+                    .font(SWType.mark(size * 0.6))
                     .foregroundStyle(SWColor.canvas)
             }
     }

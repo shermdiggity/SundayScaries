@@ -11,64 +11,141 @@ struct MatchupHeader: View {
     /// The detail screen gets more room and larger type.
     var isExpanded: Bool = false
 
+    /// Whose game this is. Yours puts you on the left with your name emphasised and the
+    /// bar reading as YOUR odds; a neutral one is home on the left, both names equal, and
+    /// the bar names the side it is describing.
+    private enum Perspective { case mine, neutral }
+    private let perspective: Perspective
+
+    private let leftName: String
+    private let rightName: String
+    private let leftScore: Double
+    private let rightScore: Double
+    private let leftRoster: Roster?
+    private let rightRoster: Roster?
+    private let probability: Double?
+    private let hasKickedOff: Bool
+
+    /// Your matchup. Unchanged for every existing call site: the weekly card and the
+    /// detail scoreboard render exactly what they did before pairs existed.
+    init(snapshot: LeagueSnapshot, isExpanded: Bool = false) {
+        self.snapshot = snapshot
+        self.isExpanded = isExpanded
+        perspective = .mine
+        leftName = snapshot.myTeam?.displayName ?? "You"
+        rightName = snapshot.opponent?.displayName ?? "—"
+        leftScore = snapshot.myScore
+        rightScore = snapshot.opponentScore
+        leftRoster = snapshot.myRoster
+        rightRoster = snapshot.opponentRoster
+        probability = snapshot.winProbability
+        hasKickedOff = snapshot.hasKickedOff
+    }
+
+    /// Anyone's matchup.
+    init(snapshot: LeagueSnapshot, pair: LeagueSnapshot.MatchupPair, isExpanded: Bool = false) {
+        self.snapshot = snapshot
+        self.isExpanded = isExpanded
+        perspective = .neutral
+        leftName = pair.left?.displayName ?? "—"
+        rightName = pair.right?.displayName ?? "—"
+        leftScore = pair.leftScore
+        rightScore = pair.rightScore
+        leftRoster = pair.leftRoster
+        rightRoster = pair.rightRoster
+        // A finished game has a result, not odds.
+        probability = pair.isFinal ? nil : snapshot.winProbability(for: pair)
+        hasKickedOff = pair.hasKickedOff
+    }
+
     private var faceSize: CGFloat { isExpanded ? 44 : 34 }
+    /// The column the "vs." sits in. Every row keeps a gap this wide so faces, names and
+    /// numbers line up down the middle.
+    private var gutter: CGFloat { 30 }
 
     var body: some View {
         VStack(spacing: isExpanded ? SWSpacing.lg : SWSpacing.md) {
-            HStack(alignment: .top, spacing: SWSpacing.sm) {
-                side(name: snapshot.myTeam?.displayName ?? "You",
-                     score: snapshot.myScore,
-                     projection: snapshot.projectedTotal(for: snapshot.myRoster),
-                     roster: snapshot.myRoster,
-                     isMine: true)
+            // Laid out as ROWS spanning both sides, not as two independent columns.
+            //
+            // Each side used to be its own stack, and to keep the two projections level
+            // when one team name wrapped, the name reserved two lines on both sides.
+            // That reservation is what put a dead band between every one-line name and
+            // its projection. A row shares its height across both sides by construction,
+            // so a wrapped name pushes BOTH projections down together and a short one
+            // reserves nothing.
+            VStack(spacing: SWSpacing.sm) {
+                HStack(spacing: SWSpacing.sm) {
+                    faces(leftRoster)
+                    Text("vs.")
+                        .font(SWType.section)
+                        .foregroundStyle(SWColor.tertiary)
+                        .frame(width: gutter)
+                    faces(rightRoster)
+                }
+                .frame(height: faceSize)
 
-                Text("vs.")
-                    .font(SWType.section)
-                    .foregroundStyle(SWColor.tertiary)
-                    .padding(.top, faceSize / 2 - 10)
+                HStack(alignment: .top, spacing: SWSpacing.sm) {
+                    nameLabel(leftName, isLeft: true)
+                    Color.clear.frame(width: gutter, height: 1)
+                    nameLabel(rightName, isLeft: false)
+                }
 
-                side(name: snapshot.opponent?.displayName ?? "—",
-                     score: snapshot.opponentScore,
-                     projection: snapshot.projectedTotal(for: snapshot.opponentRoster),
-                     roster: snapshot.opponentRoster,
-                     isMine: false)
+                HStack(alignment: .firstTextBaseline, spacing: SWSpacing.sm) {
+                    projectionLabel(snapshot.projectedTotal(for: leftRoster))
+                    Color.clear.frame(width: gutter, height: 1)
+                    projectionLabel(snapshot.projectedTotal(for: rightRoster))
+                }
             }
 
-            if let probability = snapshot.winProbability {
+            if let probability {
                 WinBar(probability: probability,
                        height: isExpanded ? 10 : 8,
-                       isLive: snapshot.hasKickedOff)
+                       isLive: hasKickedOff,
+                       // A neutral bar has no "you", so it says whose odds these are.
+                       subject: perspective == .neutral ? leftName : nil)
             }
         }
     }
 
-    private func side(name: String, score: Double, projection: Double?, roster: Roster?, isMine: Bool) -> some View {
-        VStack(spacing: SWSpacing.sm) {
-            // Three faces, side by side and ringed. Overlapping them buried the middle
-            // one and read as a pile rather than as a team.
-            HStack(spacing: SWSpacing.xs) {
-                ForEach(Array(topFaces(roster).enumerated()), id: \.offset) { _, player in
-                    Headshot(player: player, size: faceSize, strokeWidth: 2.5)
-                }
-            }
-            .frame(height: faceSize)
-
-            Text(name)
-                .font(SWType.caption)
-                .foregroundStyle(isMine ? SWColor.primary : SWColor.secondary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-
-            if let projection {
-                HStack(spacing: 3) {
-                    Text("proj").font(SWType.micro).foregroundStyle(SWColor.tertiary)
-                    Text(projection, format: .number.precision(.fractionLength(1)))
-                        .font(isExpanded ? SWType.score : SWType.scoreCaption)
-                        .foregroundStyle(SWColor.secondary)
-                }
+    /// Three faces, side by side and ringed. Overlapping them buried the middle one and
+    /// read as a pile rather than as a team.
+    private func faces(_ roster: Roster?) -> some View {
+        HStack(spacing: SWSpacing.xs) {
+            ForEach(Array(topFaces(roster).enumerated()), id: \.offset) { _, player in
+                Headshot(player: player, size: faceSize, strokeWidth: 2.5)
             }
         }
         .frame(maxWidth: .infinity)
+    }
+
+    private func nameLabel(_ name: String, isLeft: Bool) -> some View {
+        // Your name is the emphasised one in your own matchup. In someone else's there
+        // is nobody to emphasise, so both read the same.
+        let isMine = perspective == .neutral || isLeft
+        return Text(name)
+            .font(SWType.caption)
+            .foregroundStyle(isMine ? SWColor.primary : SWColor.secondary)
+            .lineLimit(2)
+            .minimumScaleFactor(0.75)
+            .multilineTextAlignment(.center)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity)
+    }
+
+    @ViewBuilder
+    private func projectionLabel(_ projection: Double?) -> some View {
+        if let projection {
+            HStack(spacing: 3) {
+                Text("proj").font(SWType.micro).foregroundStyle(SWColor.tertiary)
+                Text(projection, format: .number.precision(.fractionLength(1)))
+                    .font(isExpanded ? SWType.score : SWType.scoreCaption)
+                    .foregroundStyle(SWColor.secondary)
+                    .contentTransition(.numericText())
+            }
+            .frame(maxWidth: .infinity)
+        } else {
+            Color.clear.frame(height: 1).frame(maxWidth: .infinity)
+        }
     }
 
     /// The three highest-scoring (or highest-projected) starters — the faces that
@@ -168,6 +245,9 @@ struct WinBar: View {
     var height: CGFloat = 8
     var showsLabel: Bool = true
     var isLive: Bool = false
+    /// Whose odds these are, when it is not obvious — "Shou Me The Money 62% to win".
+    /// Nil in your own matchup, where "to win" already means you.
+    var subject: String? = nil
 
     var body: some View {
         VStack(spacing: SWSpacing.xs) {
@@ -176,9 +256,11 @@ struct WinBar: View {
                     Capsule().fill(SWColor.onSky.opacity(0.16))
                     Capsule()
                         .fill(
+                            // Winning is green, losing is red. The old warm-to-orange
+                            // ramp made a favourite look like a warning.
                             LinearGradient(
                                 colors: probability >= 0.5
-                                    ? [SWColor.accent, SWColor.warning]
+                                    ? [SWColor.positive.opacity(0.8), SWColor.positive]
                                     : [SWColor.negative.opacity(0.75), SWColor.negative],
                                 startPoint: .leading, endPoint: .trailing
                             )
@@ -191,9 +273,11 @@ struct WinBar: View {
 
             if showsLabel {
                 HStack {
-                    Text(WinProbability.label(probability) + " to win")
+                    Text((subject.map { "\($0) " } ?? "") + WinProbability.label(probability) + " to win")
                         .font(SWType.scoreCaption)
-                        .foregroundStyle(probability >= 0.5 ? SWColor.accent : SWColor.negative)
+                        .foregroundStyle(probability >= 0.5 ? SWColor.positive : SWColor.negative)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
                     Spacer()
                     if isLive {
                         Text("Live").font(SWType.micro).foregroundStyle(SWColor.live)

@@ -19,8 +19,9 @@ struct PositionCarousel: View {
     var body: some View {
         VStack(alignment: .leading, spacing: SWSpacing.md) {
             Text(title)
-                .font(SWType.headline)
-                .foregroundStyle(SWColor.primary)
+                .swVoice(SWType.sectionHeaderFace)
+                // On the sky, like the hero — not the card text colour.
+                .foregroundStyle(SWColor.onSky)
                 .padding(.horizontal, SWSpacing.xl)
 
             ScrollView(.horizontal) {
@@ -33,6 +34,7 @@ struct PositionCarousel: View {
                             isProjected: points(position.player).isProjected,
                             kickoff: kickoff(position.player)
                         )
+                        .playerTappable(position.player)
                     }
                 }
                 .padding(.horizontal, SWSpacing.xl)
@@ -71,10 +73,18 @@ struct SeasonOutlookRow: View {
         }
         .padding(SWSpacing.lg)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .glassEffect(
-            .regular.tint(SWColor.surface.opacity(0.62)),
-            in: .rect(cornerRadius: SWRadius.lg)
-        )
+        // NOT glass. Glass re-resolves its backdrop every frame, and behind this sits a
+        // full-screen animated Metal shader — the two together are most of what made
+        // scrolling stutter. Plain alpha blending has nothing to re-resolve. The league
+        // card learned this already; this one was missed.
+        .background {
+            RoundedRectangle(cornerRadius: SWRadius.lg)
+                .fill(SWColor.surface.opacity(0.82))
+                .overlay {
+                    RoundedRectangle(cornerRadius: SWRadius.lg)
+                        .strokeBorder(SWColor.hairline, lineWidth: 1)
+                }
+        }
     }
 
     private var mood: (String, Color)? {

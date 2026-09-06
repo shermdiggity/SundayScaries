@@ -199,9 +199,35 @@ struct ComponentGallery: View {
 
                     section("Type") {
                         VStack(alignment: .leading, spacing: SWSpacing.sm) {
-                            Text("Display 40").font(SWType.display).foregroundStyle(SWColor.primary)
+                            Text("Display 40").swVoice(SWType.displayFace).foregroundStyle(SWColor.primary)
                             Text("Title 26").font(SWType.title).foregroundStyle(SWColor.primary)
-                            Text("Headline 17").font(SWType.headline).foregroundStyle(SWColor.primary)
+                            Text("Headline 19 · rounded").font(SWType.headline).foregroundStyle(SWColor.primary)
+                            Text("Section header · Garamond").swVoice(SWType.sectionHeaderFace).foregroundStyle(SWColor.primary)
+                            Text("Press and hold a league card to open LeagueEditor — the "
+                                 + "native List that reorders and hides. There is no custom "
+                                 + "drag on the weekly view any more, by design.")
+                                .font(SWType.caption)
+                                .foregroundStyle(SWColor.secondary)
+                            Text("Every player — PlayerRow, LineupFaceoff, PlayerFoilCard, the "
+                                 + "Podium faces — opens PlayerSheet via .playerTappable, using "
+                                 + "the screen's contextLeagueID for its default scoring.")
+                                .font(SWType.caption)
+                                .foregroundStyle(SWColor.secondary)
+                            Text("MatchupHeader has two perspectives: yours (weekly card, "
+                                 + "detail scoreboard) and neutral (Around the league rows and "
+                                 + "MatchupSheet), where both names are equal and the win bar "
+                                 + "names the side it describes. MatchupSheet is the detail "
+                                 + "scoreboard plus LineupFaceoff for any pair.")
+                                .font(SWType.caption)
+                                .foregroundStyle(SWColor.secondary)
+                            Text("League order and visibility are edited in LeagueEditor, "
+                                 + "reachable from the account sheet.")
+                                .font(SWType.caption)
+                                .foregroundStyle(SWColor.secondary)
+                            Text("Every other face on the device lives in the font browser, "
+                                 + "reachable from the account sheet.")
+                                .font(SWType.caption)
+                                .foregroundStyle(SWColor.secondary)
                             Text("Body 15").font(SWType.body).foregroundStyle(SWColor.primary)
                             Text("Caption 13").font(SWType.caption).foregroundStyle(SWColor.secondary)
                             Text("MICRO 11").font(SWType.micro).foregroundStyle(SWColor.tertiary)

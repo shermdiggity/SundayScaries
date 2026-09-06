@@ -51,6 +51,7 @@ struct Podium: View {
         VStack(spacing: SWSpacing.sm) {
             if let face = entry.face {
                 Headshot(player: face, size: entry.rank == 1 ? 60 : 46)
+                    .playerTappable(face)
                     .overlay(alignment: .bottomTrailing) {
                         Circle()
                             .fill(medal(entry.rank))

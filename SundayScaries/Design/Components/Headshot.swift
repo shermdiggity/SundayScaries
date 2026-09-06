@@ -18,20 +18,13 @@ struct Headshot: View {
     var body: some View {
         Group {
             if let url = player.headshotURL, !player.isEmptyLineupSlot {
-                AsyncImage(url: url, transaction: Transaction(animation: SWMotion.standard)) { phase in
-                    switch phase {
-                    case let .success(image):
-                        image.resizable()
-                            .aspectRatio(contentMode: isLogo ? .fit : .fill)
-                            .padding(isLogo ? size * 0.16 : 0)
-                    case .failure:
-                        fallback
-                    case .empty:
-                        placeholder
-                    @unknown default:
-                        fallback
-                    }
+                CachedImage(url: url) {
+                    // Only ever seen the first time a face is fetched. On every later
+                    // appearance the image is already in memory and renders on frame one.
+                    placeholder
                 }
+                .aspectRatio(contentMode: isLogo ? .fit : .fill)
+                .padding(isLogo ? size * 0.16 : 0)
             } else {
                 fallback
             }
@@ -55,7 +48,7 @@ struct Headshot: View {
 
     private var fallback: some View {
         Text(initials)
-            .font(.system(size: size * 0.34, weight: .semibold))
+            .font(SWType.initials(size * 0.34))
             .foregroundStyle(tint)
             .minimumScaleFactor(0.6)
     }

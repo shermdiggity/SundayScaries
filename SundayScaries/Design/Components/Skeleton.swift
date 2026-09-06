@@ -1,44 +1,34 @@
 import SwiftUI
 import FantasyCore
 
-/// Shimmer sweep, adapted from ShipSwift (MIT) — github.com/signerlabs/ShipSwift.
-/// Changed: honours Reduce Motion by holding a still highlight instead of sweeping.
+/// A loading state that breathes.
+///
+/// This was a shimmer: a half-width gradient band in a `GeometryReader` overlay, offset
+/// across the view forever and clipped, one per skeleton. Two problems, one cause. Each
+/// band was a continuously animating, clipped layer compositing over a full-screen Metal
+/// shader — several of them at once dropped frames on every load. And because it was an
+/// overlay, it was literally a rectangle laid on top of the content: it swept across
+/// text, gaps and rounded corners alike, which is what made it read as boxy and canned.
+///
+/// Now the content itself pulses in opacity — a single Core Animation property on the
+/// group, no overlay, no mask, no geometry. The effect belongs to the placeholder
+/// shapes, so it follows every rounded corner and every gap for free, and it costs
+/// almost nothing. The name is kept so nothing that uses it had to change.
 struct SWShimmer<Content: View>: View {
-    var duration: Double = 1.6
-    var delay: Double = 0.2
+    var duration: Double = 1.1
     @ViewBuilder let content: () -> Content
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var animate = false
-
-    private var band: LinearGradient {
-        LinearGradient(
-            colors: [.clear, .clear, .white.opacity(0.14), .clear, .clear],
-            startPoint: .topLeading, endPoint: .bottomTrailing
-        )
-    }
+    @State private var dimmed = false
 
     var body: some View {
         content()
-            .overlay {
-                GeometryReader { geo in
-                    let width = geo.size.width * 0.5
-                    band
-                        .frame(width: width)
-                        .offset(x: animate ? geo.size.width + width : -width * 1.5)
-                        .animation(
-                            reduceMotion ? nil :
-                                .linear(duration: duration).delay(delay).repeatForever(autoreverses: false),
-                            value: animate
-                        )
-                }
-                .clipped()
-                .allowsHitTesting(false)
-            }
-            .task {
-                try? await Task.sleep(nanoseconds: 100_000_000)
-                animate = true
-            }
+            .opacity(dimmed ? 0.55 : 1)
+            .animation(
+                reduceMotion ? nil : .easeInOut(duration: duration).repeatForever(autoreverses: true),
+                value: dimmed
+            )
+            .onAppear { dimmed = true }
     }
 }
 
@@ -74,7 +64,7 @@ struct LeagueCardSkeleton: View {
                     Text(league.name)
                         .font(SWType.cardTitle)
                         .foregroundStyle(SWColor.primary)
-                        .lineLimit(1)
+                        .lineLimit(2, reservesSpace: true)
                         .minimumScaleFactor(0.75)
                     SkeletonBlock(width: 64, height: 11)
                 }

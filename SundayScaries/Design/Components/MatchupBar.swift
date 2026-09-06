@@ -49,10 +49,12 @@ struct MatchupBar: View {
 
             HStack {
                 Text(myName)
-                    .lineLimit(1)
+                    .lineLimit(2, reservesSpace: true)
+                    .minimumScaleFactor(0.75)
                 Spacer(minLength: SWSpacing.md)
                 Text(opponentName)
-                    .lineLimit(1)
+                    .lineLimit(2, reservesSpace: true)
+                    .minimumScaleFactor(0.75)
             }
             .font(SWType.caption)
             .foregroundStyle(SWColor.tertiary)

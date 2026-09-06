@@ -14,16 +14,9 @@ struct LineupFaceoff: View {
 
     private var week: Int { mine.week }
 
-    /// Paired by lineup position. Sleeper returns starters in `roster_positions` order,
-    /// so index alignment is the pairing — the same slot on both sides.
-    private var pairs: [(mine: RosterSlot?, theirs: RosterSlot?)] {
-        let left = mine.starters
-        let right = theirs?.starters ?? []
-        return (0..<max(left.count, right.count)).map { index in
-            (index < left.count ? left[index] : nil,
-             index < right.count ? right[index] : nil)
-        }
-    }
+    /// Pairing is domain logic, not presentation, so it lives in `Roster` where it can
+    /// be tested against deliberately mismatched lineups.
+    private var pairs: [Roster.LineupPairing] { mine.faceoff(against: theirs) }
 
     var body: some View {
         VStack(spacing: SWSpacing.sm) {
@@ -33,10 +26,10 @@ struct LineupFaceoff: View {
         }
     }
 
-    private func row(_ pair: (mine: RosterSlot?, theirs: RosterSlot?)) -> some View {
+    private func row(_ pair: Roster.LineupPairing) -> some View {
         let mineValue = value(pair.mine)
         let theirsValue = value(pair.theirs)
-        let slotName = pair.mine?.slot.rawValue ?? pair.theirs?.slot.rawValue ?? ""
+        let slotName = pair.slot.rawValue
 
         return HStack(spacing: SWSpacing.sm) {
             side(pair.mine, isWinning: mineValue > theirsValue, alignment: .leading)
@@ -75,6 +68,7 @@ struct LineupFaceoff: View {
                     if isProjected(slot) { Text("proj") }
                     Text(number(slot))
                         .foregroundStyle(isWinning ? SWColor.accent : SWColor.tertiary)
+                        .contentTransition(.numericText())
                 }
                 .font(SWType.scoreMicro)
                 .foregroundStyle(SWColor.tertiary)
@@ -92,11 +86,13 @@ struct LineupFaceoff: View {
                     Headshot(player: slot.player, size: 30)
                     content
                 }
+                .playerTappable(slot.player)
             } else {
                 HStack(spacing: SWSpacing.sm) {
                     content
                     Headshot(player: slot.player, size: 30)
                 }
+                .playerTappable(slot.player)
             }
         } else {
             Color.clear.frame(maxWidth: .infinity, minHeight: 30)
@@ -105,7 +101,7 @@ struct LineupFaceoff: View {
 
     private func accessibilityLine(
         slotName: String,
-        pair: (mine: RosterSlot?, theirs: RosterSlot?),
+        pair: Roster.LineupPairing,
         mineValue: Double,
         theirsValue: Double
     ) -> String {
