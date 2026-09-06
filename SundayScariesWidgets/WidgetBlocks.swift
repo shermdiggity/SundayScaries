@@ -146,7 +146,7 @@ struct ScoreboardRow: View {
             WidgetPlatformMark(platform: league.platform, size: 16)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: SWSpacing.xs) {
-                    Text(league.myName)
+                    Text(league.myName ?? String(localized: "Your team"))
                         .font(SWType.bodyMedium)
                         .foregroundStyle(SWColor.primary)
                         .lineLimit(1)

@@ -28,7 +28,8 @@ struct WidgetLeague: Codable, Sendable, Identifiable {
     var isLineupSet: Bool
     var issueCount: Int
     var hasMatchup: Bool
-    var myName: String
+    /// Nil when the reader's team is not known; the widget says "Your team".
+    var myName: String?
     var myScore: Double
     var myProjected: Double?
     /// "3 played · 6 to play", the app's own wording.

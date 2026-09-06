@@ -284,14 +284,14 @@ struct WeeklyView: View {
                 welcome
             }
 
-            if let error = model.loadError {
-                Text(error)
+            if let problem = model.loadProblem {
+                problem.message
                     .font(SWType.caption)
                     .foregroundStyle(SWColor.onSky.opacity(0.9))
                     .fixedSize(horizontal: false, vertical: true)
             }
-            if let note = model.seasonNote {
-                Text(note)
+            if let fallback = model.seasonFallback {
+                fallback.note
                     .font(SWType.caption)
                     .foregroundStyle(SWColor.onSkySecondary)
                     .fixedSize(horizontal: false, vertical: true)

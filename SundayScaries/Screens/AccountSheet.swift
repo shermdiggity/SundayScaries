@@ -209,8 +209,8 @@ struct AccountSheet: View {
                             .foregroundStyle(SWColor.tertiary)
                             .monospacedDigit()
                     }
-                    if let note = model.seasonNote {
-                        Text(note)
+                    if let fallback = model.seasonFallback {
+                        fallback.note
                             .font(SWType.micro)
                             .foregroundStyle(SWColor.tertiary)
                     }

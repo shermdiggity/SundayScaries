@@ -18,7 +18,7 @@ enum WidgetBridge {
                 isLineupSet: snapshot.isLineupSet,
                 issueCount: snapshot.issues.count,
                 hasMatchup: snapshot.opponent != nil,
-                myName: snapshot.myTeam?.displayName ?? "Your team",
+                myName: snapshot.myTeam?.displayName,
                 myScore: snapshot.myScore,
                 myProjected: snapshot.projectedTotal(for: snapshot.myRoster),
                 mySummary: mine.summary,

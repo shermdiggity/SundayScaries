@@ -16,7 +16,7 @@ final class WeeklyModel {
     private(set) var knownLeagues: [League] = []
     private(set) var positions: [PlayerPosition] = []
     private(set) var isLoading = false
-    private(set) var loadError: String?
+    private(set) var loadProblem: LoadProblem?
     /// The week the whole screen shows.
     private(set) var week: Int?
     /// The leading platform's week — Sleeper's `/state`, else the furthest any league
@@ -25,8 +25,8 @@ final class WeeklyModel {
     /// Set by the week control; nil means "follow the platforms".
     private var viewedWeek: Int?
     private(set) var attribution: [String] = []
-    /// "Showing 2026 — 2027 leagues haven't been created yet." Nil in the normal case.
-    private(set) var seasonNote: String?
+    /// Set when the requested season had no leagues and the one before it is shown instead.
+    private(set) var seasonFallback: SeasonFallback?
     /// When the last load finished, so a return to the foreground can decide whether
     /// what is on screen is old enough to re-read.
     private(set) var lastLoaded: Date?
@@ -394,11 +394,11 @@ final class WeeklyModel {
             positions = []
             scoringOptions = []
             week = nil
-            loadError = nil
+            loadProblem = nil
             return
         }
         isLoading = true
-        loadError = nil
+        loadProblem = nil
         defer { isLoading = false }
         let mode: FetchMode = force ? .refresh : .cacheFirst
         let quiet = !allSnapshots.isEmpty
@@ -414,7 +414,7 @@ final class WeeklyModel {
         do {
             crosswalk = try await crosswalkStore.crosswalk()
         } catch {
-            loadError = "Couldn't load the player index. It downloads once and is cached after that, so this needs a connection the first time."
+            loadProblem = .playerIndexUnavailable
             return
         }
 
@@ -425,7 +425,7 @@ final class WeeklyModel {
             // A fresh top-level load: forget the last one's fallbacks.
             triedPreviousSeason = false
             refreshedForWeekFlip = false
-            seasonNote = nil
+            seasonFallback = nil
         }
         // The platform's own idea of the season first. A calendar rule cannot know when
         // Sleeper opens the new year; `league_season` can, and until it flips the leagues
@@ -447,7 +447,7 @@ final class WeeklyModel {
         // separately and its error is remembered rather than thrown.
         var leagues: [League] = []
         var sourceOfLeague: [String: any PlatformProvider] = [:]
-        var failures: [String] = []
+        var failures: [LoadProblem] = []
         for source in sources {
             do {
                 let found = try await source.provider.leagues(for: source.account)
@@ -460,8 +460,10 @@ final class WeeklyModel {
                 #if DEBUG
                 print("[load] \(source.provider.platform.rawValue) FAILED: \(error)")
                 #endif
-                failures.append(Self.describe(error, platform: source.provider.platform, season: resolvedSeason,
-                                              handle: handle(for: source.provider.platform)))
+                failures.append(.platformFailed(
+                    source.provider.platform, PlatformFailure(error),
+                    season: resolvedSeason, handle: handle(for: source.provider.platform)
+                ))
             }
         }
 
@@ -471,17 +473,15 @@ final class WeeklyModel {
            let year = Int(resolvedSeason) {
             triedPreviousSeason = true
             let previous = String(year - 1)
-            seasonNote = "Showing \(previous) — \(resolvedSeason) leagues haven't been created yet."
+            seasonFallback = SeasonFallback(shown: previous, requested: resolvedSeason)
             return await load(season: previous, force: force)
         }
 
         guard !leagues.isEmpty else {
             // "None found" and "we could not ask" are different problems with different
             // fixes, and the empty case used to read as the first no matter which it was.
-            loadError = failures.first
-                ?? (hasESPN && !hasSleeper
-                    ? "Signed in to ESPN, but no \(resolvedSeason) leagues came back. If your league is there, add its ID."
-                    : "No leagues found for \(resolvedSeason).")
+            loadProblem = failures.first
+                ?? (hasESPN && !hasSleeper ? .espnReturnedNothing(season: resolvedSeason) : .noLeagues(season: resolvedSeason))
             snapshots = []
             knownLeagues = []
             positions = []
@@ -489,7 +489,7 @@ final class WeeklyModel {
         }
         // A platform that failed while another worked is worth saying, but must not
         // replace the leagues that did load.
-        loadError = failures.first
+        loadProblem = failures.first
 
         // Names and platforms are known now, so placeholders can carry them and only
         // the matchup needs to be skeletal. Hidden leagues are known but not fetched.
@@ -887,28 +887,45 @@ final class WeeklyModel {
         return (snapshot, myTeam != nil ? weekRosters : nil)
     }
 
-    /// What to tell the user when a platform fails. A sign-in problem is the one that has
-    /// an action attached, so it must not read as a generic network error.
-    static func describe(_ error: any Error, platform: Platform, season: String, handle: String) -> String {
-        if case let ProviderError.unauthorized(_, message) = error {
-            return message ?? "\(platform.displayName) needs you to sign in again."
-        }
-        if case let ProviderError.notFound(resource) = error {
-            return "\(platform.displayName): couldn't find \(resource)."
-        }
-        switch platform {
-        case .sleeper:         return "Couldn't find leagues for \"\(handle)\" in \(season)."
-        case .fleaflicker:     return "Couldn't find Fleaflicker leagues for \"\(handle)\" in \(season). Use the email on the account, or the user id."
-        case .myFantasyLeague: return "Couldn't load your MyFantasyLeague leagues for \(season). Check the league id, or sign in for a private league."
-        case .yahoo:           return "Couldn't load your Yahoo leagues for \(season)."
-        default:               return "Couldn't load your \(platform.displayName) leagues for \(season)."
-        }
-    }
-
     /// The NFL league year rolls over in March.
     static func currentSeason(now: Date = Date(), calendar: Calendar = .current) -> String {
         let year = calendar.component(.year, from: now)
         let month = calendar.component(.month, from: now)
         return String(month >= 3 ? year : year - 1)
     }
+}
+
+/// Why a load could not show everything. The screen turns it into words; the model
+/// only says what happened.
+enum LoadProblem: Equatable {
+    /// The player index could not be fetched and nothing was cached.
+    case playerIndexUnavailable
+    /// One platform failed while listing its leagues. The others may have worked.
+    case platformFailed(Platform, PlatformFailure, season: String, handle: String)
+    /// Nothing failed, and nothing came back.
+    case noLeagues(season: String)
+    /// Signed in to ESPN only, and it returned no leagues.
+    case espnReturnedNothing(season: String)
+}
+
+/// The part of a provider error the screen distinguishes.
+enum PlatformFailure: Equatable {
+    /// The platform wants a sign-in; the message is the platform's own, if it gave one.
+    case unauthorized(message: String?)
+    case notFound(resource: String)
+    case other
+
+    init(_ error: any Error) {
+        switch error {
+        case let ProviderError.unauthorized(_, message): self = .unauthorized(message: message)
+        case let ProviderError.notFound(resource):       self = .notFound(resource: resource)
+        default:                                         self = .other
+        }
+    }
+}
+
+/// The requested season had no leagues, so the one before it is on screen.
+struct SeasonFallback: Equatable {
+    let shown: String
+    let requested: String
 }
