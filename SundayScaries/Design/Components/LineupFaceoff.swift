@@ -29,7 +29,7 @@ struct LineupFaceoff: View {
     private func row(_ pair: Roster.LineupPairing) -> some View {
         let mineValue = value(pair.mine)
         let theirsValue = value(pair.theirs)
-        let slotName = pair.slot.rawValue
+        let slotName = pair.slot.label
 
         return HStack(spacing: SWSpacing.sm) {
             side(pair.mine, isWinning: mineValue > theirsValue, alignment: .leading)

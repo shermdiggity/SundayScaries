@@ -27,7 +27,7 @@ struct PlayerRow: View {
 
     var body: some View {
         HStack(spacing: SWSpacing.md) {
-            Text(slot.slot.rawValue)
+            Text(slot.slot.label)
                 .font(SWType.micro)
                 .foregroundStyle(isEmpty ? SWColor.tertiary : SWColor.position(player.position))
                 .frame(minWidth: 38, alignment: .leading)
@@ -129,7 +129,7 @@ struct PlayerRow: View {
     }
 
     private var accessibilityText: Text {
-        var parts = [slot.slot.rawValue, isEmpty ? String(localized: "empty") : player.name]
+        var parts = [slot.slot.label, isEmpty ? String(localized: "empty") : player.name]
         if let meta, !isEmpty { parts.append(meta) }
         if let points = slot.points, hasStarted {
             parts.append(String(localized: "\(points.formatted(SWFormat.score)) points"))

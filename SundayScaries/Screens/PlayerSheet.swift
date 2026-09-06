@@ -65,8 +65,10 @@ struct PlayerSheet: View {
                     .overlay(SWColor.position(player.position).opacity(0.10))
                     .ignoresSafeArea()
             }
-            .navigationTitle(player.name)
+            // The header carries the name; a title above it read the name twice.
+            .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.hidden, for: .navigationBar)
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)

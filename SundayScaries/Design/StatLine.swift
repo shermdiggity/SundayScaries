@@ -51,3 +51,8 @@ enum StatLine {
         return parts.joined(separator: " · ")
     }
 }
+
+extension SlotKind {
+    /// The platform key, as a label: "SUPER_FLEX" reads as "SUPER FLEX".
+    var label: String { rawValue.replacingOccurrences(of: "_", with: " ") }
+}
