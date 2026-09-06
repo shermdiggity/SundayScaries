@@ -182,7 +182,7 @@
 			mainGroup = 73789153304257A300C5E9D7;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				A1000001000000000000FK01 /* XCLocalSwiftPackageReference "../FantasyKit" */,
+				A1000001000000000000FK01 /* XCRemoteSwiftPackageReference "FantasyKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 7378915D304257A300C5E9D7 /* Products */;
@@ -522,24 +522,31 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCLocalSwiftPackageReference section */
-		A1000001000000000000FK01 /* XCLocalSwiftPackageReference "../FantasyKit" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = ../FantasyKit;
+/* Begin XCRemoteSwiftPackageReference section */
+		A1000001000000000000FK01 /* XCRemoteSwiftPackageReference "FantasyKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/shermdiggity/FantasyKit";
+			requirement = {
+				kind = exactVersion;
+				version = 0.2.0;
+			};
 		};
-/* End XCLocalSwiftPackageReference section */
+/* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		A1000002000000000000FK02 /* FantasyCore */ = {
 			isa = XCSwiftPackageProductDependency;
+			package = A1000001000000000000FK01 /* XCRemoteSwiftPackageReference "FantasyKit" */;
 			productName = FantasyCore;
 		};
 		A1000003000000000000FK03 /* FantasyProviders */ = {
 			isa = XCSwiftPackageProductDependency;
+			package = A1000001000000000000FK01 /* XCRemoteSwiftPackageReference "FantasyKit" */;
 			productName = FantasyProviders;
 		};
 		B2000000000000000000000B /* FantasyCore */ = {
 			isa = XCSwiftPackageProductDependency;
+			package = A1000001000000000000FK01 /* XCRemoteSwiftPackageReference "FantasyKit" */;
 			productName = FantasyCore;
 		};
 /* End XCSwiftPackageProductDependency section */

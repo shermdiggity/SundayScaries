@@ -19,7 +19,7 @@ who you are relying on everywhere and who is starting against you.
 
 ## Architecture
 
-Two repositories. [FantasyKit](../FantasyKit) is a Swift package with no UI: the domain
+Two repositories. [FantasyKit](https://github.com/shermdiggity/FantasyKit) is a Swift package with no UI: the domain
 model, one provider per platform, identity resolution, caching, and the analytics. It
 builds and tests on a Mac with `swift test`. This repository is the app: SwiftUI
 screens, one model, the keychain, and a widget extension.
@@ -125,9 +125,8 @@ logged-in page.
 ## Setup
 
 - Xcode 26, iOS 26.
-- Clone this repository and FantasyKit side by side; the project references the package
-  at `../FantasyKit`.
-- Open `SundayScaries.xcodeproj`, set your team, run.
+- Open `SundayScaries.xcodeproj`, set your team, run. FantasyKit is resolved from GitHub
+  at a pinned version; nothing else to install.
 
 Connecting platforms happens in the app, on the first screen:
 
@@ -143,7 +142,7 @@ Connecting platforms happens in the app, on the first screen:
 
 ## Testing
 
-The logic is tested in FantasyKit: `cd ../FantasyKit && swift test` runs 285 tests
+The logic is tested in [FantasyKit](https://github.com/shermdiggity/FantasyKit): `swift test` there runs 285 tests
 against captured JSON, with no simulator and no network. This repository builds in CI
 against a generic iOS Simulator destination with strict concurrency and warnings as
 errors; there is no app test target. Every reusable view appears in the component
