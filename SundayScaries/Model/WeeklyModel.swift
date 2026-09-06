@@ -661,9 +661,11 @@ final class WeeklyModel {
         defer { isLoading = false }
         let mode: FetchMode = force ? .refresh : .cacheFirst
         let quiet = !allSnapshots.isEmpty
+        #if DEBUG
         let loadStarted = Date()
         print("[load] begin forced=\(force) quiet=\(quiet)")
         defer { print(String(format: "[load] end forced=%@ cancelled=%@ after %.2fs", String(force), String(Task.isCancelled), Date().timeIntervalSince(loadStarted))) }
+        #endif
 
         let (store, http) = Self.infrastructure()
         let crosswalkStore = CrosswalkStore(http: http, store: store)
@@ -708,11 +710,15 @@ final class WeeklyModel {
         for source in sources {
             do {
                 let found = try await source.leagues()
+                #if DEBUG
                 print("[load] \(source.platform.rawValue): \(found.count) leagues — \(found.map(\.name))")
+                #endif
                 for league in found { sourceOfLeague[league.id] = source }
                 leagues += found
             } catch {
+                #if DEBUG
                 print("[load] \(source.platform.rawValue) FAILED: \(error)")
+                #endif
                 failures.append(Self.describe(error, platform: source.platform, season: resolvedSeason,
                                               handle: handle(for: source.platform)))
             }
@@ -875,6 +881,7 @@ final class WeeklyModel {
         allSnapshots.removeAll { !current.contains($0.id) }
         applyPreferences()
 
+        #if DEBUG
         // Diagnostics for the ranking, which is invisible when there is nothing to rank.
         for snapshot in snapshots {
             let weeks = snapshot.analytics?.weeksAnalyzed ?? []
@@ -886,6 +893,7 @@ final class WeeklyModel {
             teamsWithProjection=\(projected.count)
             """)
         }
+        #endif
         allWeekRosters = portfolioInput
         applyPreferences()
         attribution = [
@@ -1057,7 +1065,9 @@ final class WeeklyModel {
                 await WidgetBridge.publish(from: self)
             } catch {
                 // A failed refresh keeps the last good snapshot, same as the full load.
+                #if DEBUG
                 print("[refresh] \(league.name) failed: \(error)")
+                #endif
             }
         }
         await task.value
