@@ -18,8 +18,8 @@ final class DebugDumpModel {
     /// Sleeper's current season, so the field is never wrong by default.
     func loadDefaultSeason() async {
         guard season.isEmpty else { return }
-        let state = try? await SleeperProvider.state(http: URLSessionHTTPClient())
-        season = state?.leagueSeason ?? state?.season ?? SleeperStateProbe.fallbackSeason()
+        let platformSeason = (try? await SleeperProvider.leagueSeason(http: URLSessionHTTPClient())) ?? nil
+        season = platformSeason ?? SleeperStateProbe.fallbackSeason()
     }
 
     func run() async {
@@ -118,11 +118,6 @@ final class DebugDumpModel {
                 line("  (skipping this league; the rest still load)")
                 continue
             }
-
-            let syncState = await provider.syncState(
-                for: .teams(leagueID: league.id), as: [Team].self, policy: .leagues
-            )
-            line("  sync: \(syncState)")
 
             // Matchups are fetched per week and each week is isolated too.
             var matchups: [Matchup] = []

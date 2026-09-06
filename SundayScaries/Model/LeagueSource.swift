@@ -81,7 +81,7 @@ struct ESPNSource: LeagueSource {
     /// Free and already correct: ESPN applies the league's scoring server-side, so there
     /// is no second request and no scoring table to reproduce.
     func projections(for league: League, week: Int) async -> Projections {
-        Projections(week: week, byCanonicalID: await provider.projections(league: league, week: week))
+        await provider.projections(league: league, week: week)
     }
 }
 
@@ -104,7 +104,7 @@ struct MFLSource: LeagueSource {
 
     /// MFL publishes one projection per player under the league's own scoring.
     func projections(for league: League, week: Int) async -> Projections {
-        Projections(week: week, byCanonicalID: await provider.projections(league: league, week: week))
+        await provider.projections(league: league, week: week)
     }
 }
 

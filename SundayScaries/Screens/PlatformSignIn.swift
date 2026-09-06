@@ -55,7 +55,7 @@ struct MFLConnectView: View {
                         .submitLabel(.done)
                         .onSubmit(saveIDs)
                     Button("Add leagues") { saveIDs() }
-                        .disabled(ESPNProvider.leagueIDs(from: leagueIDs).isEmpty)
+                        .disabled(LeagueIDs.parse(leagueIDs).isEmpty)
                 } header: {
                     Text("Or add a public league by ID")
                 } footer: {
@@ -84,8 +84,8 @@ struct MFLConnectView: View {
                 )
                 onCredentials(credentials)
                 dismiss()
-            } catch let ProviderError.unexpectedStatus(_, body) {
-                failure = body ?? "MyFantasyLeague didn't accept that sign-in."
+            } catch let ProviderError.unauthorized(_, message) {
+                failure = message ?? "MyFantasyLeague didn't accept that sign-in."
             } catch {
                 failure = "Couldn't reach MyFantasyLeague. Check the connection and try again."
             }
@@ -94,7 +94,7 @@ struct MFLConnectView: View {
 
     private func saveIDs() {
         let trimmed = leagueIDs.trimmingCharacters(in: .whitespaces)
-        guard !ESPNProvider.leagueIDs(from: trimmed).isEmpty else { return }
+        guard !LeagueIDs.parse(trimmed).isEmpty else { return }
         onLeagueIDs(trimmed)
         dismiss()
     }

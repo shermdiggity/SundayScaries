@@ -320,7 +320,7 @@ struct AccountSheet: View {
 
     private var mflStatus: String {
         if signedInToMFL { return "Signed in" }
-        let count = ESPNProvider.leagueIDs(from: mflLeagues).count
+        let count = LeagueIDs.parse(mflLeagues).count
         return count == 0 ? "Not connected" : (count == 1 ? "1 league by ID" : "\(count) leagues by ID")
     }
 

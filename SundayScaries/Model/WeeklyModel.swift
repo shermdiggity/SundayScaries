@@ -188,7 +188,7 @@ final class WeeklyModel {
     }
 
     var isSignedInToMFL: Bool { MFLCredentialStore.current != nil }
-    var hasMFL: Bool { !ESPNProvider.leagueIDs(from: mflLeagueIDs).isEmpty || isSignedInToMFL }
+    var hasMFL: Bool { !LeagueIDs.parse(mflLeagueIDs).isEmpty || isSignedInToMFL }
 
     /// Fleaflicker: the account's email, or its numeric user id. No password exists.
     var fleaflickerHandle: String {
@@ -214,7 +214,7 @@ final class WeeklyModel {
     /// Signing in is enough on its own: with no ids typed, the provider asks ESPN which
     /// leagues this account plays in. Requiring an id here meant signing in did nothing
     /// at all, which is how this first went wrong.
-    var hasESPN: Bool { !ESPNProvider.leagueIDs(from: espnLeagueIDs).isEmpty || isSignedInToESPN }
+    var hasESPN: Bool { !LeagueIDs.parse(espnLeagueIDs).isEmpty || isSignedInToESPN }
     var isSignedInToESPN: Bool { ESPNCredentialStore.current != nil }
 
     var hasAccount: Bool { hasSleeper || hasESPN || hasMFL || hasFleaflicker || hasYahoo }
@@ -363,21 +363,22 @@ final class WeeklyModel {
             for raw in fetchedProjections { if let line = raw.stats(for: id) { projections[raw.week] = line } }
         }
 
-        var built = PlayerSeasonBuilder.build(
+        var positionRank: PositionRank?
+        if let id = player.canonicalID, !statWeeks.isEmpty {
+            positionRank = PositionRanker.rank(
+                canonicalID: id, position: player.position, weeks: statWeeks,
+                rules: option?.rules, fallbackKind: option?.kind ?? snapshot.league.scoringKind
+            )
+        }
+        return PlayerSeasonBuilder.build(
             player: player, weeks: weeks,
             stats: stats, projections: projections,
             leagueScored: leagueScored, leagueProjected: leagueProjected,
             throughWeek: currentWeek,
             rules: option?.rules, fallbackKind: option?.kind ?? snapshot.league.scoringKind,
-            schedule: snapshot.schedule, now: Date()
+            schedule: snapshot.schedule, now: Date(),
+            positionRank: positionRank
         )
-        if let id = player.canonicalID, !statWeeks.isEmpty {
-            built.positionRank = PositionRanker.rank(
-                canonicalID: id, position: player.position, weeks: statWeeks,
-                rules: option?.rules, fallbackKind: option?.kind ?? snapshot.league.scoringKind
-            )
-        }
-        return built
     }
 
     // MARK: Stepping through weeks
@@ -470,7 +471,7 @@ final class WeeklyModel {
         // Sleeper opens the new year; `league_season` can, and until it flips the leagues
         // people actually have are last season's.
         let platformSeason: String? = hasSleeper
-            ? (try? await SleeperProvider.state(http: http))?.leagueSeason
+            ? ((try? await SleeperProvider.leagueSeason(http: http)) ?? nil)
             : nil
         let resolvedSeason = season
             ?? override.flatMap { $0.isEmpty ? nil : $0 }
@@ -980,11 +981,11 @@ final class WeeklyModel {
         return (snapshot, myTeam != nil ? weekRosters : nil)
     }
 
-    /// What to tell the user when a platform fails. ESPN's 401 is the one that has an
-    /// action attached, so it must not read as a generic network error.
+    /// What to tell the user when a platform fails. A sign-in problem is the one that has
+    /// an action attached, so it must not read as a generic network error.
     static func describe(_ error: any Error, platform: Platform, season: String, handle: String) -> String {
-        if case let ProviderError.unexpectedStatus(code, body) = error, code == 401 {
-            return body ?? "\(platform.displayName) needs you to sign in again."
+        if case let ProviderError.unauthorized(_, message) = error {
+            return message ?? "\(platform.displayName) needs you to sign in again."
         }
         if case let ProviderError.notFound(resource) = error {
             return "\(platform.displayName): couldn't find \(resource)."
