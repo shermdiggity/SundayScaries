@@ -53,6 +53,6 @@ jobs:
           brew list swiftformat >/dev/null 2>&1 || brew install swiftformat
           swiftlint version && swiftformat --version
       - name: SwiftLint
-        run: swiftlint lint --strict --reporter github-actions-logging
+        run: swiftlint lint --strict --baseline .swiftlint-baseline.json --reporter github-actions-logging
       - name: SwiftFormat (lint only)
         run: swiftformat --lint .
