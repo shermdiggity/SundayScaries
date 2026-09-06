@@ -175,22 +175,16 @@ extension View {
     }
 }
 
-/// Where this league lives — the platform's real mark, falling back to its colour as a
-/// monogram when there is no logo to load.
+/// Where this league lives: the platform's initial on its own colour. Not its logo,
+/// which is the platform's trademark and not ours to fetch and show.
 struct PlatformMark: View {
     let platform: Platform
     var size: CGFloat = 18
 
     var body: some View {
-        Group {
-            if let url = SWColor.platformLogo(platform) {
-                CachedImage(url: url) { PlatformMonogram(platform: platform, size: size) }.scaledToFit()
-            } else {
-                PlatformMonogram(platform: platform, size: size)
-            }
-        }
-        .frame(width: size, height: size)
-        .accessibilityLabel(Text(platform.displayName))
+        PlatformMonogram(platform: platform, size: size)
+            .frame(width: size, height: size)
+            .accessibilityLabel(Text(platform.displayName))
     }
 }
 

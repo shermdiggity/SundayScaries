@@ -178,6 +178,23 @@ struct WeeklyView: View {
                 if url.host == "league", let id = url.pathComponents.last, id != "/" {
                     selectedLeagueID = id
                 }
+                #if DEBUG
+                // sundayscaries://debug/player/<leagueID>/<canonicalID>, /debug/account,
+                // /debug/editor: for driving screenshots on a simulator, nothing else.
+                if url.host == "debug" {
+                    let parts = url.pathComponents.filter { $0 != "/" }
+                    switch parts.first {
+                    case "account": showingAccount = true
+                    case "editor": showingLeagueEditor = true
+                    case "player" where parts.count == 3:
+                        let (leagueID, canonicalID) = (parts[1], parts[2])
+                        let player = model.snapshots.first { $0.id == leagueID }?.rosters
+                            .flatMap(\.slots).first { $0.player.canonicalID == canonicalID }?.player
+                        if let player { inspector.open(player, in: leagueID) }
+                    default: break
+                    }
+                }
+                #endif
             }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .background {

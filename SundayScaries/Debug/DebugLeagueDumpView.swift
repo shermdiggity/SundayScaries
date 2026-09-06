@@ -1,3 +1,4 @@
+#if DEBUG
 // Eyeballs the data layer against a real league, raw. Reached only from its #Preview;
 // deliberately undesigned, and nothing here is a pattern to copy.
 
@@ -308,3 +309,4 @@ enum SleeperStateProbe {
 #Preview {
     DebugLeagueDumpView()
 }
+#endif

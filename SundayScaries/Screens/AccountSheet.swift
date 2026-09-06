@@ -245,6 +245,22 @@ struct AccountSheet: View {
                             .font(SWType.micro)
                             .foregroundStyle(SWColor.tertiary)
                     }
+                    if let url = URL(string: "https://github.com/shermdiggity/SundayScaries/blob/main/PRIVACY.md") {
+                        Link(destination: url) {
+                            Text("Privacy policy")
+                                .font(SWType.caption)
+                                .foregroundStyle(SWColor.accent)
+                        }
+                        .frame(minHeight: 44)
+                    }
+                    if let url = URL(string: "https://github.com/shermdiggity/SundayScaries") {
+                        Link(destination: url) {
+                            Text("Source and support")
+                                .font(SWType.caption)
+                                .foregroundStyle(SWColor.accent)
+                        }
+                        .frame(minHeight: 44)
+                    }
                     HStack {
                         Text("Version")
                             .font(SWType.caption)

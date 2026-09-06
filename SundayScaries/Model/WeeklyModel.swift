@@ -54,6 +54,8 @@ final class WeeklyModel {
     /// the stack. Both cache to disk, so a season opened twice costs nothing the second
     /// time.
     private var playerSeasons: PlayerSeasonService?
+    /// Platforms the kill switch has paused, from the last load that could read it.
+    private var disabledPlatforms: [Platform: String] = [:]
     private var loadedSeason: String = ""
 
     var handle: String {
@@ -438,6 +440,7 @@ final class WeeklyModel {
             ?? platformSeason
             ?? Self.currentSeason()
 
+        disabledPlatforms = await RemoteConfig.disabledPlatforms()
         let ctx = makeContext(http: http, store: store, crosswalk: crosswalk, season: resolvedSeason, mode: mode)
         let scheduleStore = ctx.scheduleStore
         let scoreboard = ctx.scoreboard
@@ -447,7 +450,7 @@ final class WeeklyModel {
         // separately and its error is remembered rather than thrown.
         var leagues: [League] = []
         var sourceOfLeague: [String: any PlatformProvider] = [:]
-        var failures: [LoadProblem] = []
+        var failures: [LoadProblem] = disabledPlatforms.map { .platformDisabled($0.key, reason: $0.value) }
         for source in sources {
             do {
                 let found = try await source.provider.leagues(for: source.account)
@@ -675,31 +678,31 @@ final class WeeklyModel {
         loadedSeason = resolvedSeason
 
         var sources: [PlatformSource] = []
-        if hasSleeper {
+        if hasSleeper, disabledPlatforms[.sleeper] == nil {
             sources.append(PlatformSource(
                 provider: kit.sleeper(),
                 account: LinkedAccount(platform: .sleeper, handle: handle)
             ))
         }
-        if hasESPN {
+        if hasESPN, disabledPlatforms[.espn] == nil {
             sources.append(PlatformSource(
                 provider: kit.espn(credentials: ESPNCredentialStore.current),
                 account: LinkedAccount(platform: .espn, handle: espnLeagueIDs)
             ))
         }
-        if hasMFL {
+        if hasMFL, disabledPlatforms[.myFantasyLeague] == nil {
             sources.append(PlatformSource(
                 provider: kit.myFantasyLeague(credentials: MFLCredentialStore.current),
                 account: LinkedAccount(platform: .myFantasyLeague, handle: mflLeagueIDs)
             ))
         }
-        if hasFleaflicker {
+        if hasFleaflicker, disabledPlatforms[.fleaflicker] == nil {
             sources.append(PlatformSource(
                 provider: kit.fleaflicker(),
                 account: LinkedAccount(platform: .fleaflicker, handle: fleaflickerHandle)
             ))
         }
-        if FeatureFlags.yahooEnabled, let yahoo = YahooCredentialStore.current {
+        if FeatureFlags.yahooEnabled, disabledPlatforms[.yahoo] == nil, let yahoo = YahooCredentialStore.current {
             sources.append(PlatformSource(
                 // A refreshed token is a new credential; it goes back to the keychain.
                 provider: kit.yahoo(credentials: yahoo, onCredentialsRefreshed: { YahooCredentialStore.save($0) }),
@@ -911,6 +914,8 @@ enum LoadProblem: Equatable {
     case noLeagues(season: String)
     /// Signed in to ESPN only, and it returned no leagues.
     case espnReturnedNothing(season: String)
+    /// The kill switch has paused this platform; the reason is what the switch said.
+    case platformDisabled(Platform, reason: String)
 }
 
 /// The part of a provider error the screen distinguishes.

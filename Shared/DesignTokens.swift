@@ -86,17 +86,6 @@ enum SWColor {
             .mixed(with: surfaceRaised, by: 0.28)
     }
 
-    /// Each platform's own mark, served from its own CDN. Used nominatively — to say
-    /// "this league lives on Sleeper" — never restyled or redrawn, and never bundled.
-    static func platformLogo(_ platform: Platform) -> URL? {
-        switch platform {
-        case .sleeper: URL(string: "https://sleepercdn.com/images/v2/logos/sleeper.png")
-        case .espn:    URL(string: "https://a.espncdn.com/i/espn/espn_logos/espn_red.png")
-        case .myFantasyLeague: URL(string: "https://www.myfantasyleague.com/apple-touch-icon.png")
-        default:       nil
-        }
-    }
-
     /// Position colours follow the near-standard convention shared by Sleeper and ESPN.
     /// Matching it buys instant legibility for free; inventing our own costs clarity for
     /// nothing. Held at a lower saturation than the platforms use, so a lineup reads as

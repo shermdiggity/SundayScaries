@@ -1,3 +1,4 @@
+#if DEBUG
 import SwiftUI
 import FantasyCore
 import FantasyProviders
@@ -387,3 +388,4 @@ private struct FeedbackDemo: View {
         .buttonStyle(.bordered)
     }
 }
+#endif

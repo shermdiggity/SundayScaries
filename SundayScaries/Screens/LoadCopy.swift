@@ -14,6 +14,8 @@ extension LoadProblem {
             Text("No leagues found for \(season).")
         case let .espnReturnedNothing(season):
             Text("Signed in to ESPN, but no \(season) leagues came back. If your league is there, add its ID.")
+        case let .platformDisabled(platform, reason):
+            Text("\(platform.displayName) is paused for now: \(reason)")
         }
     }
 
