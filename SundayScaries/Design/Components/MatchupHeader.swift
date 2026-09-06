@@ -170,6 +170,8 @@ struct MatchupHeader: View {
 /// point lead with four players left is a different situation from the same lead with
 /// none, and you should know which before you read the score.
 struct ProgressRow: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
+    private var isAccessibilitySize: Bool { typeSize.isAccessibilitySize }
     let mine: LineupProgress
     let theirs: LineupProgress
     var isCompact: Bool = false
@@ -200,7 +202,10 @@ struct ProgressRow: View {
                 .contentTransition(.numericText())
 
             if progress.isKnown {
-                HStack(spacing: SWSpacing.xs) {
+                let counts = isAccessibilitySize
+                    ? AnyLayout(VStackLayout(alignment: alignment, spacing: SWSpacing.xs))
+                    : AnyLayout(HStackLayout(spacing: SWSpacing.xs))
+                counts {
                     if progress.finished > 0 { count(progress.finished, "played", SWColor.secondary) }
                     if progress.inProgress > 0 { count(progress.inProgress, "playing", SWColor.live) }
                     if progress.yetToPlay > 0 { count(progress.yetToPlay, "to play", SWColor.accent) }

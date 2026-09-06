@@ -14,6 +14,8 @@ import FantasyProviders
 /// there, or it is another platform's league). Everything else is the league's own
 /// figure. One legend line says so, and only when it applies.
 struct PlayerSheet: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
+    private var isAccessibilitySize: Bool { typeSize.isAccessibilitySize }
     let selection: PlayerInspector.Selection
     /// Passed in, never read from the environment. Sheet content is hosted in its own
     /// hierarchy and an environment value set on the presenting screen did not reach it
@@ -155,8 +157,11 @@ struct PlayerSheet: View {
 
     private func summary(_ season: PlayerSeason) -> some View {
         let format = SWFormat.score
+        let cells = isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: SWSpacing.md))
+            : AnyLayout(HStackLayout(alignment: .top, spacing: SWSpacing.xl))
         return VStack(alignment: .leading, spacing: SWSpacing.md) {
-            HStack(alignment: .top, spacing: SWSpacing.xl) {
+            cells {
                 StatCell(value: season.totalPoints.formatted(format), caption: "Points")
                 if let average = season.averagePoints {
                     StatCell(value: average.formatted(format), caption: "Per game")
@@ -167,7 +172,7 @@ struct PlayerSheet: View {
                 Spacer(minLength: 0)
             }
             if let projected = season.averageProjected, let delta = season.averageVersusProjection {
-                HStack(alignment: .top, spacing: SWSpacing.xl) {
+                cells {
                     StatCell(value: projected.formatted(format), caption: "Proj. per game")
                     StatCell(
                         value: delta.formatted(format.sign(strategy: .always())),
@@ -228,7 +233,7 @@ struct PlayerSheet: View {
             Text("\(week.week)")
                 .font(SWType.scoreCaption)
                 .foregroundStyle(isCurrent ? SWColor.accent : SWColor.tertiary)
-                .frame(width: 24, alignment: .leading)
+                .frame(minWidth: 24, alignment: .leading)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(week.isBye ? "Bye" : (week.opponent ?? "—"))

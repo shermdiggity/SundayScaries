@@ -26,6 +26,8 @@ struct WeeklyView: View {
     @FocusState private var fleaflickerFieldFocused: Bool
     @FocusState private var sleeperFieldFocused: Bool
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dynamicTypeSize) private var typeSize
+    private var isAccessibilitySize: Bool { typeSize.isAccessibilitySize }
     @State private var showingAccount = false
     @State private var showingLeagueEditor = false
     @State private var selectedLeagueID: String?
@@ -286,7 +288,7 @@ struct WeeklyView: View {
                     .foregroundStyle(SWColor.onSky)
                     .accessibilityAddTraits(.isHeader)
                     .shadow(color: .black.opacity(0.35), radius: 6, y: 1)
-                    .lineLimit(1)
+                    .lineLimit(isAccessibilitySize ? 3 : 1)
                     .minimumScaleFactor(0.5)
             } else {
                 welcome

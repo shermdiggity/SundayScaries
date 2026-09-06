@@ -310,7 +310,7 @@ struct LeagueDetailView: View {
                     Text(snapshot.myTeam?.displayName ?? "You")
                         .frame(maxWidth: .infinity, alignment: .leading)
                     Text("Starters")
-                        .frame(width: 46)
+                        .frame(minWidth: 46)
                     Text(snapshot.opponent?.displayName ?? "—")
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 }
@@ -388,7 +388,7 @@ struct LeagueDetailView: View {
                 .font(SWType.scoreCaption)
                 .foregroundStyle(entry.isCurrent ? SWColor.accent : SWColor.tertiary)
                 .monospacedDigit()
-                .frame(width: 60, alignment: .leading)
+                .frame(minWidth: 60, alignment: .leading)
 
             Text(entry.opponent?.displayName ?? "—")
                 .font(SWType.bodyMedium)
@@ -402,7 +402,7 @@ struct LeagueDetailView: View {
                 Text(won ? "W" : "L")
                     .font(SWType.scoreCaption)
                     .foregroundStyle(won ? SWColor.positive : SWColor.negative)
-                    .frame(width: 16)
+                    .frame(minWidth: 16)
                 Text("\(entry.myScore.formatted(format)) – \(entry.theirScore.formatted(format))")
                     .font(SWType.scoreCaption)
                     .foregroundStyle(SWColor.secondary)
@@ -589,7 +589,7 @@ struct LeagueDetailView: View {
             Text("\(row.rank)")
                 .font(SWType.scoreCaption)
                 .foregroundStyle(row.isMine ? SWColor.accent : SWColor.tertiary)
-                .frame(width: 22, alignment: .trailing)
+                .frame(minWidth: 22, alignment: .trailing)
 
             if let face = bestPlayer(forTeam: row.teamID) {
                 Headshot(player: face, size: 26)

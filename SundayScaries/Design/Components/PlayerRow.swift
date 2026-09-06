@@ -30,7 +30,7 @@ struct PlayerRow: View {
             Text(slot.slot.rawValue)
                 .font(SWType.micro)
                 .foregroundStyle(isEmpty ? SWColor.tertiary : SWColor.position(player.position))
-                .frame(width: 38, alignment: .leading)
+                .frame(minWidth: 38, alignment: .leading)
 
             if showsHeadshot { Headshot(player: player, size: 38) }
 

@@ -25,6 +25,8 @@ struct Podium: View {
     /// Tapping a plinth opens that team.
     var onSelect: (String) -> Void = { _ in }
     var idForRank: (Int) -> String? = { _ in nil }
+    @Environment(\.dynamicTypeSize) private var typeSize
+    private var isAccessibilitySize: Bool { typeSize.isAccessibilitySize }
 
     /// Podium order: 2nd, 1st, 3rd.
     private var ordered: [Entry] {
@@ -33,7 +35,10 @@ struct Podium: View {
     }
 
     var body: some View {
-        HStack(alignment: .bottom, spacing: SWSpacing.sm) {
+        let layout = isAccessibilitySize
+            ? AnyLayout(VStackLayout(spacing: SWSpacing.md))
+            : AnyLayout(HStackLayout(alignment: .bottom, spacing: SWSpacing.sm))
+        return layout {
             ForEach(ordered) { entry in
                 Button {
                     if let id = idForRank(entry.rank) { onSelect(id) }
@@ -72,7 +77,7 @@ struct Podium: View {
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
                 .minimumScaleFactor(0.7)
-                .frame(height: 34, alignment: .top)
+                .frame(height: isAccessibilitySize ? nil : 34, alignment: .top)
 
             // The plinth. Its height is the ranking, so the shape carries the result.
             RoundedRectangle(cornerRadius: SWRadius.sm, style: .continuous)

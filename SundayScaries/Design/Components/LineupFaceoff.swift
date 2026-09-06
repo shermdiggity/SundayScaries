@@ -39,7 +39,7 @@ struct LineupFaceoff: View {
                     .font(SWType.micro)
                     .foregroundStyle(SWColor.tertiary)
             }
-            .frame(width: 46)
+            .frame(minWidth: 46)
 
             side(pair.theirs, isWinning: theirsValue > mineValue, alignment: .trailing)
         }

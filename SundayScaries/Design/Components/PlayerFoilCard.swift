@@ -13,6 +13,8 @@ struct PlayerFoilCard: View {
     var isProjected: Bool = true
     /// "Sun 1:00 PM" — when this player's game starts.
     var kickoff: String?
+    @Environment(\.dynamicTypeSize) private var typeSize
+    private var isAccessibilitySize: Bool { typeSize.isAccessibilitySize }
 
     private var involvements: [LeagueInvolvement] {
         switch kind {
@@ -32,7 +34,7 @@ struct PlayerFoilCard: View {
             portrait
             details
         }
-        .frame(width: 168)
+        .frame(width: isAccessibilitySize ? nil : 168)
         .background(
             RoundedRectangle(cornerRadius: SWRadius.md, style: .continuous)
                 .fill(SWColor.surface)
@@ -70,7 +72,7 @@ struct PlayerFoilCard: View {
                           barHeight: 6, barWidth: 20)
                 .padding(SWSpacing.sm)
         }
-        .frame(height: 108)
+        .frame(height: isAccessibilitySize ? nil : 108)
         .overlay(alignment: .bottomLeading) {
             // The meter shows the shape of the concentration; this says the number out
             // loud. On its own the meter never answered "of how many?".
@@ -133,7 +135,7 @@ struct PlayerFoilCard: View {
         }
         .padding(SWSpacing.md)
         .frame(maxWidth: .infinity, alignment: .topLeading)
-        .frame(height: 116)
+        .frame(height: isAccessibilitySize ? nil : 116)
         .clipped()
     }
 
