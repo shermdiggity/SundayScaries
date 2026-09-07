@@ -55,7 +55,7 @@ struct AccountSheet: View {
                             }
                             .font(SWType.caption)
                             .buttonStyle(.borderless)
-                            .frame(minHeight: 44)
+                            .frame(minHeight: SWSize.hitTarget)
                             .accessibilityLabel("Disconnect Sleeper")
                         }
                     }
@@ -71,13 +71,13 @@ struct AccountSheet: View {
                             }
                             .font(SWType.caption)
                             .buttonStyle(.borderless)
-                            .frame(minHeight: 44)
+                            .frame(minHeight: SWSize.hitTarget)
                             .accessibilityLabel("Sign out of ESPN")
                         } else {
                             Button("Sign in") { showingESPNLogin = true }
                                 .font(SWType.bodyMedium)
                                 .buttonStyle(.borderless)
-                                .frame(minHeight: 44)
+                                .frame(minHeight: SWSize.hitTarget)
                                 .accessibilityLabel("Sign in to ESPN")
                         }
                     }
@@ -95,13 +95,13 @@ struct AccountSheet: View {
                                 }
                                 .font(SWType.caption)
                                 .buttonStyle(.borderless)
-                                .frame(minHeight: 44)
+                                .frame(minHeight: SWSize.hitTarget)
                                 .accessibilityLabel("Sign out of Yahoo")
                             } else {
                                 Button("Sign in") { showingYahooLogin = true }
                                     .font(SWType.bodyMedium)
                                     .buttonStyle(.borderless)
-                                    .frame(minHeight: 44)
+                                    .frame(minHeight: SWSize.hitTarget)
                                     .accessibilityLabel("Sign in to Yahoo")
                             }
                         }
@@ -119,13 +119,13 @@ struct AccountSheet: View {
                             }
                             .font(SWType.caption)
                             .buttonStyle(.borderless)
-                            .frame(minHeight: 44)
+                            .frame(minHeight: SWSize.hitTarget)
                             .accessibilityLabel("Sign out of MyFantasyLeague")
                         } else {
                             Button(mflLeagues.isEmpty ? "Connect" : "Sign in") { showingMFLConnect = true }
                                 .font(SWType.bodyMedium)
                                 .buttonStyle(.borderless)
-                                .frame(minHeight: 44)
+                                .frame(minHeight: SWSize.hitTarget)
                                 .accessibilityLabel("Sign in to MyFantasyLeague")
                         }
                     }
@@ -165,7 +165,7 @@ struct AccountSheet: View {
                             }
                             .font(SWType.caption)
                             .buttonStyle(.borderless)
-                            .frame(minHeight: 44)
+                            .frame(minHeight: SWSize.hitTarget)
                             .accessibilityLabel("Disconnect Fleaflicker")
                         }
                     }
@@ -251,7 +251,7 @@ struct AccountSheet: View {
                                 .font(SWType.caption)
                                 .foregroundStyle(SWColor.accent)
                         }
-                        .frame(minHeight: 44)
+                        .frame(minHeight: SWSize.hitTarget)
                     }
                     if let url = URL(string: "https://github.com/shermdiggity/SundayScaries") {
                         Link(destination: url) {
@@ -259,7 +259,7 @@ struct AccountSheet: View {
                                 .font(SWType.caption)
                                 .foregroundStyle(SWColor.accent)
                         }
-                        .frame(minHeight: 44)
+                        .frame(minHeight: SWSize.hitTarget)
                     }
                     HStack {
                         Text("Version")
@@ -333,8 +333,8 @@ struct AccountSheet: View {
         @ViewBuilder detail: () -> some View, @ViewBuilder trailing: () -> some View
     ) -> some View {
         HStack(spacing: SWSpacing.md) {
-            PlatformMark(platform: platform, size: 26)
-            VStack(alignment: .leading, spacing: 1) {
+            PlatformMark(platform: platform, size: SWSize.markLarge)
+            VStack(alignment: .leading, spacing: SWSpacing.xxs) {
                 Text(title)
                     .font(SWType.bodyMedium)
                     .foregroundStyle(SWColor.primary)

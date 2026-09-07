@@ -10,8 +10,8 @@ struct StatCell: View {
     var detail: String?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            HStack(alignment: .firstTextBaseline, spacing: 3) {
+        VStack(alignment: .leading, spacing: SWSpacing.xxs) {
+            HStack(alignment: .firstTextBaseline, spacing: SWSpacing.xxs) {
                 Text(value)
                     .font(SWType.score)
                     .foregroundStyle(tone)

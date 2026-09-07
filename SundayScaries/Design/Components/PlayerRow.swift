@@ -25,16 +25,19 @@ struct PlayerRow: View {
     private var player: PlayerRef { slot.player }
     private var isEmpty: Bool { player.isEmptyLineupSlot }
 
+    /// The column the slot label sits in, so names start on one line down a lineup.
+    private static let slotLabelColumn: CGFloat = 38
+
     var body: some View {
         HStack(spacing: SWSpacing.md) {
             Text(slot.slot.label)
                 .font(SWType.micro)
                 .foregroundStyle(isEmpty ? SWColor.tertiary : SWColor.position(player.position))
-                .frame(minWidth: 38, alignment: .leading)
+                .frame(minWidth: Self.slotLabelColumn, alignment: .leading)
 
-            if showsHeadshot { Headshot(player: player, size: 38) }
+            if showsHeadshot { Headshot(player: player, size: SWSize.faceRow) }
 
-            VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: SWSpacing.xxs) {
                 Text(isEmpty ? "Empty" : player.name)
                     .font(SWType.bodyMedium)
                     .foregroundStyle(isEmpty ? SWColor.tertiary : SWColor.primary)
@@ -57,7 +60,7 @@ struct PlayerRow: View {
             Spacer(minLength: SWSpacing.sm)
 
             if let mark = statusMark {
-                Circle().fill(mark).frame(width: 6, height: 6).accessibilityHidden(true)
+                Circle().fill(mark).frame(width: SWSize.dot, height: SWSize.dot).accessibilityHidden(true)
             }
 
             trailing
@@ -79,9 +82,9 @@ struct PlayerRow: View {
                 .foregroundStyle(SWColor.primary)
                 // Digits roll to the new value instead of blinking.
                 .contentTransition(.numericText())
-                .frame(minWidth: 56, alignment: .trailing)
+                .frame(minWidth: SWSize.scoreColumn, alignment: .trailing)
         } else if let projection {
-            HStack(spacing: 2) {
+            HStack(spacing: SWSpacing.xxs) {
                 Text("proj")
                     .font(SWType.micro)
                     .foregroundStyle(SWColor.tertiary)
@@ -97,7 +100,7 @@ struct PlayerRow: View {
             Text("—")
                 .font(SWType.scoreCaption)
                 .foregroundStyle(SWColor.tertiary)
-                .frame(minWidth: 56, alignment: .trailing)
+                .frame(minWidth: SWSize.scoreColumn, alignment: .trailing)
         }
     }
 

@@ -105,7 +105,7 @@ struct WeeklyView: View {
                             outlook
                         }
                     }
-                    .padding(.top, 56)
+                    .padding(.top, SWSize.topInset)
                     .padding(.bottom, SWSpacing.xxl)
                 }
                 .scrollIndicators(.hidden)
@@ -175,7 +175,7 @@ struct WeeklyView: View {
             .onAppear {
                 // One beat after launch: the launch colour becomes the live sky and the
                 // clouds arrive. Background only; nothing readable is gated on it.
-                withAnimation(.easeOut(duration: 0.9)) { skyIsUp = true }
+                withAnimation(SWMotion.launch) { skyIsUp = true }
             }
             .modifier(SignInSheets(
                 model: model, espn: $showingESPNLogin, mfl: $showingMFLConnect, yahoo: $showingYahooLogin
@@ -266,7 +266,9 @@ struct WeeklyView: View {
                 // last week's finals; forward again to where the platforms are. When one
                 // platform has flipped and another has not, this is what keeps every
                 // card describing the same seven days.
-                HStack(spacing: SWSpacing.sm) {
+                // The row is laid out at caption height; each control's 44pt target
+                // overflows it above and below, which SwiftUI allows and hit-tests.
+                HStack(spacing: 0) {
                     weekStep(systemImage: "chevron.left", label: "Previous week", enabled: model.canStepBack) {
                         Task { await model.show(week: week - 1) }
                     }
@@ -275,6 +277,7 @@ struct WeeklyView: View {
                         .foregroundStyle(SWColor.onSkySecondary)
                         .monospacedDigit()
                         .contentTransition(.numericText())
+                        .padding(.horizontal, SWSpacing.xs)
                     weekStep(systemImage: "chevron.right", label: "Next week", enabled: model.canStepForward) {
                         Task { await model.show(week: week + 1) }
                     }
@@ -283,13 +286,13 @@ struct WeeklyView: View {
                             .accessibilityLabel("Back to the current week")
                             .font(SWType.caption)
                             .foregroundStyle(SWColor.onSky)
-                            .frame(minWidth: 44, minHeight: 44)
+                            .frame(minWidth: SWSize.hitTarget, minHeight: SWSize.hitTarget)
                             .contentShape(.rect)
-                            .padding(.vertical, -11)
                             .buttonStyle(.plain)
-                            .padding(.leading, SWSpacing.xs)
                     }
                 }
+                .frame(height: SWSpacing.xl)
+                .padding(.leading, -SWSpacing.md)
             }
 
             if model.hasAccount {
@@ -420,8 +423,8 @@ struct WeeklyView: View {
     private func connectCard(_ platform: Platform, detail: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: SWSpacing.md) {
-                PlatformMark(platform: platform, size: 28)
-                VStack(alignment: .leading, spacing: 2) {
+                PlatformMark(platform: platform, size: SWSize.markLarge)
+                VStack(alignment: .leading, spacing: SWSpacing.xxs) {
                     Text(platform.displayName)
                         .font(SWType.cardTitle)
                         .foregroundStyle(SWColor.primary)
@@ -482,14 +485,15 @@ struct WeeklyView: View {
         Task { await connect() }
     }
 
-    private func weekStep(systemImage: String, label: LocalizedStringKey, enabled: Bool, action: @escaping () -> Void) -> some View {
+    private func weekStep(
+        systemImage: String, label: LocalizedStringKey, enabled: Bool, action: @escaping () -> Void
+    ) -> some View {
         Button(action: action) {
             Image(systemName: systemImage)
                 .font(SWType.glyph)
                 .foregroundStyle(enabled ? SWColor.onSky : SWColor.onSkySecondary.opacity(0.35))
-                .frame(width: 44, height: 44)
+                .frame(width: SWSize.hitTarget, height: SWSize.hitTarget)
                 .contentShape(.rect)
-                .padding(-11)
         }
         .buttonStyle(.plain)
         .disabled(!enabled)
@@ -577,9 +581,8 @@ struct WeeklyView: View {
                 }
                 .font(SWType.caption)
                 .foregroundStyle(SWColor.onSkySecondary)
-                .padding(.vertical, SWSpacing.sm)
-                .frame(maxWidth: .infinity)
-                .contentShape(Rectangle())
+                .frame(maxWidth: .infinity, minHeight: SWSize.hitTarget)
+                .contentShape(.rect)
             }
             .buttonStyle(.plain)
         }

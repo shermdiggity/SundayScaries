@@ -20,8 +20,13 @@ struct ExposureMeter: View {
     let filled: Int
     let total: Int
     var kind: Kind = .started
-    var barHeight: CGFloat = 8
-    var barWidth: CGFloat = 44
+    var barHeight: CGFloat = SWSpacing.sm
+    var barWidth: CGFloat = SWSize.hitTarget
+
+    /// An unfilled bar is a hairline at this height; every bar's corners and the faced
+    /// outline share one stroke.
+    private static let emptyHeight: CGFloat = 2
+    private static let stroke: CGFloat = 1.5
 
     private var tint: Color {
         switch kind {
@@ -31,7 +36,7 @@ struct ExposureMeter: View {
     }
 
     var body: some View {
-        VStack(spacing: 2) {
+        VStack(spacing: SWSpacing.xxs) {
             ForEach(0..<max(total, 1), id: \.self) { index in
                 bar(isFilled: index < filled)
             }
@@ -50,16 +55,16 @@ struct ExposureMeter: View {
 
     @ViewBuilder
     private func bar(isFilled: Bool) -> some View {
-        let shape = RoundedRectangle(cornerRadius: 1.5, style: .continuous)
+        let shape = RoundedRectangle(cornerRadius: Self.stroke, style: .continuous)
         switch (isFilled, kind) {
         case (false, _):
             shape.fill(SWColor.onSky.opacity(0.22))
-                .frame(width: barWidth, height: 2)
+                .frame(width: barWidth, height: Self.emptyHeight)
         case (true, .started):
             shape.fill(tint)
                 .frame(width: barWidth, height: barHeight)
         case (true, .faced):
-            shape.strokeBorder(tint, lineWidth: 1.5)
+            shape.strokeBorder(tint, lineWidth: Self.stroke)
                 .background(shape.fill(tint.opacity(0.14)))
                 .frame(width: barWidth, height: barHeight)
         }

@@ -80,8 +80,8 @@ struct PlayerSheet: View {
 
     private var header: some View {
         HStack(spacing: SWSpacing.md) {
-            Headshot(player: player, size: 64, strokeWidth: 2.5)
-            VStack(alignment: .leading, spacing: 2) {
+            Headshot(player: player, size: SWSize.facePortrait, strokeWidth: Headshot.ring)
+            VStack(alignment: .leading, spacing: SWSpacing.xxs) {
                 Text(player.name)
                     .font(SWType.title)
                     .foregroundStyle(SWColor.primary)
@@ -126,7 +126,7 @@ struct PlayerSheet: View {
                     }
                 } label: {
                     HStack(spacing: SWSpacing.xs) {
-                        PlatformMark(platform: option.platform, size: 16)
+                        PlatformMark(platform: option.platform, size: SWSize.markSmall)
                         Text(option.name)
                             .font(SWType.bodyMedium)
                             .foregroundStyle(SWColor.primary)
@@ -139,7 +139,7 @@ struct PlayerSheet: View {
                     .padding(.horizontal, SWSpacing.md)
                     .padding(.vertical, SWSpacing.sm)
                     .background(Capsule().fill(SWColor.surface))
-                    .frame(minHeight: 44)
+                    .frame(minHeight: SWSize.hitTarget)
                     .contentShape(.rect)
                 }
                 .accessibilityLabel("Scoring rules: \(option.name)")
@@ -238,9 +238,9 @@ struct PlayerSheet: View {
             Text("\(week.week)")
                 .font(SWType.scoreCaption)
                 .foregroundStyle(isCurrent ? SWColor.accent : SWColor.tertiary)
-                .frame(minWidth: 24, alignment: .leading)
+                .frame(minWidth: SWSpacing.xl, alignment: .leading)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: SWSpacing.xxs) {
                 Text(week.isBye ? "Bye" : (week.opponent ?? "—"))
                     .font(SWType.bodyMedium)
                     .foregroundStyle(week.isBye ? SWColor.tertiary : SWColor.primary)
@@ -255,7 +255,7 @@ struct PlayerSheet: View {
 
             Spacer(minLength: SWSpacing.sm)
 
-            VStack(alignment: .trailing, spacing: 2) {
+            VStack(alignment: .trailing, spacing: SWSpacing.xxs) {
                 if let actual = week.actual {
                     // An estimate is the same number, quieter. Nothing else changes.
                     Text(actual.points, format: SWFormat.score)

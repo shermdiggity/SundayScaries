@@ -24,6 +24,13 @@ struct PlayerFoilCard: View {
     }
 
     private var count: Int { involvements.count }
+
+    /// The card's own geometry: its width, the portrait band and the face in it, and
+    /// the fixed height of the text block so a row of cards stays level.
+    private static let width: CGFloat = 168
+    private static let portraitBand: CGFloat = 108
+    private static let portrait: CGFloat = 76
+    private static let textBlock: CGFloat = 116
     private var isAgainst: Bool { kind == .faced }
     private var tint: Color { isAgainst ? SWColor.negative : SWColor.positive }
     private var positionColor: Color { SWColor.position(position.player.position) }
@@ -33,7 +40,7 @@ struct PlayerFoilCard: View {
             portrait
             details
         }
-        .frame(width: isAccessibilitySize ? nil : 168)
+        .frame(width: isAccessibilitySize ? nil : Self.width)
         .background(
             RoundedRectangle(cornerRadius: SWRadius.md, style: .continuous)
                 .fill(SWColor.surface)
@@ -63,15 +70,15 @@ struct PlayerFoilCard: View {
                 colors: [positionColor.opacity(0.42), SWColor.surface],
                 startPoint: .top, endPoint: .bottom
             )
-            Headshot(player: position.player, size: 76, strokeWidth: 2.5)
+            Headshot(player: position.player, size: Self.portrait, strokeWidth: Headshot.ring)
                 .frame(maxWidth: .infinity)
                 .padding(.top, SWSpacing.md)
 
             ExposureMeter(filled: count, total: position.totalLeagues, kind: kind,
-                          barHeight: 6, barWidth: 20)
+                          barHeight: SWSize.dot, barWidth: SWSpacing.xl)
                 .padding(SWSpacing.sm)
         }
-        .frame(height: isAccessibilitySize ? nil : 108)
+        .frame(height: isAccessibilitySize ? nil : Self.portraitBand)
         .overlay(alignment: .bottomLeading) {
             // The meter shows the shape of the concentration; this says the number out
             // loud. On its own the meter never answered "of how many?".
@@ -134,7 +141,7 @@ struct PlayerFoilCard: View {
         }
         .padding(SWSpacing.md)
         .frame(maxWidth: .infinity, alignment: .topLeading)
-        .frame(height: isAccessibilitySize ? nil : 116)
+        .frame(height: isAccessibilitySize ? nil : Self.textBlock)
         .clipped()
     }
 

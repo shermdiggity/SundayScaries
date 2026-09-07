@@ -66,9 +66,9 @@ struct LeagueEditor: View {
 
     private func row(_ league: League, hidden: Bool) -> some View {
         HStack(spacing: SWSpacing.md) {
-            PlatformMark(platform: league.platform, size: 26)
+            PlatformMark(platform: league.platform, size: SWSize.markLarge)
 
-            VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: SWSpacing.xxs) {
                 Text(league.name)
                     .font(SWType.bodyMedium)
                     .foregroundStyle(hidden ? SWColor.tertiary : SWColor.primary)
@@ -89,13 +89,13 @@ struct LeagueEditor: View {
                 Image(systemName: hidden ? "eye.slash" : "eye")
                     .font(SWType.icon)
                     .foregroundStyle(hidden ? SWColor.tertiary : SWColor.accent)
-                    .frame(minWidth: 44, minHeight: 44)
+                    .frame(minWidth: SWSize.hitTarget, minHeight: SWSize.hitTarget)
                     .contentShape(.rect)
             }
             .accessibilityLabel(hidden ? Text("Show \(league.name)") : Text("Hide \(league.name)"))
             // Without this the row's drag handle swallows the tap.
             .buttonStyle(.borderless)
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, SWSpacing.xxs)
     }
 }

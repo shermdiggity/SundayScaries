@@ -80,7 +80,7 @@ private struct LineupStatusView: View {
             Text(entry.isEmpty ? "Sunday Scaries" : StatusBlock(snapshot: entry.snapshot).headline)
                 .widgetURL(WidgetStore.homeURL)
         case .accessoryRectangular:
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: SWSpacing.xxs) {
                 Text(entry.isEmpty ? "Sunday Scaries" : StatusBlock(snapshot: entry.snapshot).headline)
                     .font(SWType.bodyMedium)
                 if !entry.isEmpty {

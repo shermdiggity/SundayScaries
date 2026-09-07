@@ -15,19 +15,14 @@ import FantasyCore
 /// shapes, so it follows every rounded corner and every gap for free, and it costs
 /// almost nothing. The name is kept so nothing that uses it had to change.
 struct SWShimmer<Content: View>: View {
-    var duration: Double = 1.1
     @ViewBuilder let content: () -> Content
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var dimmed = false
 
     var body: some View {
         content()
             .opacity(dimmed ? 0.55 : 1)
-            .animation(
-                reduceMotion ? nil : .easeInOut(duration: duration).repeatForever(autoreverses: true),
-                value: dimmed
-            )
+            .animation(SWMotion.breathe, value: dimmed)
             .onAppear { dimmed = true }
     }
 }
@@ -37,8 +32,8 @@ struct SWShimmer<Content: View>: View {
 /// reflow when the data lands.
 struct SkeletonBlock: View {
     var width: CGFloat?
-    var height: CGFloat = 12
-    var radius: CGFloat = 4
+    var height: CGFloat = SWSpacing.md
+    var radius: CGFloat = SWSpacing.xs
 
     var body: some View {
         RoundedRectangle(cornerRadius: radius, style: .continuous)
@@ -60,7 +55,7 @@ struct LeagueCardSkeleton: View {
         VStack(alignment: .leading, spacing: SWSpacing.md) {
             HStack(spacing: SWSpacing.sm) {
                 PlatformMark(platform: league.platform)
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: SWSpacing.xxs) {
                     Text(league.name)
                         .font(SWType.cardTitle)
                         .foregroundStyle(SWColor.primary)
@@ -95,7 +90,8 @@ struct LeagueCardSkeleton: View {
         VStack(spacing: SWSpacing.sm) {
             HStack(spacing: SWSpacing.xs) {
                 ForEach(0..<3, id: \.self) { _ in
-                    Circle().fill(SWColor.primary.opacity(0.12)).frame(width: 34, height: 34)
+                    Circle().fill(SWColor.primary.opacity(0.12))
+                        .frame(width: SWSize.faceMatchup, height: SWSize.faceMatchup)
                 }
             }
             SkeletonBlock(width: 72, height: 11)

@@ -13,7 +13,7 @@ import FantasyCore
 /// Widgets cannot fetch the logo images, so every platform gets the monogram.
 struct WidgetPlatformMark: View {
     let platform: String
-    var size: CGFloat = 16
+    var size: CGFloat = SWSize.markSmall
 
     private var resolved: Platform? { Platform(rawValue: platform) }
 
@@ -38,7 +38,7 @@ struct WidgetPlatformMark: View {
 /// A headshot from the container, or initials on the position colour.
 struct WidgetHeadshot: View {
     let player: WidgetPlayer
-    var size: CGFloat = 34
+    var size: CGFloat = SWSize.faceMatchup
 
     private var image: UIImage? {
         guard let file = player.headshotFile, let url = WidgetStore.headshotURL(file: file) else { return nil }
@@ -94,7 +94,7 @@ struct StatusBlock: View {
                 Image(systemName: isSet ? "checkmark" : "exclamationmark")
                     .font(SWType.icon)
                     .foregroundStyle(tint)
-                    .frame(width: 24, height: 24)
+                    .frame(width: SWSpacing.xl, height: SWSpacing.xl)
                     .accessibilityHidden(true)
                 Text("Week \(snapshot.week)")
                     .font(SWType.caption)
@@ -110,7 +110,7 @@ struct StatusBlock: View {
                 VStack(alignment: .leading, spacing: SWSpacing.xs) {
                     ForEach(snapshot.leagues.prefix(compact ? 3 : 5)) { league in
                         HStack(spacing: SWSpacing.sm) {
-                            WidgetPlatformMark(platform: league.platform, size: 14)
+                            WidgetPlatformMark(platform: league.platform, size: SWSize.markSmall)
                             Text(league.name)
                                 .font(SWType.caption)
                                 .foregroundStyle(SWColor.secondary)
@@ -145,8 +145,8 @@ struct ScoreboardRow: View {
 
     var body: some View {
         HStack(spacing: SWSpacing.sm) {
-            WidgetPlatformMark(platform: league.platform, size: 16)
-            VStack(alignment: .leading, spacing: 2) {
+            WidgetPlatformMark(platform: league.platform)
+            VStack(alignment: .leading, spacing: SWSpacing.xxs) {
                 HStack(spacing: SWSpacing.xs) {
                     Text(league.myName ?? String(localized: "Your team"))
                         .font(SWType.bodyMedium)
@@ -215,8 +215,8 @@ struct WidgetPlayerRow: View {
 
     var body: some View {
         HStack(spacing: SWSpacing.sm) {
-            WidgetHeadshot(player: player, size: 30)
-            VStack(alignment: .leading, spacing: 1) {
+            WidgetHeadshot(player: player, size: SWSize.faceInline)
+            VStack(alignment: .leading, spacing: SWSpacing.xxs) {
                 Text(player.name)
                     .font(SWType.caption)
                     .foregroundStyle(SWColor.primary)
@@ -226,7 +226,7 @@ struct WidgetPlayerRow: View {
                     .foregroundStyle(SWColor.tertiary)
             }
             Spacer(minLength: SWSpacing.xs)
-            VStack(alignment: .trailing, spacing: 1) {
+            VStack(alignment: .trailing, spacing: SWSpacing.xxs) {
                 if let value = player.value {
                     Text(value.widgetScore)
                         .font(SWType.scoreCaption)

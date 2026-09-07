@@ -9,9 +9,11 @@ import FantasyCore
 /// colour, and never an empty hole.
 struct Headshot: View {
     let player: PlayerRef
-    var size: CGFloat = 44
+    var size: CGFloat = SWSize.faceHero
     /// A thick, flat ring — the outline a sticker or a football card would have.
     var strokeWidth: CGFloat = 1
+    /// The ring's width where a face leads: the matchup header, the foil card, a sheet.
+    static let ring: CGFloat = 2.5
     /// Team defenses are logos, which need room to breathe rather than a tight crop.
     private var isLogo: Bool { player.position == .def }
 

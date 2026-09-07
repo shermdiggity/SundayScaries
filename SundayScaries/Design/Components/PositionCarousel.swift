@@ -97,8 +97,8 @@ struct SeasonOutlookRow: View {
 
     private func contribution(_ value: PlayerContribution, label: LocalizedStringKey, tone: Color) -> some View {
         HStack(spacing: SWSpacing.sm) {
-            Headshot(player: value.player, size: 36)
-            VStack(alignment: .leading, spacing: 1) {
+            Headshot(player: value.player, size: SWSize.faceRow)
+            VStack(alignment: .leading, spacing: SWSpacing.xxs) {
                 Text(label)
                     .font(SWType.micro)
                     .foregroundStyle(tone)

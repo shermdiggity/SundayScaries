@@ -28,6 +28,10 @@ struct Podium: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     private var isAccessibilitySize: Bool { typeSize.isAccessibilitySize }
 
+    /// The rank badge on the winner's face, and the two-line box a team name gets.
+    private static let rankBadge: CGFloat = 22
+    private static let nameBox: CGFloat = 34
+
     /// Podium order: 2nd, 1st, 3rd.
     private var ordered: [Entry] {
         let byRank = Dictionary(uniqueKeysWithValues: entries.prefix(3).map { ($0.rank, $0) })
@@ -54,18 +58,18 @@ struct Podium: View {
     private func column(_ entry: Entry) -> some View {
         VStack(spacing: SWSpacing.sm) {
             if let face = entry.face {
-                Headshot(player: face, size: entry.rank == 1 ? 60 : 46)
+                Headshot(player: face, size: entry.rank == 1 ? SWSize.facePortrait : SWSize.faceHero)
                     .playerTappable(face)
                     .overlay(alignment: .bottomTrailing) {
                         Circle()
-                            .fill(medal(entry.rank))
-                            .frame(width: 22, height: 22)
+                            .fill(SWColor.medal(entry.rank))
+                            .frame(width: Self.rankBadge, height: Self.rankBadge)
                             .overlay {
                                 Text("\(entry.rank)")
                                     .font(SWType.scoreMicro)
                                     .foregroundStyle(SWColor.canvas)
                             }
-                            .offset(x: 2, y: 2)
+                            .offset(x: SWSpacing.xxs, y: SWSpacing.xxs)
                     }
             }
 
@@ -77,11 +81,11 @@ struct Podium: View {
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
                 .minimumScaleFactor(0.7)
-                .frame(height: isAccessibilitySize ? nil : 34, alignment: .top)
+                .frame(height: isAccessibilitySize ? nil : Self.nameBox, alignment: .top)
 
             // The plinth. Its height is the ranking, so the shape carries the result.
             RoundedRectangle(cornerRadius: SWRadius.sm, style: .continuous)
-                .fill(medal(entry.rank).opacity(entry.isMine ? 0.85 : 0.55))
+                .fill(SWColor.medal(entry.rank).opacity(entry.isMine ? 0.85 : 0.55))
                 .frame(height: plinthHeight(entry.rank))
                 .overlay(alignment: .top) {
                     VStack(spacing: 0) {
@@ -96,7 +100,7 @@ struct Podium: View {
                             .foregroundStyle(SWColor.canvas.opacity(0.6))
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
-                            .padding(.top, 2)
+                            .padding(.top, SWSpacing.xxs)
                     }
                     .padding(.top, SWSpacing.sm)
                 }
@@ -106,19 +110,12 @@ struct Podium: View {
         .accessibilityLabel(Text("\(entry.rank). \(entry.teamName), \(entry.powerPoints) \(Text(entry.unit))"))
     }
 
+    /// Stepped so the shape carries the result before the numbers do.
     private func plinthHeight(_ rank: Int) -> CGFloat {
         switch rank {
         case 1:  100
         case 2:  82
         default: 68
-        }
-    }
-
-    private func medal(_ rank: Int) -> Color {
-        switch rank {
-        case 1:  SWColor.accent
-        case 2:  Color(red: 0.85, green: 0.87, blue: 0.92)
-        default: Color(red: 0.93, green: 0.66, blue: 0.44)
         }
     }
 }

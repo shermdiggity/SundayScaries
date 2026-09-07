@@ -42,6 +42,16 @@ enum SWColor {
     /// A game in progress.
     static let live = Color(red: 0.937, green: 0.616, blue: 0.286)
 
+    /// The podium's plinths. First is the accent; silver and bronze are held just as
+    /// quiet, so the three read as one set rather than three colours.
+    static func medal(_ rank: Int) -> Color {
+        switch rank {
+        case 1:  accent
+        case 2:  Color(red: 0.85, green: 0.87, blue: 0.92)
+        default: Color(red: 0.93, green: 0.66, blue: 0.44)
+        }
+    }
+
     /// One accent, and only one. A warm ember — it reads against every sky state from
     /// dawn to midnight, which a cool accent does not.
     static let accent = Color(red: 1.000, green: 0.596, blue: 0.235)
@@ -221,6 +231,8 @@ enum SWFormat {
 // MARK: - Spacing, radius, motion
 
 enum SWSpacing {
+    /// The one step below the scale: the gap between a name and the line under it.
+    static let xxs: CGFloat = 2
     static let xs: CGFloat = 4
     static let sm: CGFloat = 8
     static let md: CGFloat = 12
@@ -235,9 +247,54 @@ enum SWRadius {
     static let lg: CGFloat = 24
 }
 
-/// Three durations, so nothing on the screen feels out of tempo with anything else.
+/// Sizes that recur across screens: a face, a mark, a column, a tap target. Anything
+/// that appears in one component only stays a named constant inside that component.
+enum SWSize {
+    /// Apple's minimum tap target.
+    static let hitTarget: CGFloat = 44
+    /// Room left under the top bar on the screens that hide the navigation bar.
+    static let topInset: CGFloat = 56
+
+    /// A face beside a line of text: lineup faceoffs, ranking rows, widget rows.
+    static let faceInline: CGFloat = 30
+    /// A face on a matchup header, the card's size.
+    static let faceMatchup: CGFloat = 34
+    /// The atom, `PlayerRow`.
+    static let faceRow: CGFloat = 38
+    /// A face on the detail scoreboard or a podium plinth.
+    static let faceHero: CGFloat = 44
+    /// A face that leads a sheet.
+    static let facePortrait: CGFloat = 64
+
+    /// A platform's mark beside a caption, beside a title, or leading a row.
+    static let markSmall: CGFloat = 16
+    static let mark: CGFloat = 18
+    static let markLarge: CGFloat = 28
+
+    /// A status dot beside a name.
+    static let dot: CGFloat = 6
+    /// The column a score sits in, so rows of them align.
+    static let scoreColumn: CGFloat = 56
+    /// The column a slot label ("SUPER FLEX") sits in between two lineups.
+    static let slotColumn: CGFloat = 46
+}
+
+/// Three durations, so nothing on the screen feels out of tempo with anything else,
+/// plus the two one-offs that are not transitions: the launch fade and the skeleton
+/// pulse. Every token is nil under Reduce Motion, so every `withAnimation` and every
+/// `.animation(_:value:)` in the app honours the setting without checking it.
+///
+/// Main-actor bound because the accessibility setting is, and every caller is a view
+/// or the model. (The widget target defaults to nonisolated and never animates.)
+@MainActor
 enum SWMotion {
-    static let quick    = Animation.snappy(duration: 0.2)
-    static let standard = Animation.smooth(duration: 0.3)
-    static let reveal   = Animation.spring(response: 0.5, dampingFraction: 0.8)
+    private static var isReduced: Bool { UIAccessibility.isReduceMotionEnabled }
+
+    static var quick: Animation? { isReduced ? nil : .snappy(duration: 0.2) }
+    static var standard: Animation? { isReduced ? nil : .smooth(duration: 0.3) }
+    static var reveal: Animation? { isReduced ? nil : .spring(response: 0.5, dampingFraction: 0.8) }
+    /// The launch colour becoming the live sky. Background only, never content.
+    static var launch: Animation? { isReduced ? nil : .easeOut(duration: 0.9) }
+    /// A skeleton breathing. Reduce Motion gets a still placeholder, not a blank one.
+    static var breathe: Animation? { isReduced ? nil : .easeInOut(duration: 1.1).repeatForever(autoreverses: true) }
 }

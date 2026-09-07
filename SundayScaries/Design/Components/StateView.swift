@@ -35,7 +35,7 @@ struct StateView: View {
                     .font(SWType.bodyMedium)
                     .foregroundStyle(onSky ? SWColor.onSky : SWColor.accent)
                     .buttonStyle(.plain)
-                    .frame(minHeight: 44)
+                    .frame(minHeight: SWSize.hitTarget)
                     .contentShape(.rect)
             }
         }

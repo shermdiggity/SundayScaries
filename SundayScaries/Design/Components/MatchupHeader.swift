@@ -58,7 +58,7 @@ struct MatchupHeader: View {
         hasKickedOff = pair.hasKickedOff
     }
 
-    private var faceSize: CGFloat { isExpanded ? 44 : 34 }
+    private var faceSize: CGFloat { isExpanded ? SWSize.faceHero : SWSize.faceMatchup }
     /// The column the "vs." sits in. Every row keeps a gap this wide so faces, names and
     /// numbers line up down the middle.
     private var gutter: CGFloat { 30 }
@@ -112,7 +112,7 @@ struct MatchupHeader: View {
     private func faces(_ roster: Roster?) -> some View {
         HStack(spacing: SWSpacing.xs) {
             ForEach(Array(topFaces(roster).enumerated()), id: \.offset) { _, player in
-                Headshot(player: player, size: faceSize, strokeWidth: 2.5)
+                Headshot(player: player, size: faceSize, strokeWidth: Headshot.ring)
             }
         }
         .frame(maxWidth: .infinity)
@@ -135,7 +135,7 @@ struct MatchupHeader: View {
     @ViewBuilder
     private func projectionLabel(_ projection: Double?) -> some View {
         if let projection {
-            HStack(spacing: 3) {
+            HStack(spacing: SWSpacing.xxs) {
                 Text("proj").font(SWType.micro).foregroundStyle(SWColor.tertiary)
                 Text(projection, format: SWFormat.score)
                     .font(isExpanded ? SWType.score : SWType.scoreCaption)
@@ -194,7 +194,7 @@ struct ProgressRow: View {
     }
 
     private func side(_ progress: LineupProgress, alignment: HorizontalAlignment) -> some View {
-        VStack(alignment: alignment, spacing: 1) {
+        VStack(alignment: alignment, spacing: SWSpacing.xxs) {
             // The points are the headline here; the counts qualify them.
             Text(progress.pointsScored, format: SWFormat.score)
                 .font(isCompact ? SWType.score : SWType.scoreLarge)
@@ -229,7 +229,7 @@ struct ProgressRow: View {
     }
 
     private func count(_ value: Int, _ label: LocalizedStringKey, _ tone: Color) -> some View {
-        HStack(spacing: 2) {
+        HStack(spacing: SWSpacing.xxs) {
             Text("\(value)")
                 .font(SWType.scoreMicro)
                 .foregroundStyle(tone)

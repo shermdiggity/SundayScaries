@@ -35,6 +35,13 @@ struct LeagueDetailView: View {
 
     private var palette: SkyPalette { Sky.palette() }
     private var week: Int { snapshot.week }
+
+    /// The top bar's glyph box, and the three columns the schedule and ranking rows
+    /// hold so their neighbours align: "Week 12", a W or an L, a rank.
+    private static let iconBox: CGFloat = 20
+    private static let weekColumn: CGFloat = 60
+    private static let resultColumn: CGFloat = 16
+    private static let rankColumn: CGFloat = 22
     /// True only while this league is the one the weekly view has open.
     private var isActive: Bool { selectedLeagueID == snapshot.id }
 
@@ -76,7 +83,7 @@ struct LeagueDetailView: View {
                     mySchedule
                 }
                 .padding(.horizontal, SWSpacing.lg)
-                .padding(.top, 56)
+                .padding(.top, SWSize.topInset)
                 .padding(.bottom, SWSpacing.xxl)
             }
             .scrollIndicators(.hidden)
@@ -184,12 +191,12 @@ struct LeagueDetailView: View {
                         // to tell that anything had happened.
                         ProgressView()
                             .tint(SWColor.onSky)
-                            .frame(width: 20, height: 20)
+                            .frame(width: Self.iconBox, height: Self.iconBox)
                     } else {
                         Image(systemName: "arrow.clockwise")
                             .font(SWType.icon)
                             .foregroundStyle(SWColor.onSky)
-                            .frame(width: 20, height: 20)
+                            .frame(width: Self.iconBox, height: Self.iconBox)
                     }
                 }
                 .padding(SWSpacing.md)
@@ -209,7 +216,7 @@ struct LeagueDetailView: View {
     /// A full-width bar, not a floating pill: once the scoreboard is gone this is the
     /// scoreboard, so it carries both live totals and both projections.
     private var collapsedSummary: some View {
-        VStack(spacing: 2) {
+        VStack(spacing: SWSpacing.xxs) {
             HStack(spacing: SWSpacing.sm) {
                 Text(snapshot.league.name)
                     .font(SWType.bodyMedium)
@@ -235,8 +242,8 @@ struct LeagueDetailView: View {
             }
 
             if let probability = snapshot.winProbability {
-                WinBar(probability: probability, height: 6, showsLabel: true, isLive: snapshot.hasKickedOff)
-                    .padding(.top, 2)
+                WinBar(probability: probability, height: SWSize.dot, showsLabel: true, isLive: snapshot.hasKickedOff)
+                    .padding(.top, SWSpacing.xxs)
             }
         }
         .padding(.horizontal, SWSpacing.md)
@@ -252,7 +259,7 @@ struct LeagueDetailView: View {
                 .font(SWType.micro)
                 .foregroundStyle(SWColor.tertiary)
                 .lineLimit(1)
-            HStack(spacing: 4) {
+            HStack(spacing: SWSpacing.xs) {
                 Text(scored, format: SWFormat.score)
                     .contentTransition(.numericText())
                     .font(SWType.scoreCaption)
@@ -310,7 +317,7 @@ struct LeagueDetailView: View {
             if let destination = PlatformLinks.league(snapshot.league, teamID: snapshot.myTeam?.id) {
                 Link(destination: destination) {
                     HStack(spacing: SWSpacing.sm) {
-                        PlatformMark(platform: snapshot.league.platform, size: 18)
+                        PlatformMark(platform: snapshot.league.platform, size: SWSize.mark)
                         Text("Open in \(snapshot.league.platform.displayName)")
                             .font(SWType.bodyMedium)
                             .foregroundStyle(SWColor.primary)
@@ -348,7 +355,7 @@ struct LeagueDetailView: View {
                     Text(snapshot.myTeam?.displayName ?? "You")
                         .frame(maxWidth: .infinity, alignment: .leading)
                     Text("Starters")
-                        .frame(minWidth: 46)
+                        .frame(minWidth: SWSize.slotColumn)
                     Text(snapshot.opponent?.displayName ?? "—")
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 }
@@ -426,7 +433,7 @@ struct LeagueDetailView: View {
                 .font(SWType.scoreCaption)
                 .foregroundStyle(entry.isCurrent ? SWColor.accent : SWColor.tertiary)
                 .monospacedDigit()
-                .frame(minWidth: 60, alignment: .leading)
+                .frame(minWidth: Self.weekColumn, alignment: .leading)
 
             Text(entry.opponent?.displayName ?? "—")
                 .font(SWType.bodyMedium)
@@ -440,7 +447,7 @@ struct LeagueDetailView: View {
                 Text(won ? "W" : "L")
                     .font(SWType.scoreCaption)
                     .foregroundStyle(won ? SWColor.positive : SWColor.negative)
-                    .frame(minWidth: 16)
+                    .frame(minWidth: Self.resultColumn)
                 Text("\(entry.myScore.formatted(format)) – \(entry.theirScore.formatted(format))")
                     .font(SWType.scoreCaption)
                     .foregroundStyle(SWColor.secondary)
@@ -627,10 +634,10 @@ struct LeagueDetailView: View {
             Text("\(row.rank)")
                 .font(SWType.scoreCaption)
                 .foregroundStyle(row.isMine ? SWColor.accent : SWColor.tertiary)
-                .frame(minWidth: 22, alignment: .trailing)
+                .frame(minWidth: Self.rankColumn, alignment: .trailing)
 
             if let face = bestPlayer(forTeam: row.teamID) {
-                Headshot(player: face, size: 26)
+                Headshot(player: face, size: SWSize.faceInline)
             }
 
             VStack(alignment: .leading, spacing: 0) {

@@ -42,7 +42,7 @@ struct MatchupSheet: View {
                                 Text(pair.left?.displayName ?? "—")
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                 Text("Starters")
-                                    .frame(minWidth: 46)
+                                    .frame(minWidth: SWSize.slotColumn)
                                 Text(pair.right?.displayName ?? "—")
                                     .frame(maxWidth: .infinity, alignment: .trailing)
                             }

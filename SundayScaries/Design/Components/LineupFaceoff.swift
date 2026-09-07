@@ -34,12 +34,12 @@ struct LineupFaceoff: View {
         return HStack(spacing: SWSpacing.sm) {
             side(pair.mine, isWinning: mineValue > theirsValue, alignment: .leading)
 
-            VStack(spacing: 1) {
+            VStack(spacing: SWSpacing.xxs) {
                 Text(slotName)
                     .font(SWType.micro)
                     .foregroundStyle(SWColor.tertiary)
             }
-            .frame(minWidth: 46)
+            .frame(minWidth: SWSize.slotColumn)
 
             side(pair.theirs, isWinning: theirsValue > mineValue, alignment: .trailing)
         }
@@ -53,7 +53,7 @@ struct LineupFaceoff: View {
     @ViewBuilder
     private func side(_ slot: RosterSlot?, isWinning: Bool, alignment: HorizontalAlignment) -> some View {
         if let slot {
-            let content = VStack(alignment: alignment, spacing: 1) {
+            let content = VStack(alignment: alignment, spacing: SWSpacing.xxs) {
                 Text(slot.player.isEmptyLineupSlot ? "Empty" : slot.player.name)
                     .font(SWType.caption)
                     .foregroundStyle(slot.issue == nil ? SWColor.primary : SWColor.warning)
@@ -61,7 +61,7 @@ struct LineupFaceoff: View {
                     .minimumScaleFactor(0.8)
                 // Who they play and when, then the number — labelled "proj" whenever
                 // it is one, so a projection is never mistaken for a score.
-                HStack(spacing: 3) {
+                HStack(spacing: SWSpacing.xxs) {
                     if let matchup = snapshot.schedule.opponentLabel(nflTeam: slot.player.nflTeam, week: week) {
                         Text(matchup)
                     }
@@ -83,19 +83,19 @@ struct LineupFaceoff: View {
 
             if alignment == .leading {
                 HStack(spacing: SWSpacing.sm) {
-                    Headshot(player: slot.player, size: 30)
+                    Headshot(player: slot.player, size: SWSize.faceInline)
                     content
                 }
                 .playerTappable(slot.player)
             } else {
                 HStack(spacing: SWSpacing.sm) {
                     content
-                    Headshot(player: slot.player, size: 30)
+                    Headshot(player: slot.player, size: SWSize.faceInline)
                 }
                 .playerTappable(slot.player)
             }
         } else {
-            Color.clear.frame(maxWidth: .infinity, minHeight: 30)
+            Color.clear.frame(maxWidth: .infinity, minHeight: SWSize.faceInline)
         }
     }
 
