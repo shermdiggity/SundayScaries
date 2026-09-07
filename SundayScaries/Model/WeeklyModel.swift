@@ -16,6 +16,12 @@ final class WeeklyModel {
     private(set) var knownLeagues: [League] = []
     private(set) var positions: [PlayerPosition] = []
     private(set) var isLoading = false
+    /// Which load is the newest. Loads overlap freely (the pull, the poll, a week step,
+    /// foregrounding, a sign-in) and each streams its leagues into `allSnapshots` as
+    /// they resolve, so without this two of them could leave the screen on two weeks and
+    /// the first to finish switched the skeletons off for the second. A load that has
+    /// been superseded stops publishing; the newest one owns the screen.
+    private var loadGeneration = 0
     private(set) var loadProblem: LoadProblem?
     /// The week the whole screen shows.
     private(set) var week: Int?
@@ -279,7 +285,7 @@ final class WeeklyModel {
     /// otherwise the projection, flagged so the card can label it.
     func points(for player: PlayerRef) -> (value: Double?, isProjected: Bool) {
         for snapshot in snapshots {
-            let state = snapshot.schedule.gameState(nflTeam: player.nflTeam, week: snapshot.myRoster?.week ?? 1)
+            let state = snapshot.schedule.gameState(nflTeam: player.nflTeam, week: snapshot.week)
             guard state == .inProgress || state == .final else { continue }
             let scored = snapshot.rosters
                 .flatMap(\.slots)
@@ -363,9 +369,12 @@ final class WeeklyModel {
     /// Whether any starter in any visible league is in a game right now. Drives the
     /// live poll: while this is true the app refreshes itself; while it is false nothing
     /// runs.
+    ///
+    /// Asked of the LIVE week. The reader may be looking at last week's finals while a
+    /// game is on; the poll and the foreground refresh still need to run.
     var hasLiveGame: Bool {
         snapshots.contains { snapshot in
-            let week = snapshot.week
+            let week = liveWeek ?? snapshot.week
             return snapshot.rosters.contains { roster in
                 roster.starters.contains { slot in
                     snapshot.schedule.gameState(nflTeam: slot.player.nflTeam, week: week) == .inProgress
@@ -391,17 +400,27 @@ final class WeeklyModel {
             // whatever was loaded before.
             allLeagues = []
             allSnapshots = []
+            allWeekRosters = []
             knownLeagues = []
             snapshots = []
             positions = []
             scoringOptions = []
             week = nil
+            liveWeek = nil
+            viewedWeek = nil
+            lastLoaded = nil
+            seasonFallback = nil
             loadProblem = nil
+            // The widget holds the last thing the app knew, in a container the reader
+            // never sees. An account they removed must not keep living there.
+            WidgetBridge.clear()
             return
         }
+        loadGeneration += 1
+        let generation = loadGeneration
         isLoading = true
         loadProblem = nil
-        defer { isLoading = false }
+        defer { if generation == loadGeneration { isLoading = false } }
         let mode: FetchMode = force ? .refresh : .cacheFirst
         let quiet = !allSnapshots.isEmpty
         #if DEBUG
@@ -422,7 +441,11 @@ final class WeeklyModel {
 
         // A season override, for looking at a finished season during development.
         // Set with a launch argument: -seasonOverride 2025
+        #if DEBUG
         let override = UserDefaults.standard.string(forKey: "seasonOverride")
+        #else
+        let override: String? = nil
+        #endif
         if season == nil, !force {
             // A fresh top-level load: forget the last one's fallbacks.
             triedPreviousSeason = false
@@ -433,7 +456,7 @@ final class WeeklyModel {
         // Sleeper opens the new year; `league_season` can, and until it flips the leagues
         // people actually have are last season's.
         let platformSeason: String? = hasSleeper
-            ? ((try? await SleeperProvider.leagueSeason(http: http)) ?? nil)
+            ? try? await SleeperProvider.leagueSeason(http: http)
             : nil
         let resolvedSeason = season
             ?? override.flatMap { $0.isEmpty ? nil : $0 }
@@ -531,10 +554,6 @@ final class WeeklyModel {
         }
 
         var portfolioInput: [LeagueWeekRosters] = []
-        if !quiet {
-            allSnapshots = []
-            snapshots = []
-        }
 
         // Hidden leagues are not fetched. Loading them "so un-hiding is instant" doubled
         // the work of every pull for cards nobody was looking at; un-hiding now fetches
@@ -574,6 +593,8 @@ final class WeeklyModel {
         }
 
         for await (league, outcome) in outcomes {
+            // A newer load owns the screen now. Let the stream drain; publish nothing.
+            guard generation == loadGeneration else { continue }
             let resolved: LeagueSnapshot
             switch outcome {
             case let .success(snapshot):
@@ -597,7 +618,10 @@ final class WeeklyModel {
                     opponentRoster: nil, rosters: [], matchup: nil, currentMatchups: [],
                     seasonMatchups: [], weeklyRosters: [], analytics: nil, outlook: .empty,
                     projections: .empty(week: 0), schedule: .empty(season: "0"),
-                    syncState: .failed(ProviderError.transport(underlying: String(describing: error)))
+                    // The real failure, so a card can one day say "sign in again" rather
+                    // than "couldn't refresh" for everything.
+                    syncState: .failed((error as? ProviderError)
+                        ?? ProviderError.transport(underlying: String(describing: error)))
                 )
             }
             // Replaced in place when it exists, so a quiet refresh rolls the card's
@@ -616,14 +640,15 @@ final class WeeklyModel {
             // league's card never flashes on screen before being filtered away.
             applyPreferences()
         }
+        guard generation == loadGeneration else { return }
         // Hidden leagues' rosters were not refetched; keep what they had so un-hiding
-        // does not blank the portfolio until the next load.
-        let loadedIDs = Set(toLoad.map(\.id))
-        portfolioInput += allWeekRosters.filter { !loadedIDs.contains($0.league.id) }
-        // A league that is gone from the platform is gone from here too.
+        // does not blank the portfolio until the next load. A league that is gone from
+        // the platform is gone from here too, rosters included: a disconnected account's
+        // starters used to keep feeding Your Guys until the next cold start.
         let current = Set(allLeagues.map(\.id))
+        let loadedIDs = Set(toLoad.map(\.id))
+        portfolioInput += allWeekRosters.filter { !loadedIDs.contains($0.league.id) && current.contains($0.league.id) }
         allSnapshots.removeAll { !current.contains($0.id) }
-        applyPreferences()
 
         #if DEBUG
         // Diagnostics for the ranking, which is invisible when there is nothing to rank.
@@ -646,7 +671,9 @@ final class WeeklyModel {
             await scoreboard.attribution,
         ]
         lastLoaded = Date()
-        await WidgetBridge.publish(from: self)
+        // The widget shows the live week. Stepping back to look at last week's finals
+        // must not put last week on the home screen.
+        if isOnLiveWeek { await WidgetBridge.publish(from: self) }
     }
 
     /// Everything a load needs to talk to the platforms, built fresh for one load so the
@@ -744,6 +771,9 @@ final class WeeklyModel {
                     for: league, week: shownWeek, source: source,
                     scheduleStore: ctx.scheduleStore, scoreboard: ctx.scoreboard, mode: .refresh
                 )
+                // The reader stepped to another week while this ran. The card for that
+                // week is someone else's to fill.
+                guard week == shownWeek else { return false }
                 if let index = allSnapshots.firstIndex(where: { $0.id == leagueID }) {
                     allSnapshots[index] = snapshot
                 } else {
@@ -755,7 +785,7 @@ final class WeeklyModel {
                 print("[lineup] \(league.name) w\(snapshot.week) single-refresh starters=\(snapshot.myRoster?.starters.count ?? 0) empty=\(snapshot.myRoster?.starters.filter { $0.player.isEmptyLineupSlot }.count ?? 0) issues=\(snapshot.issues.count)")
                 #endif
                 applyPreferences()
-                await WidgetBridge.publish(from: self)
+                if isOnLiveWeek { await WidgetBridge.publish(from: self) }
                 return true
             } catch {
                 // A failed refresh keeps the last good snapshot, same as the full load.

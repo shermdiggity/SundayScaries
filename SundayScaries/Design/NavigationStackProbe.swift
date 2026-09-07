@@ -39,7 +39,14 @@ struct NavigationStackProbe: UIViewRepresentable {
     }
 
     func updateUIView(_ view: ProbeView, context: Context) {
-        onAttach({ [weak view] in view?.canPresent ?? false }, { [weak view] in view?.diagnostics ?? "probe gone" })
+        onAttach({ [weak view] in view?.canPresent ?? false }, { [weak view] in
+            #if DEBUG
+            view?.diagnostics ?? "probe gone"
+            #else
+            _ = view
+            return ""
+            #endif
+        })
     }
 
     final class ProbeView: UIView {
@@ -69,7 +76,8 @@ struct NavigationStackProbe: UIViewRepresentable {
         #if DEBUG
         override func didMoveToWindow() {
             super.didMoveToWindow()
-            diagLog("probe window=\(window != nil) \(window == nil ? "(detail LEFT the window)" : "(detail ENTERED the window)")")
+            let direction = window == nil ? "(detail LEFT the window)" : "(detail ENTERED the window)"
+            diagLog("probe window=\(window != nil) \(direction)")
         }
 
         /// Everything that could explain why a tap reached this screen.
@@ -91,11 +99,15 @@ struct NavigationStackProbe: UIViewRepresentable {
             cursor = controller
             while let current = cursor { if current === top { topIsMine = true }; cursor = current.parent }
             let frame = window.map { convert(bounds, to: $0) } ?? .zero
-            return [
-                "t=\(diagStamp()) window=\(window != nil) alpha=\(alpha) hidden=\(hidden) transformed=\(transformed) frameInWindow=\(frame) screen=\(window?.bounds.size ?? .zero)",
-                "chain=\(chain.joined(separator: " > "))",
-                "nav=\(nav != nil) stack=\(nav?.viewControllers.count ?? -1) onStack=\(isOnNavigationStack) canPresent=\(canPresent) topIsMine=\(topIsMine) transition=\(nav?.transitionCoordinator != nil) interactive=\(nav?.transitionCoordinator?.isInteractive ?? false) cancelled=\(nav?.transitionCoordinator?.isCancelled ?? false) movingFromParent=\(controller?.isMovingFromParent ?? false) beingDismissed=\(controller?.isBeingDismissed ?? false)",
-            ].joined(separator: "\n   ")
+            let coordinator = nav?.transitionCoordinator
+            let geometry = "t=\(diagStamp()) window=\(window != nil) alpha=\(alpha) hidden=\(hidden) "
+                + "transformed=\(transformed) frameInWindow=\(frame) screen=\(window?.bounds.size ?? .zero)"
+            let stack = "nav=\(nav != nil) stack=\(nav?.viewControllers.count ?? -1) onStack=\(isOnNavigationStack) "
+                + "canPresent=\(canPresent) topIsMine=\(topIsMine) transition=\(coordinator != nil) "
+                + "interactive=\(coordinator?.isInteractive ?? false) cancelled=\(coordinator?.isCancelled ?? false) "
+                + "movingFromParent=\(controller?.isMovingFromParent ?? false) "
+                + "beingDismissed=\(controller?.isBeingDismissed ?? false)"
+            return [geometry, "chain=\(chain.joined(separator: " > "))", stack].joined(separator: "\n   ")
         }
         #endif
 

@@ -22,7 +22,12 @@ nonisolated enum Keychain {
         SecItemDelete(query as CFDictionary)
         query[kSecValueData as String] = data
         query[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
-        SecItemAdd(query as CFDictionary, nil)
+        let status = SecItemAdd(query as CFDictionary, nil)
+        #if DEBUG
+        // A write that fails is otherwise silent: the next load just says "sign in
+        // again" with nothing to explain why.
+        if status != errSecSuccess { print("[keychain] write for \(key) failed: \(status)") }
+        #endif
     }
 
     static func string(for key: String) -> String? {

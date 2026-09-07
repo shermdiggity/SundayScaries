@@ -8,29 +8,7 @@ import FantasyCore
 enum WidgetBridge {
     @MainActor
     static func publish(from model: WeeklyModel) async {
-        let leagues: [WidgetLeague] = model.snapshots.map { snapshot in
-            let mine = snapshot.progress
-            let theirs = snapshot.opponentProgress
-            return WidgetLeague(
-                id: snapshot.league.id,
-                name: snapshot.league.name,
-                platform: snapshot.league.platform.rawValue,
-                isLineupSet: snapshot.isLineupSet,
-                issueCount: snapshot.issues.count,
-                hasMatchup: snapshot.opponent != nil,
-                myName: snapshot.myTeam?.displayName,
-                myScore: snapshot.myScore,
-                myProjected: snapshot.projectedTotal(for: snapshot.myRoster),
-                mySummary: mine.summary,
-                opponentName: snapshot.opponent?.displayName,
-                opponentScore: snapshot.opponentScore,
-                opponentProjected: snapshot.projectedTotal(for: snapshot.opponentRoster),
-                opponentSummary: theirs.summary,
-                winProbability: snapshot.winProbability,
-                isLive: mine.inProgress > 0 || theirs.inProgress > 0,
-                isFinal: mine.isKnown && mine.yetToPlay == 0 && mine.inProgress == 0
-            )
-        }
+        let leagues = model.snapshots.map(league(from:))
 
         func players(_ positions: [PlayerPosition], count: (PlayerPosition) -> Int) async -> [WidgetPlayer] {
             var result: [WidgetPlayer] = []
@@ -62,11 +40,59 @@ enum WidgetBridge {
             upAgainst: await players(model.upAgainst()) { $0.facedCount }
         )
         WidgetStore.save(snapshot)
+        pruneHeadshots(keeping: Set((snapshot.yourGuys + snapshot.upAgainst).compactMap(\.headshotFile)))
         WidgetCenter.shared.reloadAllTimelines()
     }
 
+    /// One league as the widget's scoreboard row needs it.
+    @MainActor
+    private static func league(from snapshot: LeagueSnapshot) -> WidgetLeague {
+        let mine = snapshot.progress
+        let theirs = snapshot.opponentProgress
+        return WidgetLeague(
+            id: snapshot.league.id,
+            name: snapshot.league.name,
+            platform: snapshot.league.platform.rawValue,
+            isLineupSet: snapshot.isLineupSet,
+            issueCount: snapshot.issues.count,
+            hasMatchup: snapshot.opponent != nil,
+            myName: snapshot.myTeam?.displayName,
+            myScore: snapshot.myScore,
+            myProjected: snapshot.projectedTotal(for: snapshot.myRoster),
+            mySummary: mine.summary,
+            opponentName: snapshot.opponent?.displayName,
+            opponentScore: snapshot.opponentScore,
+            opponentProjected: snapshot.projectedTotal(for: snapshot.opponentRoster),
+            opponentSummary: theirs.summary,
+            winProbability: snapshot.winProbability,
+            isLive: mine.inProgress > 0 || theirs.inProgress > 0,
+            isFinal: mine.isKnown && mine.yetToPlay == 0 && mine.inProgress == 0
+        )
+    }
+
+    /// Disconnecting the last account clears the widget too. The container is shared
+    /// state the reader cannot see; an account they removed must not keep scoring there.
+    @MainActor
+    static func clear() {
+        WidgetStore.save(.empty)
+        if let directory = WidgetStore.headshotsDirectory {
+            try? FileManager.default.removeItem(at: directory)
+        }
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+
+    /// Faces the widget no longer names are removed, so the container holds the sixteen
+    /// it can show rather than everyone who was ever on a card.
+    private static func pruneHeadshots(keeping named: Set<String>) {
+        guard let directory = WidgetStore.headshotsDirectory,
+              let files = try? FileManager.default.contentsOfDirectory(atPath: directory.path) else { return }
+        for file in files where !named.contains(file) {
+            try? FileManager.default.removeItem(at: directory.appendingPathComponent(file))
+        }
+    }
+
     /// Copies a small headshot into the container, where the widget can read it without a
-    /// network. Already-present files are kept; a face does not change week to week.
+    /// network. A file already there is kept: a face does not change week to week.
     @MainActor
     private static func headshotFile(for player: PlayerRef, id: String) async -> String? {
         guard let url = player.headshotURL, let directory = WidgetStore.headshotsDirectory else { return nil }

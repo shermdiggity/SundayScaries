@@ -4,16 +4,37 @@ import FantasyCore
 /// The kill switch (spec §4). A small JSON file in the app's repository names platforms
 /// that should not be read right now and why: `{"disabled": {"espn": "reason"}}`. ESPN
 /// has no sanctioned API and can change under the app, and a takedown request has to be
-/// answerable without waiting for a release. The file is read once per load with a short
-/// timeout; the last answer is kept, so an offline load behaves like the last online one.
-nonisolated enum RemoteConfig {
+/// answerable without waiting for a release. The file is read at most once an hour with
+/// a short timeout. The last answer is kept, so an offline load behaves like the last
+/// online one.
+///
+/// Once an hour, not once per load: this used to be awaited, serially, before any
+/// provider was asked anything, on every load. The live poll runs a load a minute, so on
+/// a weak connection each of those waited up to five seconds on a file that changes once
+/// a season.
+enum RemoteConfig {
     private struct Payload: Codable { var disabled: [String: String] }
 
     static let url = URL(string: "https://raw.githubusercontent.com/shermdiggity/SundayScaries/main/config/providers.json")
     private static let cacheKey = "remoteConfig.disabled"
+    private static let checkInterval: TimeInterval = 3_600
+
+    @MainActor private static var lastChecked: Date?
+    @MainActor private static var lastAnswer: [Platform: String]?
 
     /// Platforms that are paused, with the reason to show.
-    static func disabledPlatforms() async -> [Platform: String] {
+    @MainActor
+    static func disabledPlatforms(now: Date = Date()) async -> [Platform: String] {
+        if let lastChecked, let lastAnswer, now.timeIntervalSince(lastChecked) < checkInterval {
+            return lastAnswer
+        }
+        let answer = await fetch()
+        lastChecked = now
+        lastAnswer = answer
+        return answer
+    }
+
+    private static func fetch() async -> [Platform: String] {
         if let url {
             var request = URLRequest(url: url)
             request.timeoutInterval = 5

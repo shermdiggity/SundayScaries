@@ -26,8 +26,18 @@ enum BackgroundRefresh {
             let model = WeeklyModel()
             await model.load(force: true)
             schedule(liveSoon: model.hasLiveGame)
+            // Once expired, the expiration handler has already answered for us. Marking a
+            // task complete twice is harmless, but claiming success for work that was
+            // cut short is not.
+            guard !Task.isCancelled else { return }
             task.setTaskCompleted(success: true)
         }
-        task.expirationHandler = { work.cancel() }
+        // iOS treats a task that expires without completing as a misbehaving app and
+        // throttles the next requests, which are the widgets' only lifeline while the
+        // app is closed. So: cancel the work AND complete the task, honestly.
+        task.expirationHandler = {
+            work.cancel()
+            task.setTaskCompleted(success: false)
+        }
     }
 }

@@ -214,6 +214,9 @@ private struct ESPNLoginWebView: UIViewRepresentable {
 
     static func dismantleUIView(_ webView: WKWebView, coordinator: Coordinator) {
         coordinator.cookieStore?.remove(coordinator)
+        // Cancel, or a sign-in that never minted `espn_s2`, used to leave the Disney
+        // session sitting in the app's shared web store. The wipe runs on every exit.
+        coordinator.wipeSession()
     }
 
     final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKHTTPCookieStoreObserver {
@@ -325,7 +328,7 @@ private struct ESPNLoginWebView: UIViewRepresentable {
         /// The default store is shared and persistent, so without this a live ESPN login
         /// would be left sitting inside the app.
         @MainActor
-        private func wipeSession() {
+        func wipeSession() {
             let store = WKWebsiteDataStore.default()
             let types = WKWebsiteDataStore.allWebsiteDataTypes()
             store.fetchDataRecords(ofTypes: types) { records in
@@ -360,10 +363,12 @@ struct ESPNManualCredentialsView: View {
     @State private var swid = ""
     @State private var s2 = ""
 
-    private var isComplete: Bool {
-        !swid.trimmingCharacters(in: .whitespaces).isEmpty
-            && !s2.trimmingCharacters(in: .whitespaces).isEmpty
-    }
+    /// Pasted from a browser, so a trailing newline is the common case, and a newline
+    /// inside a cookie header is a sign-in that fails for no visible reason.
+    private var trimmedSWID: String { swid.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var trimmedS2: String { s2.trimmingCharacters(in: .whitespacesAndNewlines) }
+
+    private var isComplete: Bool { !trimmedSWID.isEmpty && !trimmedS2.isEmpty }
 
     var body: some View {
         NavigationStack {
@@ -397,7 +402,7 @@ struct ESPNManualCredentialsView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        onCapture(ESPNCredentials(swid: swid, espnS2: s2))
+                        onCapture(ESPNCredentials(swid: trimmedSWID, espnS2: trimmedS2))
                     }
                     .disabled(!isComplete)
                 }
