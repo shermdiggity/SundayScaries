@@ -4,8 +4,10 @@ import FantasyCore
 /// A player card. No shader, no finish — the effects fought the content and lost.
 ///
 /// It reads through colour and shape instead: the portrait sits on the player's own
-/// position colour, and whether you are riding on him or up against him sets the ring,
-/// the meter and the bar down the side. Warm means yours, cold means theirs.
+/// position colour, and whether you are riding on him or up against him sets the meter
+/// and the one line that says so. Warm means yours, cold means theirs. Nothing is
+/// drawn around any of it: no bar down the edge, no rule across the middle, no outline.
+/// The surface against the sky is the card's edge, and the type carries the rest.
 struct PlayerFoilCard: View {
     let position: PlayerPosition
     let kind: ExposureMeter.Kind
@@ -45,21 +47,7 @@ struct PlayerFoilCard: View {
             RoundedRectangle(cornerRadius: SWRadius.md, style: .continuous)
                 .fill(SWColor.surface)
         )
-        .overlay(alignment: .leading) {
-            // One bar of meaning down the leading edge: warm if he is yours, cold if he
-            // is theirs. Readable before you have read a word.
-            UnevenRoundedRectangle(
-                topLeadingRadius: SWRadius.md, bottomLeadingRadius: SWRadius.md,
-                bottomTrailingRadius: 0, topTrailingRadius: 0, style: .continuous
-            )
-            .fill(tint)
-            .frame(width: 4)
-        }
         .clipShape(RoundedRectangle(cornerRadius: SWRadius.md, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: SWRadius.md, style: .continuous)
-                .strokeBorder(SWColor.hairline, lineWidth: 1)
-        }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityText)
     }
@@ -81,19 +69,19 @@ struct PlayerFoilCard: View {
         .frame(height: isAccessibilitySize ? nil : Self.portraitBand)
         .overlay(alignment: .bottomLeading) {
             // The meter shows the shape of the concentration; this says the number out
-            // loud. On its own the meter never answered "of how many?".
+            // loud. On its own the meter never answered "of how many?". Set as type in
+            // the meter's own colour, on the band, where the gradient has already
+            // resolved to the surface.
             Text(countLabel)
                 .font(SWType.micro)
-                .foregroundStyle(SWColor.canvas)
-                .padding(.horizontal, 6)
-                .padding(.vertical, 3)
-                .background(Capsule().fill(tint))
-                .padding(SWSpacing.sm)
+                .foregroundStyle(tint)
+                .padding(.horizontal, SWSpacing.md)
+                .padding(.bottom, SWSpacing.sm)
         }
     }
 
     private var details: some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: SWSpacing.xxs) {
             Text(position.player.name)
                 .font(SWType.bodyMedium)
                 .foregroundStyle(SWColor.primary)
@@ -108,7 +96,7 @@ struct PlayerFoilCard: View {
                 }
                 Spacer(minLength: 0)
                 if let points {
-                    HStack(spacing: 2) {
+                    HStack(spacing: SWSpacing.xxs) {
                         if isProjected { Text("proj").foregroundStyle(SWColor.tertiary) }
                         Text(points, format: SWFormat.score)
                             .font(SWType.scoreMicro)
@@ -128,8 +116,8 @@ struct PlayerFoilCard: View {
                 .foregroundStyle(SWColor.tertiary)
                 .lineLimit(1)
                 .opacity(kickoff == nil ? 0 : 1)
-
-            Rectangle().fill(SWColor.hairline).frame(height: 1).padding(.vertical, 2)
+                // Space, not a rule, separates the game from the leagues it counts in.
+                .padding(.bottom, SWSpacing.xs)
 
             ForEach(Array(leagueLines.enumerated()), id: \.offset) { _, line in
                 Text(line.isEmpty ? " " : line)

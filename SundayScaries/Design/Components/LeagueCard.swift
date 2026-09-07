@@ -47,16 +47,12 @@ struct LeagueCard: View {
         return snapshot.hasKickedOff ? .live : .upcoming
     }
 
-    /// Derived from the league's id, so every league keeps a stable identity colour
-    /// without anyone choosing one by hand. Not `hashValue`: that is seeded per launch,
-    /// and the colour changed every time the app opened.
-    private var accent: Color {
-        let hues: [Color] = [
-            SWColor.accent, SWColor.positive, SWColor.position(.wr),
-            SWColor.position(.te), SWColor.position(.k), SWColor.position(.rb),
-        ]
-        let stable = snapshot.league.id.unicodeScalars.reduce(0) { ($0 &* 31) &+ Int($1.value) }
-        return hues[abs(stable) % hues.count]
+    /// First place is the one standing worth colouring, and it gets the app's one
+    /// accent. Every league used to pick its own hue from six by hashing its id, which
+    /// put a pink 4th beside a teal 7th beside an orange 2nd: colour that meant nothing
+    /// and fought the platform tint under it.
+    private var standingTone: Color {
+        snapshot.standing == 1 ? SWColor.accent : SWColor.secondary
     }
 
     private var header: some View {
@@ -84,7 +80,7 @@ struct LeagueCard: View {
                         Text(team.record.summary)
                             .accessibilityLabel(Text("Record \(team.record.summary)"))
                         if let standing = snapshot.standing {
-                            Text(Self.ordinal(standing)).foregroundStyle(accent)
+                            Text(Self.ordinal(standing)).foregroundStyle(standingTone)
                                 .accessibilityLabel(Text("\(Self.ordinal(standing)) place"))
                         }
                     }
@@ -137,8 +133,9 @@ struct LeagueCard: View {
 /// to the live view, the glass has to re-resolve its backdrop, and that one frame is
 /// visible. Plain alpha blending has nothing to re-resolve.
 ///
-/// It keeps the look — a translucent tinted surface with a lit top lip and a hairline —
-/// without the sampling.
+/// It keeps the look — a translucent tinted surface with a lit top lip — without the
+/// sampling. The edge is the surface's own colour at low opacity, an edge you feel
+/// rather than see: six leagues used to wear six bright platform-coloured outlines.
 struct LeagueSurface: ViewModifier {
     let platform: Platform
 
@@ -165,7 +162,7 @@ struct LeagueSurface: ViewModifier {
             }
             .overlay {
                 RoundedRectangle(cornerRadius: SWRadius.lg, style: .continuous)
-                    .strokeBorder(SWColor.platform(platform).opacity(0.45), lineWidth: 1.5)
+                    .strokeBorder(SWColor.platform(platform).opacity(0.18), lineWidth: 1)
             }
             .clipShape(RoundedRectangle(cornerRadius: SWRadius.lg, style: .continuous))
     }
@@ -196,16 +193,16 @@ struct LineupCheck: View {
     let issueCount: Int
 
     var body: some View {
-        HStack(spacing: 3) {
+        HStack(spacing: SWSpacing.xxs) {
             Image(systemName: isSet ? "checkmark" : "exclamationmark")
                 .font(SWType.glyph)
             if !isSet, issueCount > 1 {
                 Text("\(issueCount)").font(SWType.scoreMicro)
             }
         }
-        .foregroundStyle(isSet ? SWColor.canvas : SWColor.canvas)
-        .padding(.horizontal, 6)
-        .padding(.vertical, 4)
+        .foregroundStyle(SWColor.canvas)
+        .padding(.horizontal, SWSpacing.sm)
+        .padding(.vertical, SWSpacing.xs)
         .background(Capsule().fill(isSet ? SWColor.positive : SWColor.warning))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(isSet ? "Lineup set" : "\(issueCount) lineup problems"))

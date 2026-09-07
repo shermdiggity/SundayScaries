@@ -406,6 +406,8 @@ struct LeagueDetailView: View {
                     }
                 }
 
+                // Rows, spaced. No rule between them: the week numbers down the left
+                // already read as a column.
                 VStack(spacing: 0) {
                     ForEach(schedule) { entry in
                         Button {
@@ -414,9 +416,6 @@ struct LeagueDetailView: View {
                             scheduleRow(entry)
                         }
                         .buttonStyle(.plain)
-                        if entry.id != schedule.last?.id {
-                            Rectangle().fill(SWColor.hairline).frame(height: 1)
-                        }
                     }
                 }
             }

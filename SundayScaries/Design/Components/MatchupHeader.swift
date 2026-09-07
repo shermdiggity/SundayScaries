@@ -177,11 +177,10 @@ struct ProgressRow: View {
     var isCompact: Bool = false
 
     var body: some View {
-        HStack(alignment: .center, spacing: SWSpacing.sm) {
+        // Two sides, one leading and one trailing, with nothing drawn between them.
+        // The gap is the divider.
+        HStack(alignment: .center, spacing: SWSpacing.lg) {
             side(mine, alignment: .leading)
-            Rectangle()
-                .fill(SWColor.hairline)
-                .frame(width: 1, height: isCompact ? 18 : 22)
             side(theirs, alignment: .trailing)
         }
         .padding(.vertical, isCompact ? SWSpacing.xs : SWSpacing.sm)

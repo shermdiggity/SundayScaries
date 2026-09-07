@@ -78,12 +78,8 @@ struct SeasonOutlookRow: View {
         // scrolling stutter. Plain alpha blending has nothing to re-resolve. The league
         // card learned this already; this one was missed.
         .background {
-            RoundedRectangle(cornerRadius: SWRadius.lg)
+            RoundedRectangle(cornerRadius: SWRadius.lg, style: .continuous)
                 .fill(SWColor.surface.opacity(0.82))
-                .overlay {
-                    RoundedRectangle(cornerRadius: SWRadius.lg)
-                        .strokeBorder(SWColor.hairline, lineWidth: 1)
-                }
         }
     }
 

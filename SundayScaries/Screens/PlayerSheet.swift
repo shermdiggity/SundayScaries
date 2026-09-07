@@ -214,11 +214,9 @@ struct PlayerSheet: View {
             }
             VStack(spacing: 0) {
                 // In order. A schedule reads top to bottom; the current week is marked.
+                // The week numbers are the column; no rule is drawn between rows.
                 ForEach(season.weeks) { week in
                     row(week, isCurrent: week.week == currentWeek)
-                    if week.week != season.weeks.last?.week {
-                        Rectangle().fill(SWColor.hairline).frame(height: 1)
-                    }
                 }
             }
             .padding(.horizontal, SWSpacing.lg)
