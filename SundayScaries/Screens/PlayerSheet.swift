@@ -219,7 +219,7 @@ struct PlayerSheet: View {
                 // In order. A schedule reads top to bottom; the current week is marked.
                 // The week numbers are the column; no rule is drawn between rows.
                 ForEach(season.weeks) { week in
-                    row(week, isCurrent: week.week == currentWeek)
+                    PlayerWeekRow(week: week, isCurrent: week.week == currentWeek, position: player.position)
                 }
             }
             .padding(.horizontal, SWSpacing.lg)
@@ -230,61 +230,6 @@ struct PlayerSheet: View {
 
     private var currentWeek: Int? {
         model.allLeagues.first { $0.id == leagueID }?.currentWeek
-    }
-
-    @ViewBuilder
-    private func row(_ week: PlayerWeek, isCurrent: Bool) -> some View {
-        let line = StatLine.summary(week.stats, position: player.position)
-        HStack(alignment: .firstTextBaseline, spacing: SWSpacing.md) {
-            Text("\(week.week)")
-                .font(SWType.scoreCaption)
-                .foregroundStyle(isCurrent ? SWColor.accent : SWColor.tertiary)
-                .frame(minWidth: SWSpacing.xl, alignment: .leading)
-
-            VStack(alignment: .leading, spacing: SWSpacing.xxs) {
-                Text(week.isBye ? "Bye" : (week.opponent ?? "—"))
-                    .font(SWType.bodyMedium)
-                    .foregroundStyle(week.isBye ? SWColor.tertiary : SWColor.primary)
-                if !line.isEmpty {
-                    Text(line)
-                        .font(SWType.micro)
-                        .foregroundStyle(SWColor.secondary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.85)
-                }
-            }
-
-            Spacer(minLength: SWSpacing.sm)
-
-            VStack(alignment: .trailing, spacing: SWSpacing.xxs) {
-                if let actual = week.actual {
-                    // An estimate is the same number, quieter. Nothing else changes.
-                    Text(actual.points, format: SWFormat.score)
-                        .font(SWType.score)
-                        .foregroundStyle(actual.isExact ? tone(week) : SWColor.tertiary)
-                        .monospacedDigit()
-                        .contentTransition(.numericText())
-                    if let projected = week.projected {
-                        Text("proj \(projected.points.formatted(SWFormat.score))")
-                            .font(SWType.micro)
-                            .foregroundStyle(SWColor.tertiary)
-                    }
-                } else if let projected = week.projected {
-                    Text("proj \(projected.points.formatted(SWFormat.score))")
-                        .font(SWType.scoreCaption)
-                        .foregroundStyle(SWColor.secondary)
-                }
-            }
-        }
-        .padding(.vertical, SWSpacing.sm)
-        .opacity(week.isBye ? 0.6 : 1)
-        .accessibilityElement(children: .combine)
-    }
-
-    /// The colour says one thing only: did they beat their projection.
-    private func tone(_ week: PlayerWeek) -> Color {
-        guard let actual = week.actual, let projected = week.projected else { return SWColor.primary }
-        return actual.points >= projected.points ? SWColor.positive : SWColor.negative
     }
 
     private func reload() async {

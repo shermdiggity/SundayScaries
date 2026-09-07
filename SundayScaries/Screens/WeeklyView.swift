@@ -12,8 +12,6 @@ struct WeeklyView: View {
     /// the sky fades in over it, so launch and first frame are one continuous motion.
     /// The TYPE is never part of this — it is on screen from frame one.
     @State private var skyIsUp = false
-    @State private var sleeperDraft = ""
-    @State private var isEnteringSleeper = false
     @State private var showingESPNLogin = false
     @State private var showingMFLConnect = false
     @State private var showingYahooLogin = false
@@ -21,13 +19,7 @@ struct WeeklyView: View {
     /// be felt and one the poll started cannot.
     @State private var connectSuccesses = 0
     @State private var connectFailures = 0
-    @State private var isEnteringFleaflicker = false
-    @State private var fleaflickerDraft = ""
-    @FocusState private var fleaflickerFieldFocused: Bool
-    @FocusState private var sleeperFieldFocused: Bool
     @Environment(\.scenePhase) private var scenePhase
-    @Environment(\.dynamicTypeSize) private var typeSize
-    private var isAccessibilitySize: Bool { typeSize.isAccessibilitySize }
     @State private var showingAccount = false
     @State private var showingLeagueEditor = false
     @State private var selectedLeagueID: String?
@@ -104,11 +96,17 @@ struct WeeklyView: View {
 
                 ScrollView {
                     VStack(spacing: SWSpacing.xxl) {
-                        hero
+                        WeeklyHero(model: model) {
+                            WelcomeView(
+                                model: model, showingESPNLogin: $showingESPNLogin,
+                                showingMFLConnect: $showingMFLConnect, showingYahooLogin: $showingYahooLogin,
+                                connect: connect
+                            )
+                        }
                         if model.hasAccount {
                             leagues
-                            exposure
-                            outlook
+                            PortfolioSection(model: model)
+                            OutlookSection(snapshots: model.snapshots)
                         }
                     }
                     .padding(.top, SWSize.topInset)
@@ -191,9 +189,6 @@ struct WeeklyView: View {
                 // One beat after launch: the launch colour becomes the live sky and the
                 // clouds arrive. Background only; nothing readable is gated on it.
                 withAnimation(SWMotion.launch) { skyIsUp = true }
-                // A handle that failed comes back into its field, ready to be fixed.
-                if sleeperDraft.isEmpty { sleeperDraft = model.handle }
-                if fleaflickerDraft.isEmpty { fleaflickerDraft = model.fleaflickerHandle }
             }
             .modifier(SignInSheets(
                 model: model, espn: $showingESPNLogin, mfl: $showingMFLConnect, yahoo: $showingYahooLogin
@@ -211,14 +206,6 @@ struct WeeklyView: View {
                 guard !loading, let pending = pendingLeagueID else { return }
                 pendingLeagueID = nil
                 open(leagueID: pending)
-            }
-            .onChange(of: isEnteringSleeper) { _, entering in
-                // Focus after the field exists. Set in the same update that creates it,
-                // the focus request had nothing to land on.
-                if entering { sleeperFieldFocused = true }
-            }
-            .onChange(of: isEnteringFleaflicker) { _, entering in
-                if entering { fleaflickerFieldFocused = true }
             }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .background {
@@ -261,225 +248,10 @@ struct WeeklyView: View {
     private var topBar: some View {
         HStack {
             Spacer()
-            accountButton
+            AccountButton { showingAccount = true }
         }
         .padding(.horizontal, SWSpacing.lg)
         .padding(.top, SWSpacing.xs)
-    }
-
-    private var accountButton: some View {
-        Button { showingAccount = true } label: {
-            // Deliberately not glass: anything that samples its backdrop has to
-            // re-resolve when this screen comes back from a push, and that frame
-            // is visible.
-            Image(systemName: "person.crop.circle")
-                .font(SWType.icon)
-                .foregroundStyle(SWColor.onSky)
-                .padding(SWSpacing.md)
-                .background {
-                    Circle()
-                        .fill(SWColor.surface.opacity(0.72))
-                        .overlay { Circle().strokeBorder(SWColor.hairline, lineWidth: 1) }
-                }
-                .contentShape(.circle)
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Accounts")
-    }
-
-    // MARK: - Hero
-
-    /// The sky owns the fold, carrying one fact. Not a headline stack — the whole point
-    /// is that the atmosphere and a single sentence do the work.
-    private var hero: some View {
-        VStack(alignment: .leading, spacing: SWSpacing.lg) {
-            if model.isLoading, model.snapshots.isEmpty {
-                HeroSkeleton()
-            }
-
-            if let week = model.week {
-                // One week for the whole screen, and the reader can move it. Back for
-                // last week's finals; forward again to where the platforms are. When one
-                // platform has flipped and another has not, this is what keeps every
-                // card describing the same seven days.
-                // The row is laid out at caption height; each control's 44pt target
-                // overflows it above and below, which SwiftUI allows and hit-tests.
-                HStack(spacing: 0) {
-                    weekStep(systemImage: "chevron.left", label: "Previous week", enabled: model.canStepBack) {
-                        Task { await model.show(week: week - 1) }
-                    }
-                    Text("Week \(week)")
-                        .font(SWType.caption)
-                        .foregroundStyle(SWColor.onSkySecondary)
-                        .monospacedDigit()
-                        .contentTransition(.numericText())
-                        .padding(.horizontal, SWSpacing.xs)
-                    weekStep(systemImage: "chevron.right", label: "Next week", enabled: model.canStepForward) {
-                        Task { await model.show(week: week + 1) }
-                    }
-                    if !model.isOnLiveWeek {
-                        Button("Now") { Task { await model.show(week: nil) } }
-                            .accessibilityLabel("Back to the current week")
-                            .font(SWType.caption)
-                            .foregroundStyle(SWColor.onSky)
-                            .frame(minWidth: SWSize.hitTarget, minHeight: SWSize.hitTarget)
-                            .contentShape(.rect)
-                            .buttonStyle(.plain)
-                    }
-                }
-                .frame(height: SWSpacing.xl)
-                .padding(.leading, -SWSpacing.md)
-            }
-
-            if !showsWelcome {
-                // One line, always. It shrinks rather than wrapping.
-                Text(quietHeadline)
-                    .swVoice(SWType.displayFace)
-                    .foregroundStyle(SWColor.onSky)
-                    .accessibilityAddTraits(.isHeader)
-                    .shadow(color: .black.opacity(0.35), radius: 6, y: 1)
-                    .lineLimit(isAccessibilitySize ? 3 : 1)
-                    .minimumScaleFactor(0.5)
-            } else {
-                welcome
-            }
-
-            if let problem = model.loadProblem {
-                StateView(
-                    kind: .error, title: "Not everything loaded", detail: problem.message,
-                    retry: { Task { await model.load() } }, onSky: true
-                )
-            }
-            if let fallback = model.seasonFallback {
-                fallback.note
-                    .font(SWType.caption)
-                    .foregroundStyle(SWColor.onSkySecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, SWSpacing.xl)
-    }
-
-    // MARK: - First run
-
-    /// The weekly view with nothing in it yet. Not a separate flow: the same sky, the same
-    /// voice, and two ways in. The moment either connects, this turns into the real
-    /// screen in place — skeletons where the cards will be — and that is the onboarding.
-    private var welcome: some View {
-        VStack(alignment: .leading, spacing: SWSpacing.xl) {
-            VStack(alignment: .leading, spacing: SWSpacing.sm) {
-                Text("Your whole Sunday, one screen.")
-                    .swVoice(SWType.displayFace)
-                    .foregroundStyle(SWColor.onSky)
-                    .shadow(color: .black.opacity(0.35), radius: 6, y: 1)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.6)
-                Text("Every league you're in. Live scores, who you're relying on, who's coming for you.")
-                    .font(SWType.body)
-                    .foregroundStyle(SWColor.onSkySecondary)
-                    // Same legibility shadow as the headline: midday white cloud is the
-                    // case that breaks bare light type over the sky.
-                    .shadow(color: .black.opacity(0.3), radius: 4, y: 1)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            VStack(spacing: SWSpacing.md) {
-                connectCard(.sleeper, detail: "Just your username. No password.") {
-                    withAnimation(SWMotion.standard) { isEnteringSleeper.toggle() }
-                    sleeperFieldFocused = isEnteringSleeper
-                }
-                if isEnteringSleeper {
-                    HStack(spacing: SWSpacing.sm) {
-                        TextField("Sleeper username", text: $sleeperDraft)
-                            .font(SWType.body)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
-                            .submitLabel(.go)
-                            .focused($sleeperFieldFocused)
-                            .onSubmit(connectSleeper)
-                        Button("Connect", action: connectSleeper)
-                            .font(SWType.bodyMedium)
-                            .disabled(sleeperDraft.trimmingCharacters(in: .whitespaces).isEmpty)
-                    }
-                    .padding(.horizontal, SWSpacing.lg)
-                    .padding(.vertical, SWSpacing.md)
-                    .leagueSurface(.sleeper)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
-                }
-                connectCard(.espn, detail: "Sign in on ESPN's page. We keep nothing but your session.") {
-                    showingESPNLogin = true
-                }
-                if FeatureFlags.yahooEnabled {
-                    connectCard(.yahoo, detail: "Yahoo's official sign-in. Your password never comes here.") {
-                        showingYahooLogin = true
-                    }
-                }
-                connectCard(.myFantasyLeague, detail: "Sign in, or paste a public league's ID.") {
-                    showingMFLConnect = true
-                }
-                connectCard(.fleaflicker, detail: "Just the email on your account. No password.") {
-                    withAnimation(SWMotion.standard) { isEnteringFleaflicker.toggle() }
-                    fleaflickerFieldFocused = isEnteringFleaflicker
-                }
-                if isEnteringFleaflicker {
-                    HStack(spacing: SWSpacing.sm) {
-                        TextField("Email on your Fleaflicker account", text: $fleaflickerDraft)
-                            .font(SWType.body)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
-                            .keyboardType(.emailAddress)
-                            .submitLabel(.go)
-                            .focused($fleaflickerFieldFocused)
-                            .onSubmit(connectFleaflicker)
-                        Button("Connect", action: connectFleaflicker)
-                            .font(SWType.bodyMedium)
-                            .disabled(fleaflickerDraft.trimmingCharacters(in: .whitespaces).isEmpty)
-                    }
-                    .padding(.horizontal, SWSpacing.lg)
-                    .padding(.vertical, SWSpacing.md)
-                    .leagueSurface(.fleaflicker)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
-                }
-            }
-        }
-    }
-
-    private func connectFleaflicker() {
-        let handle = fleaflickerDraft.trimmingCharacters(in: .whitespaces)
-        guard !handle.isEmpty else { return }
-        fleaflickerFieldFocused = false
-        model.fleaflickerHandle = handle
-        Task { await connect() }
-    }
-
-    /// One way in. The platform's own mark, its name, one honest line about what
-    /// connecting involves, and a chevron. The same surface the league cards wear, so
-    /// the moment it becomes one nothing about the screen's material changes.
-    private func connectCard(_ platform: Platform, detail: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: SWSpacing.md) {
-                PlatformMark(platform: platform, size: SWSize.markLarge)
-                VStack(alignment: .leading, spacing: SWSpacing.xxs) {
-                    Text(platform.displayName)
-                        .font(SWType.cardTitle)
-                        .foregroundStyle(SWColor.primary)
-                    Text(detail)
-                        .font(SWType.caption)
-                        .foregroundStyle(SWColor.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                Spacer(minLength: SWSpacing.sm)
-                Image(systemName: "chevron.right")
-                    .font(SWType.glyph)
-                    .foregroundStyle(SWColor.tertiary)
-                    .accessibilityHidden(true)
-            }
-            .padding(SWSpacing.lg)
-            .leagueSurface(platform)
-            .contentShape(.rect(cornerRadius: SWRadius.lg))
-        }
-        .buttonStyle(.plain)
     }
 
     #if DEBUG
@@ -528,44 +300,6 @@ struct WeeklyView: View {
         if model.loadProblem == nil { connectSuccesses += 1 } else { connectFailures += 1 }
     }
 
-    private func connectSleeper() {
-        let handle = sleeperDraft.trimmingCharacters(in: .whitespaces)
-        guard !handle.isEmpty else { return }
-        sleeperFieldFocused = false
-        model.handle = handle
-        Task { await connect() }
-    }
-
-    private func weekStep(
-        systemImage: String, label: LocalizedStringKey, enabled: Bool, action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            Image(systemName: systemImage)
-                .font(SWType.glyph)
-                .foregroundStyle(enabled ? SWColor.onSky : SWColor.onSkySecondary.opacity(0.35))
-                .frame(width: SWSize.hitTarget, height: SWSize.hitTarget)
-                .contentShape(.rect)
-        }
-        .buttonStyle(.plain)
-        .disabled(!enabled)
-        .accessibilityLabel(label)
-    }
-
-    /// The connect cards are the way in, and they stay the way in when a connect FAILED.
-    /// A mistyped handle used to be kept, which threw the cards away and left the reader
-    /// with "Nothing to show yet.", an error, and no field to fix it in.
-    private var showsWelcome: Bool {
-        !model.hasAccount || (model.knownLeagues.isEmpty && !model.isLoading && model.loadProblem != nil)
-    }
-
-    /// The header answers one question and one only: are my lineups set?
-    private var quietHeadline: LocalizedStringKey {
-        if model.snapshots.isEmpty { return model.isLoading ? "" : "Nothing to show yet." }
-        let leagues = model.leaguesNeedingAttention
-        guard leagues > 0 else { return "Every lineup is set." }
-        return "\(leagues) lineups need you."
-    }
-
     // MARK: - Sections
 
     @ViewBuilder
@@ -609,150 +343,11 @@ struct WeeklyView: View {
                     }
                 }
 
-                editLeaguesRow
+                EditLeaguesRow(hiddenCount: model.hiddenLeagues.count, isShown: !model.allLeagues.isEmpty) {
+                    showingLeagueEditor = true
+                }
             }
             .padding(.horizontal, SWSpacing.lg)
         }
-    }
-
-    /// The way into reordering and hiding — visible, not a long press nobody finds.
-    /// Doubles as the way back to anything hidden, because hiding something on this
-    /// screen removes it from this screen, so the way back has to be here too.
-    @ViewBuilder
-    private var editLeaguesRow: some View {
-        let hidden = model.hiddenLeagues.count
-        if !model.allLeagues.isEmpty {
-            Button {
-                showingLeagueEditor = true
-            } label: {
-                HStack(spacing: SWSpacing.xs) {
-                    Image(systemName: "slider.horizontal.3").font(SWType.micro).accessibilityHidden(true)
-                    Text("Edit leagues")
-                    if hidden > 0 {
-                        Text("·").foregroundStyle(SWColor.onSkySecondary.opacity(0.6))
-                        Text("\(hidden) hidden")
-                    }
-                }
-                .font(SWType.caption)
-                .foregroundStyle(SWColor.onSkySecondary)
-                .frame(maxWidth: .infinity, minHeight: SWSize.hitTarget)
-                .contentShape(.rect)
-            }
-            .buttonStyle(.plain)
-        }
-    }
-
-    @ViewBuilder
-    private var exposure: some View {
-        // Starters only. A bench player you own five times changes nothing about your
-        // Sunday, and neither does one sitting on an opponent's bench.
-        let mine = model.yourGuys()
-        let faced = model.upAgainst()
-
-        if !mine.isEmpty || !faced.isEmpty {
-            VStack(alignment: .leading, spacing: SWSpacing.xl) {
-                if !mine.isEmpty {
-                    PositionCarousel(title: "Your Guys", positions: mine, kind: .started,
-                                     points: model.points(for:), kickoff: model.kickoff(for:))
-                }
-                if !faced.isEmpty {
-                    PositionCarousel(title: "Up against", positions: faced, kind: .faced,
-                                     points: model.points(for:), kickoff: model.kickoff(for:))
-                }
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var outlook: some View {
-        let withOutlook = model.snapshots.filter { $0.outlook.mvp != nil }
-        if !withOutlook.isEmpty {
-            VStack(alignment: .leading, spacing: SWSpacing.lg) {
-                Text("The season so far")
-                    .swVoice(SWType.sectionHeaderFace)
-                    // On the sky, like the hero — not the card text colour.
-                    .foregroundStyle(SWColor.onSky)
-                    .accessibilityAddTraits(.isHeader)
-
-                ForEach(withOutlook) { snapshot in
-                    SeasonOutlookRow(snapshot: snapshot)
-                }
-            }
-            .padding(.horizontal, SWSpacing.xl)
-        }
-    }
-}
-
-/// The three platform sign-ins the welcome cards open. Each saves what it was handed
-/// and reloads.
-private struct SignInSheets: ViewModifier {
-    let model: WeeklyModel
-    @Binding var espn: Bool
-    @Binding var mfl: Bool
-    @Binding var yahoo: Bool
-
-    func body(content: Content) -> some View {
-        content
-            .sheet(isPresented: $espn) {
-                ESPNLoginView { credentials in
-                    ESPNCredentialStore.save(credentials)
-                    Task { await model.load() }
-                }
-            }
-            .sheet(isPresented: $mfl) {
-                MFLConnectView { credentials in
-                    MFLCredentialStore.save(credentials)
-                    Task { await model.load() }
-                } onLeagueIDs: { ids in
-                    model.mflLeagueIDs = ids
-                    Task { await model.load() }
-                }
-            }
-            .sheet(isPresented: $yahoo) {
-                YahooSignInView { credentials in
-                    YahooCredentialStore.save(credentials)
-                    Task { await model.load() }
-                }
-            }
-    }
-}
-
-/// The live poll. Once a minute it asks one cheap question — is any starter in a game
-/// right now? — and only if so does it refresh. On a Tuesday this loop does nothing but
-/// sleep. On a Sunday it keeps every number within a minute of true, quietly, without a
-/// skeleton ever appearing.
-private struct LivePoll: ViewModifier {
-    let model: WeeklyModel
-
-    func body(content: Content) -> some View {
-        content.task {
-            while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(60))
-                guard !Task.isCancelled, model.hasLiveGame else { continue }
-                await model.load(force: true)
-            }
-        }
-    }
-}
-
-/// The `[zoom-diag]` frame log CLAUDE.md points at if the stuck-card symptom ever returns:
-/// a closed card moving with its neighbour on scroll is a system snapshot, one frozen in
-/// place is our layout. Logs only the cards under suspicion, and only in DEBUG.
-private struct ZoomDiagnostics: ViewModifier {
-    let name: String
-    let isSubject: Bool
-
-    @State private var lastY: CGFloat = .nan
-
-    func body(content: Content) -> some View {
-        #if DEBUG
-        content.onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).minY } action: { y in
-            guard isSubject, lastY.isNaN || abs(y - lastY) > 4 else { return }
-            lastY = y
-            print("[zoom-diag] \(name) screenY=\(Int(y))")
-        }
-        #else
-        content
-        #endif
     }
 }

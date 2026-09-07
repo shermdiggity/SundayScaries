@@ -23,13 +23,6 @@ struct AccountSheet: View {
     @State private var showingMFLConnect = false
     @State private var showingYahooLogin = false
 
-    private var leagueSummary: LocalizedStringKey {
-        let total = model.allLeagues.count
-        let hidden = model.allLeagues.count { model.isHidden($0) }
-        if total == 0 { return "None yet" }
-        return hidden == 0 ? "\(total)" : "\(total - hidden) of \(total)"
-    }
-
     var body: some View {
         NavigationStack {
             List {
@@ -49,14 +42,10 @@ struct AccountSheet: View {
                             .onSubmit(persist)
                     } trailing: {
                         if !handle.trimmingCharacters(in: .whitespaces).isEmpty {
-                            Button("Disconnect", role: .destructive) {
+                            action("Disconnect", label: "Disconnect Sleeper", role: .destructive) {
                                 handle = ""
                                 persist()
                             }
-                            .font(SWType.caption)
-                            .buttonStyle(.borderless)
-                            .frame(minHeight: SWSize.hitTarget)
-                            .accessibilityLabel("Disconnect Sleeper")
                         }
                     }
 
@@ -64,21 +53,13 @@ struct AccountSheet: View {
                         statusText(espnStatus)
                     } trailing: {
                         if signedInToESPN {
-                            Button("Sign out", role: .destructive) {
+                            action("Sign out", label: "Sign out of ESPN", role: .destructive) {
                                 ESPNCredentialStore.clear()
                                 signedInToESPN = false
                                 didSignInThisSession = true
                             }
-                            .font(SWType.caption)
-                            .buttonStyle(.borderless)
-                            .frame(minHeight: SWSize.hitTarget)
-                            .accessibilityLabel("Sign out of ESPN")
                         } else {
-                            Button("Sign in") { showingESPNLogin = true }
-                                .font(SWType.bodyMedium)
-                                .buttonStyle(.borderless)
-                                .frame(minHeight: SWSize.hitTarget)
-                                .accessibilityLabel("Sign in to ESPN")
+                            action("Sign in", label: "Sign in to ESPN") { showingESPNLogin = true }
                         }
                     }
 
@@ -88,21 +69,13 @@ struct AccountSheet: View {
                             statusText(signedInToYahoo ? "Signed in" : "Not connected")
                         } trailing: {
                             if signedInToYahoo {
-                                Button("Sign out", role: .destructive) {
+                                action("Sign out", label: "Sign out of Yahoo", role: .destructive) {
                                     YahooCredentialStore.clear()
                                     signedInToYahoo = false
                                     didSignInThisSession = true
                                 }
-                                .font(SWType.caption)
-                                .buttonStyle(.borderless)
-                                .frame(minHeight: SWSize.hitTarget)
-                                .accessibilityLabel("Sign out of Yahoo")
                             } else {
-                                Button("Sign in") { showingYahooLogin = true }
-                                    .font(SWType.bodyMedium)
-                                    .buttonStyle(.borderless)
-                                    .frame(minHeight: SWSize.hitTarget)
-                                    .accessibilityLabel("Sign in to Yahoo")
+                                action("Sign in", label: "Sign in to Yahoo") { showingYahooLogin = true }
                             }
                         }
                     }
@@ -112,21 +85,15 @@ struct AccountSheet: View {
                         statusText(mflStatus)
                     } trailing: {
                         if signedInToMFL {
-                            Button("Sign out", role: .destructive) {
+                            action("Sign out", label: "Sign out of MyFantasyLeague", role: .destructive) {
                                 MFLCredentialStore.clear()
                                 signedInToMFL = false
                                 didSignInThisSession = true
                             }
-                            .font(SWType.caption)
-                            .buttonStyle(.borderless)
-                            .frame(minHeight: SWSize.hitTarget)
-                            .accessibilityLabel("Sign out of MyFantasyLeague")
                         } else {
-                            Button(mflLeagues.isEmpty ? "Connect" : "Sign in") { showingMFLConnect = true }
-                                .font(SWType.bodyMedium)
-                                .buttonStyle(.borderless)
-                                .frame(minHeight: SWSize.hitTarget)
-                                .accessibilityLabel("Sign in to MyFantasyLeague")
+                            action(mflLeagues.isEmpty ? "Connect" : "Sign in", label: "Sign in to MyFantasyLeague") {
+                                showingMFLConnect = true
+                            }
                         }
                     }
                     if !mflLeagues.isEmpty || signedInToMFL {
@@ -159,14 +126,10 @@ struct AccountSheet: View {
                             .onSubmit(persist)
                     } trailing: {
                         if !fleaflicker.trimmingCharacters(in: .whitespaces).isEmpty {
-                            Button("Disconnect", role: .destructive) {
+                            action("Disconnect", label: "Disconnect Fleaflicker", role: .destructive) {
                                 fleaflicker = ""
                                 persist()
                             }
-                            .font(SWType.caption)
-                            .buttonStyle(.borderless)
-                            .frame(minHeight: SWSize.hitTarget)
-                            .accessibilityLabel("Disconnect Fleaflicker")
                         }
                     }
 
@@ -196,86 +159,8 @@ struct AccountSheet: View {
                     Text("Platforms")
                 }
 
-                // MARK: Your week
-
-                Section {
-                    Button {
-                        showingLeagueEditor = true
-                    } label: {
-                        HStack {
-                            Text("Show and reorder")
-                                .font(SWType.bodyMedium)
-                                .foregroundStyle(SWColor.primary)
-                            Spacer()
-                            Text(leagueSummary)
-                                .font(SWType.caption)
-                                .foregroundStyle(SWColor.tertiary)
-                            Image(systemName: "chevron.right")
-                                .font(SWType.glyph)
-                                .foregroundStyle(SWColor.tertiary)
-                                .accessibilityHidden(true)
-                        }
-                    }
-                    .disabled(model.allLeagues.isEmpty)
-
-                    HStack {
-                        Text("Season")
-                            .font(SWType.bodyMedium)
-                            .foregroundStyle(SWColor.primary)
-                        Spacer()
-                        Text(model.allLeagues.first?.season ?? WeeklyModel.currentSeason())
-                            .font(SWType.caption)
-                            .foregroundStyle(SWColor.tertiary)
-                            .monospacedDigit()
-                    }
-                    if let fallback = model.seasonFallback {
-                        fallback.note
-                            .font(SWType.micro)
-                            .foregroundStyle(SWColor.tertiary)
-                    }
-                } header: {
-                    Text("Leagues")
-                }
-
-                // MARK: About
-
-                Section {
-                    // Where the data comes from belongs here, at the bottom of a screen
-                    // about the app — not under every week on the main screen.
-                    ForEach(model.attribution, id: \.self) { line in
-                        Text(line)
-                            .font(SWType.micro)
-                            .foregroundStyle(SWColor.tertiary)
-                    }
-                    if let url = URL(string: "https://github.com/shermdiggity/SundayScaries/blob/main/PRIVACY.md") {
-                        Link(destination: url) {
-                            Text("Privacy policy")
-                                .font(SWType.caption)
-                                .foregroundStyle(SWColor.accent)
-                        }
-                        .frame(minHeight: SWSize.hitTarget)
-                    }
-                    if let url = URL(string: "https://github.com/shermdiggity/SundayScaries") {
-                        Link(destination: url) {
-                            Text("Source and support")
-                                .font(SWType.caption)
-                                .foregroundStyle(SWColor.accent)
-                        }
-                        .frame(minHeight: SWSize.hitTarget)
-                    }
-                    HStack {
-                        Text("Version")
-                            .font(SWType.caption)
-                            .foregroundStyle(SWColor.secondary)
-                        Spacer()
-                        Text(Self.version)
-                            .font(SWType.caption)
-                            .foregroundStyle(SWColor.tertiary)
-                            .monospacedDigit()
-                    }
-                } header: {
-                    Text("About")
-                }
+                AccountLeaguesSection(model: model) { showingLeagueEditor = true }
+                AccountAboutSection(model: model)
             }
             .listStyle(.insetGrouped)
             .navigationTitle("You")
@@ -347,6 +232,18 @@ struct AccountSheet: View {
         }
     }
 
+    /// A row's one action. Destructive ones are quieter than the way in.
+    private func action(
+        _ title: LocalizedStringKey, label: LocalizedStringKey, role: ButtonRole? = nil,
+        perform: @escaping () -> Void
+    ) -> some View {
+        Button(title, role: role, action: perform)
+            .font(role == .destructive ? SWType.caption : SWType.bodyMedium)
+            .buttonStyle(.borderless)
+            .frame(minHeight: SWSize.hitTarget)
+            .accessibilityLabel(label)
+    }
+
     private func statusText(_ text: LocalizedStringKey) -> some View {
         Text(text)
             .font(SWType.caption)
@@ -363,12 +260,6 @@ struct AccountSheet: View {
         if signedInToMFL { return "Signed in" }
         let count = LeagueIDs.parse(mflLeagues).count
         return count == 0 ? "Not connected" : "\(count) leagues by ID"
-    }
-
-    private static var version: String {
-        let short = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
-        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"
-        return "\(short) (\(build))"
     }
 
     /// Writes what has changed and reloads if it matters. Safe to call repeatedly.

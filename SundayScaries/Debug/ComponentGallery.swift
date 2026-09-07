@@ -76,6 +76,20 @@ struct ComponentGallery: View {
                         .background(RoundedRectangle(cornerRadius: SWRadius.md).fill(SWColor.surface))
                     }
 
+                    section("Week control: on the live week, and stepped back") {
+                        ZStack {
+                            StaticSky(palette: Sky.palette())
+                            VStack(alignment: .leading, spacing: SWSpacing.lg) {
+                                WeekControl(week: 3, canStepBack: true, canStepForward: false,
+                                            isOnLiveWeek: true) { _ in }
+                                WeekControl(week: 2, canStepBack: true, canStepForward: true,
+                                            isOnLiveWeek: false) { _ in }
+                            }
+                            .padding(SWSpacing.xl)
+                        }
+                        .clipShape(RoundedRectangle(cornerRadius: SWRadius.md))
+                    }
+
                     section("Progress row") {
                         let progress = GallerySamples.sampleProgress
                         VStack(alignment: .leading, spacing: SWSpacing.md) {
