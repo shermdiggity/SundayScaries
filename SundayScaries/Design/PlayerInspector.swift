@@ -30,6 +30,7 @@ final class PlayerInspector {
             diagLog("inspector \(owner) selection -> \(selection.map { $0.player.name } ?? "nil")")
         }
     }
+
     /// False once the screen that owns this inspector has been closed. A league detail
     /// popped by the zoom transition's swipe stays hit-testable for a beat after it has
     /// visibly gone, so a quick tap on the weekly view landed on the dead detail and
@@ -38,6 +39,7 @@ final class PlayerInspector {
     var isEnabled = true {
         didSet { diagLog("inspector \(owner) isEnabled -> \(isEnabled)") }
     }
+
     /// Asked at tap time. A pushed screen sets this from a `NavigationStackProbe`, so a
     /// tap that lands while the screen is being swiped away — or one that IS the swipe,
     /// cancelled and handed back as a tap — presents nothing.
@@ -51,7 +53,8 @@ final class PlayerInspector {
             return
         }
         let allowed = canPresent()
-        diagLog("inspector \(owner) tap on \(player.name) enabled=\(isEnabled) decision=\(allowed ? "PRESENT" : "REFUSE (popped, or a transition is in flight)")\n   \(describe())")
+        let decision = allowed ? "PRESENT" : "REFUSE (popped, or a transition is in flight)"
+        diagLog("inspector \(owner) tap on \(player.name) enabled=\(isEnabled) decision=\(decision)\n   \(describe())")
         guard allowed else { return }
         selection = Selection(player: player, leagueID: leagueID)
     }

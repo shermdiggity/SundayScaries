@@ -16,6 +16,14 @@ struct PositionCarousel: View {
     /// "Sun 1:00 PM" for this player's game.
     var kickoff: (PlayerRef) -> String? = { _ in nil }
 
+    /// The first league this card's own involvement names; nil lets the screen decide.
+    private func scoringLeague(for position: PlayerPosition) -> String? {
+        switch kind {
+        case .started: position.startedIn.first?.leagueID
+        case .faced:   position.facedIn.first?.leagueID
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: SWSpacing.md) {
             Text(title)
@@ -35,6 +43,10 @@ struct PositionCarousel: View {
                             kickoff: kickoff(position.player)
                         )
                         .playerTappable(position.player)
+                        // Scored under a league he is IN. The screen's default is the
+                        // first league in the list, which may never have rostered him,
+                        // and then every week in his sheet was an estimate.
+                        .environment(\.contextLeagueID, scoringLeague(for: position))
                     }
                 }
                 .padding(.horizontal, SWSpacing.xl)
@@ -94,6 +106,7 @@ struct SeasonOutlookRow: View {
     private func contribution(_ value: PlayerContribution, label: LocalizedStringKey, tone: Color) -> some View {
         HStack(spacing: SWSpacing.sm) {
             Headshot(player: value.player, size: SWSize.faceRow)
+                .playerTappable(value.player)
             VStack(alignment: .leading, spacing: SWSpacing.xxs) {
                 Text(label)
                     .font(SWType.micro)

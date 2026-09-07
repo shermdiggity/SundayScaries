@@ -15,6 +15,7 @@ import FantasyProviders
 /// figure. One legend line says so, and only when it applies.
 struct PlayerSheet: View {
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.dismiss) private var dismiss
     private var isAccessibilitySize: Bool { typeSize.isAccessibilitySize }
     let selection: PlayerInspector.Selection
     /// Passed in, never read from the environment. Sheet content is hosted in its own
@@ -54,7 +55,8 @@ struct PlayerSheet: View {
                         StateView(
                             kind: .empty, title: "No season to show yet.",
                             detail: Text("Stats come from a league's scoring, so a league has to be showing."),
-                            retry: { Task { await reload() } }
+                            // Trying again only helps when there is a league to score under.
+                            retry: leagueID == nil ? nil : { Task { await reload() } }
                         )
                     }
                 }
@@ -69,6 +71,7 @@ struct PlayerSheet: View {
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.hidden, for: .navigationBar)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)

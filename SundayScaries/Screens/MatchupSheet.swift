@@ -13,6 +13,7 @@ struct MatchupSheet: View {
     let snapshot: LeagueSnapshot
     let pair: LeagueSnapshot.MatchupPair
     let model: WeeklyModel
+    @Environment(\.dismiss) private var dismiss
     @State private var inspector = PlayerInspector(owner: "matchup")
 
     private var week: Int { pair.matchup.week }
@@ -72,6 +73,7 @@ struct MatchupSheet: View {
             }
             .navigationTitle("Week \(week)")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
         }
         // Its own inspector: a sheet presented from a sheet must come from the top. And
         // the sheet is attached BEFORE the environment so that environment encloses it.

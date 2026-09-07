@@ -106,7 +106,8 @@ struct Podium: View {
                 }
         }
         .frame(maxWidth: .infinity)
-        .accessibilityElement(children: .combine)
+        // Contained: the face inside is its own button, and stays reachable.
+        .accessibilityElement(children: .contain)
         .accessibilityLabel(Text("\(entry.rank). \(entry.teamName), \(entry.powerPoints) \(Text(entry.unit))"))
     }
 

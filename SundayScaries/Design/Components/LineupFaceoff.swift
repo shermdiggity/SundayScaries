@@ -44,7 +44,9 @@ struct LineupFaceoff: View {
             side(pair.theirs, isWinning: theirsValue > mineValue, alignment: .trailing)
         }
         .padding(.vertical, SWSpacing.xs)
-        .accessibilityElement(children: .combine)
+        // Contained, not combined: each side is a button that opens a player, and
+        // combining the row hid both of them from VoiceOver.
+        .accessibilityElement(children: .contain)
         .accessibilityLabel(Text(verbatim: accessibilityLine(
             slotName: slotName, pair: pair, mineValue: mineValue, theirsValue: theirsValue
         )))

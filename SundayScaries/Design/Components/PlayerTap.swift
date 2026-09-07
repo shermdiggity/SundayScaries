@@ -44,7 +44,9 @@ private struct PlayerSheetHost: ViewModifier {
         content
             .sheet(item: inspector.binding) { selection in
                 PlayerSheet(selection: selection, model: model)
-                    .onAppear { diagLog("SHEET ON SCREEN for \(selection.player.name), presented by inspector \(inspector.owner)") }
+                    .onAppear {
+                        diagLog("SHEET ON SCREEN for \(selection.player.name), inspector \(inspector.owner)")
+                    }
                     .onDisappear { diagLog("sheet for \(selection.player.name) gone (owner \(inspector.owner))") }
             }
             .environment(\.playerInspector, inspector)

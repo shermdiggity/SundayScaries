@@ -8,6 +8,7 @@ struct TeamSheet: View {
     let snapshot: LeagueSnapshot
     let teamID: String
     let model: WeeklyModel
+    @Environment(\.dismiss) private var dismiss
     @State private var inspector = PlayerInspector(owner: "team")
 
     private var team: Team? { snapshot.teams.first { $0.id == teamID } }
@@ -52,6 +53,8 @@ struct TeamSheet: View {
             }
             .navigationTitle(team?.displayName ?? "Team")
             .navigationBarTitleDisplayMode(.inline)
+            // A sheet a VoiceOver user can close without the scrub gesture.
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
         }
         // Its own inspector: a sheet presented from a sheet must come from the top. And
         // the sheet is attached BEFORE the environment so that environment encloses it.

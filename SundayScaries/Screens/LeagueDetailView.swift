@@ -146,7 +146,10 @@ struct LeagueDetailView: View {
     /// handed back as a tap, must not open a sheet from a screen on its way out.
     private func present(_ action: () -> Void) {
         let allowed = stack.canPresent()
-        diagLog("detail \(snapshot.league.name) tap (team/matchup) selected=\(selectedLeagueID ?? "nil") isActive=\(isActive) decision=\(allowed ? "PRESENT" : "REFUSE")\n   \(stack.describe())")
+        diagLog(
+            "detail \(snapshot.league.name) tap (team/matchup) selected=\(selectedLeagueID ?? "nil") "
+                + "isActive=\(isActive) decision=\(allowed ? "PRESENT" : "REFUSE")\n   \(stack.describe())"
+        )
         guard allowed else { return }
         action()
     }
@@ -637,6 +640,7 @@ struct LeagueDetailView: View {
 
             if let face = bestPlayer(forTeam: row.teamID) {
                 Headshot(player: face, size: SWSize.faceInline)
+                    .playerTappable(face)
             }
 
             VStack(alignment: .leading, spacing: 0) {

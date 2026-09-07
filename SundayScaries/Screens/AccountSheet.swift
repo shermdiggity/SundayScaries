@@ -61,7 +61,7 @@ struct AccountSheet: View {
                     }
 
                     platformRow(.espn, title: "ESPN") {
-                        statusText(signedInToESPN ? "Signed in" : "Not connected")
+                        statusText(espnStatus)
                     } trailing: {
                         if signedInToESPN {
                             Button("Sign out", role: .destructive) {
@@ -170,10 +170,12 @@ struct AccountSheet: View {
                         }
                     }
 
-                    // Only once signed in, and only as a disclosure: nearly nobody needs
-                    // it, and a bare "League ID" field beneath a sign-in button was most
-                    // of what made this screen read as a developer's checklist.
-                    if signedInToESPN {
+                    // Only once signed in or once an id exists, and only as a disclosure:
+                    // nearly nobody needs it, and a bare "League ID" field beneath a
+                    // sign-in button was most of what made this screen read as a
+                    // developer's checklist. An id typed earlier must stay editable after
+                    // a sign-out, because it keeps loading that league.
+                    if signedInToESPN || !espnLeagues.isEmpty {
                         DisclosureGroup(isExpanded: $showingLeagueIDs) {
                             TextField("League IDs, comma-separated", text: $espnLeagues)
                                 .font(SWType.caption)
@@ -349,6 +351,12 @@ struct AccountSheet: View {
         Text(text)
             .font(SWType.caption)
             .foregroundStyle(SWColor.secondary)
+    }
+
+    private var espnStatus: LocalizedStringKey {
+        if signedInToESPN { return "Signed in" }
+        let count = LeagueIDs.parse(espnLeagues).count
+        return count == 0 ? "Not connected" : "\(count) leagues by ID"
     }
 
     private var mflStatus: LocalizedStringKey {

@@ -43,6 +43,12 @@ struct WeeklyView: View {
     /// real list scrolled underneath, sliding behind the card below. Retiring the id
     /// once the pop has finished leaves nothing for a stale snapshot to be bound to.
     @State private var transitionSourceID: String?
+    /// Which retirement of the source is current. A card re-tapped inside the 0.7s hold
+    /// used to have its source nulled mid-push by the previous close's timer.
+    @State private var sourceRetirement = UUID()
+    /// A widget or a link opened a league the screen could not show yet (still loading,
+    /// or hidden). Opened the moment its snapshot exists.
+    @State private var pendingLeagueID: String?
     #if DEBUG
     /// The last card that was closed, so its frame can be logged against its neighbour.
     @State private var diagnoseID: String?
@@ -140,7 +146,7 @@ struct WeeklyView: View {
             // is a player sheet with no model and a skeleton that never resolves.
             .playerSheetHost(inspector, model: model, leagueID: model.knownLeagues.first?.id)
             .navigationDestination(item: $selectedLeagueID) { id in
-                if let snapshot = model.snapshots.first(where: { $0.id == id }) {
+                if let snapshot = model.snapshot(for: id) {
                     LeagueDetailView(
                         snapshot: snapshot,
                         model: model,
@@ -151,6 +157,15 @@ struct WeeklyView: View {
                     // The card's border grows to fill the screen. It only reads that way
                     // because the destination header is bare content, not another card.
                     .navigationTransition(.zoom(sourceID: id, in: cardTransition))
+                } else {
+                    // The league left the screen between the tap and the push (hidden, or
+                    // gone from the platform). Sky, no bar, and straight back.
+                    ZStack {
+                        palette.sky.ignoresSafeArea()
+                        StaticSky(palette: palette).ignoresSafeArea()
+                    }
+                    .toolbar(.hidden, for: .navigationBar)
+                    .onAppear { selectedLeagueID = nil }
                 }
             }
             .sheet(isPresented: $showingLeagueEditor) {
@@ -176,6 +191,9 @@ struct WeeklyView: View {
                 // One beat after launch: the launch colour becomes the live sky and the
                 // clouds arrive. Background only; nothing readable is gated on it.
                 withAnimation(SWMotion.launch) { skyIsUp = true }
+                // A handle that failed comes back into its field, ready to be fixed.
+                if sleeperDraft.isEmpty { sleeperDraft = model.handle }
+                if fleaflickerDraft.isEmpty { fleaflickerDraft = model.fleaflickerHandle }
             }
             .modifier(SignInSheets(
                 model: model, espn: $showingESPNLogin, mfl: $showingMFLConnect, yahoo: $showingYahooLogin
@@ -184,8 +202,23 @@ struct WeeklyView: View {
             .onOpenURL { url in
                 guard url.scheme == WidgetStore.urlScheme else { return }
                 if url.host == "league", let id = url.pathComponents.last, id != "/" {
-                    selectedLeagueID = id
+                    open(leagueID: id)
                 }
+            }
+            .onChange(of: model.isLoading) { _, loading in
+                // A link that arrived before the load landed opens now, or never: a
+                // league the widget knew and the reader has since hidden stays closed.
+                guard !loading, let pending = pendingLeagueID else { return }
+                pendingLeagueID = nil
+                open(leagueID: pending)
+            }
+            .onChange(of: isEnteringSleeper) { _, entering in
+                // Focus after the field exists. Set in the same update that creates it,
+                // the focus request had nothing to land on.
+                if entering { sleeperFieldFocused = true }
+            }
+            .onChange(of: isEnteringFleaflicker) { _, entering in
+                if entering { fleaflickerFieldFocused = true }
             }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .background {
@@ -209,11 +242,14 @@ struct WeeklyView: View {
                 diagLog("weekly: selectedLeagueID -> nil (was \(closing)); the zoom source is held for 0.7s")
                 #endif
                 // Long enough for the pop animation to have finished, whatever its
-                // curve; short enough that a tap on another card is not affected. If the
-                // user has already tapped another card by then, leave that one alone.
+                // curve; short enough that a tap on another card is not affected. A tap
+                // on ANY card in the meantime issues a new retirement, so this one is
+                // stale and does nothing.
+                let retirement = UUID()
+                sourceRetirement = retirement
                 Task { @MainActor in
                     try? await Task.sleep(for: .seconds(0.7))
-                    if transitionSourceID == closing { transitionSourceID = nil }
+                    if sourceRetirement == retirement, transitionSourceID == closing { transitionSourceID = nil }
                 }
             }
         }
@@ -295,7 +331,7 @@ struct WeeklyView: View {
                 .padding(.leading, -SWSpacing.md)
             }
 
-            if model.hasAccount {
+            if !showsWelcome {
                 // One line, always. It shrinks rather than wrapping.
                 Text(quietHeadline)
                     .swVoice(SWType.displayFace)
@@ -471,6 +507,21 @@ struct WeeklyView: View {
     }
     #endif
 
+    /// Opens a league, if there is a league to open. A skeleton card is a `Button` like
+    /// any other, and tapping it used to push a destination with nothing in it.
+    private func open(leagueID id: String) {
+        guard model.snapshot(for: id) != nil else {
+            // Not loaded yet: remember it, and let the load's end decide.
+            if model.isLoading { pendingLeagueID = id }
+            return
+        }
+        // The source must exist BEFORE the push begins, and a retirement still pending
+        // from the last close must not fire on it.
+        sourceRetirement = UUID()
+        transitionSourceID = id
+        selectedLeagueID = id
+    }
+
     /// One load for a connect the reader just made, and one haptic for how it went.
     private func connect() async {
         await model.load()
@@ -500,6 +551,13 @@ struct WeeklyView: View {
         .accessibilityLabel(label)
     }
 
+    /// The connect cards are the way in, and they stay the way in when a connect FAILED.
+    /// A mistyped handle used to be kept, which threw the cards away and left the reader
+    /// with "Nothing to show yet.", an error, and no field to fix it in.
+    private var showsWelcome: Bool {
+        !model.hasAccount || (model.knownLeagues.isEmpty && !model.isLoading && model.loadProblem != nil)
+    }
+
     /// The header answers one question and one only: are my lineups set?
     private var quietHeadline: LocalizedStringKey {
         if model.snapshots.isEmpty { return model.isLoading ? "" : "Nothing to show yet." }
@@ -526,11 +584,7 @@ struct WeeklyView: View {
             VStack(spacing: SWSpacing.lg) {
                 LeagueStack(
                     items: model.knownLeagues,
-                    onSelect: { league in
-                        // The source must exist BEFORE the push begins.
-                        transitionSourceID = league.id
-                        selectedLeagueID = league.id
-                    }
+                    onSelect: { league in open(leagueID: league.id) }
                 ) { league in
                     if let snapshot = model.snapshot(for: league.id) {
                         LeagueCard(snapshot: snapshot)
