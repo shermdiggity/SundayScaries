@@ -91,6 +91,16 @@
     "%@ chance to win" : {
 
     },
+    "%@ is paused for now: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ is paused for now: %2$@"
+          }
+        }
+      }
+    },
     "%@ needs you to sign in again." : {
 
     },
@@ -301,9 +311,6 @@
         }
       }
     },
-    "%lld:00" : {
-
-    },
     "%lld." : {
 
     },
@@ -317,18 +324,6 @@
 
     },
     "×%lld" : {
-
-    },
-    "92-62 all-play" : {
-
-    },
-    "97-57 all-play" : {
-
-    },
-    "118.4  ·  99.0  ·  102.1" : {
-
-    },
-    "121-33 all-play" : {
 
     },
     "A public league needs no sign-in. The id is the number after /home/ in the league's address." : {
@@ -382,9 +377,6 @@
     "Bench" : {
 
     },
-    "Body 15" : {
-
-    },
     "Braces on the SWID are optional — they're added if missing." : {
 
     },
@@ -392,9 +384,6 @@
 
     },
     "Cancel" : {
-
-    },
-    "Caption 13" : {
 
     },
     "Carrying you" : {
@@ -425,9 +414,6 @@
 
     },
     "Couldn't find leagues for \"%@\" in %@." : {
-
-    },
-    "Couldn't find leagues for \"you\" in 2026." : {
 
     },
     "Couldn't load the player index. It downloads once and is cached after that, so this needs a connection the first time." : {
@@ -463,9 +449,6 @@
     "Disconnect Sleeper" : {
 
     },
-    "Display 40" : {
-
-    },
     "Done" : {
 
     },
@@ -496,22 +479,7 @@
     "Every lineup is set." : {
 
     },
-    "Failed" : {
-
-    },
-    "fresh renders nothing:" : {
-
-    },
-    "Gallery" : {
-
-    },
     "Getting robbed" : {
-
-    },
-    "Gibbs starts against you." : {
-
-    },
-    "Headline 19 · rounded" : {
 
     },
     "Hidden" : {
@@ -575,16 +543,10 @@
     "Live" : {
 
     },
-    "Load" : {
-
-    },
     "Loading %@" : {
 
     },
     "Loading your week" : {
-
-    },
-    "MICRO 11" : {
 
     },
     "More options" : {
@@ -695,6 +657,9 @@
     "Previous week" : {
 
     },
+    "Privacy policy" : {
+
+    },
     "proj" : {
 
     },
@@ -714,9 +679,6 @@
 
     },
     "Refresh" : {
-
-    },
-    "Refreshed" : {
 
     },
     "Refreshing" : {
@@ -757,9 +719,6 @@
     "Running hot" : {
 
     },
-    "SAE Keeper FFL" : {
-
-    },
     "Save" : {
 
     },
@@ -778,9 +737,6 @@
     "Season" : {
 
     },
-    "Section header · Garamond" : {
-
-    },
     "Show %@" : {
 
     },
@@ -791,9 +747,6 @@
 
     },
     "Showing %@ — %@ leagues haven't been created yet." : {
-
-    },
-    "Showing the last numbers that loaded." : {
 
     },
     "Showing the last numbers that loaded. Check the connection and try again." : {
@@ -842,6 +795,9 @@
 
     },
     "Sleeper username" : {
+
+    },
+    "Source and support" : {
 
     },
     "Starters" : {
@@ -938,13 +894,7 @@
     "This week" : {
 
     },
-    "Title 26" : {
-
-    },
     "to play" : {
-
-    },
-    "Toggled" : {
 
     },
     "Try again" : {
@@ -1019,7 +969,7 @@
     "Your matchup in every league." : {
 
     },
-    "Your password goes to MyFantasyLeague once, over HTTPS, and is never stored. Only the sign-in cookie is kept, in the keychain, and it lists the leagues you're in." : {
+    "Your password goes to MyFantasyLeague once and is never stored. Only the sign-in cookie is kept in the keychain to list the leagues you're in." : {
 
     },
     "Your season" : {

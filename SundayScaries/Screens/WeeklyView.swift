@@ -624,28 +624,6 @@ struct WeeklyView: View {
             .padding(.horizontal, SWSpacing.xl)
         }
     }
-
-    // MARK: - Copy
-
-    /// The sentence that leads the app. Written, not templated from fragments.
-    static func sentence(for position: PlayerPosition) -> LocalizedStringKey {
-        let surname = position.player.name.split(separator: " ").last.map(String.init)
-            ?? position.player.name
-        if position.facedCount > position.ownedCount {
-            return position.facedCount == position.totalLeagues
-                ? "\(surname) starts against you everywhere."
-                : "\(surname) starts against you in \(spelled(position.facedCount)) of \(spelled(position.totalLeagues)) leagues."
-        }
-        return position.ownedCount == position.totalLeagues
-            ? "You're all-in on \(surname)."
-            : "You're \(spelled(position.ownedCount))-for-\(spelled(position.totalLeagues)) on \(surname)."
-    }
-
-    static func spelled(_ value: Int) -> String {
-        let words = ["zero", "one", "two", "three", "four", "five",
-                     "six", "seven", "eight", "nine", "ten"]
-        return value >= 0 && value < words.count ? words[value] : String(value)
-    }
 }
 
 /// The three platform sign-ins the welcome cards open. Each saves what it was handed

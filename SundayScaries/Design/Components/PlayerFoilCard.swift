@@ -18,7 +18,6 @@ struct PlayerFoilCard: View {
 
     private var involvements: [LeagueInvolvement] {
         switch kind {
-        case .owned:   position.ownedIn
         case .started: position.startedIn
         case .faced:   position.facedIn
         }
@@ -26,7 +25,7 @@ struct PlayerFoilCard: View {
 
     private var count: Int { involvements.count }
     private var isAgainst: Bool { kind == .faced }
-    private var tint: Color { isAgainst ? SWColor.negative : SWColor.accent }
+    private var tint: Color { isAgainst ? SWColor.negative : SWColor.positive }
     private var positionColor: Color { SWColor.position(position.player.position) }
 
     var body: some View {

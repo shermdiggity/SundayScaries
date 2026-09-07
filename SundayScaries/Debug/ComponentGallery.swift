@@ -18,7 +18,7 @@ struct ComponentGallery: View {
                         VStack(spacing: SWSpacing.md) {
                             ForEach([3, 7, 10, 13, 17, 20], id: \.self) { hour in
                                 ZStack(alignment: .topLeading) {
-                                    StaticSky(palette: Sky.palette(at: Self.date(hour: hour)))
+                                    StaticSky(palette: Sky.palette(at: GallerySamples.date(hour: hour)))
                                     VStack(alignment: .leading, spacing: SWSpacing.sm) {
                                         Text("\(hour):00")
                                             .font(SWType.caption)
@@ -43,69 +43,137 @@ struct ComponentGallery: View {
                         }
                     }
 
-                    section("Exposure, owned") {
-                        HStack(alignment: .bottom, spacing: SWSpacing.xl) {
-                            ForEach([5, 4, 3, 2, 1, 0], id: \.self) {
-                                ExposureMeter(filled: $0, total: 5)
+                    // The card in every state the weekly view can put it in, over the
+                    // sky it actually sits on. This is most of what a person sees.
+                    section("League card, every state") {
+                        ZStack {
+                            StaticSky(palette: Sky.palette())
+                            VStack(spacing: SWSpacing.lg) {
+                                LeagueCard(snapshot: GallerySamples.snapshot(.live))
+                                LeagueCard(snapshot: GallerySamples.snapshot(.upcoming))
+                                LeagueCard(snapshot: GallerySamples.snapshot(.failed))
+                                LeagueCard(snapshot: GallerySamples.snapshot(.undrafted))
+                                LeagueCard(snapshot: GallerySamples.snapshot(.carryover))
+                                LeagueCard(snapshot: GallerySamples.snapshot(.noTeam))
+                                LeagueCard(snapshot: GallerySamples.snapshot(.noMatchup))
+                                LeagueCard(snapshot: GallerySamples.snapshot(.complete))
+                                LeagueCardSkeleton(league: GallerySamples.league)
                             }
+                            .padding(SWSpacing.lg)
+                        }
+                        .clipShape(RoundedRectangle(cornerRadius: SWRadius.md))
+                    }
+
+                    section("Matchup header: yours, expanded, someone else's") {
+                        VStack(spacing: SWSpacing.xl) {
+                            MatchupHeader(snapshot: GallerySamples.snapshot(.live))
+                            MatchupHeader(snapshot: GallerySamples.snapshot(.upcoming), isExpanded: true)
+                            if let pair = GallerySamples.snapshot(.live).otherMatchups.first {
+                                MatchupHeader(snapshot: GallerySamples.snapshot(.live), pair: pair)
+                            }
+                        }
+                        .padding(SWSpacing.lg)
+                        .background(RoundedRectangle(cornerRadius: SWRadius.md).fill(SWColor.surface))
+                    }
+
+                    section("Progress row") {
+                        let progress = GallerySamples.sampleProgress
+                        VStack(alignment: .leading, spacing: SWSpacing.md) {
+                            ProgressRow(mine: progress[1], theirs: progress[2])
+                            ProgressRow(mine: progress[0], theirs: progress[0], isCompact: true)
+                            ProgressRow(mine: progress[3], theirs: progress[1])
                         }
                     }
 
-                    section("Exposure, faced") {
+                    section("Win bar") {
+                        VStack(alignment: .leading, spacing: SWSpacing.lg) {
+                            ForEach([28.0, 7.0, 0.0, -7.0, -28.0], id: \.self) { margin in
+                                WinBar(probability: WinProbability.value(margin: margin),
+                                       isLive: margin == 7.0)
+                            }
+                            WinBar(probability: 0.62, subject: "Mahomies")
+                        }
+                    }
+
+                    // Deliberately mismatched: an empty slot on one side, a flex the
+                    // other side lacks, a player on a bye. Pairing is by slot, never
+                    // by index, and this is where that shows.
+                    section("Lineup faceoff") {
+                        let live = GallerySamples.snapshot(.live)
+                        if let mine = live.myRoster {
+                            LineupFaceoff(snapshot: live, mine: mine, theirs: live.opponentRoster)
+                                .padding(SWSpacing.lg)
+                                .background(RoundedRectangle(cornerRadius: SWRadius.md).fill(SWColor.surface))
+                        }
+                    }
+
+                    section("Player rows") {
+                        VStack(spacing: 0) {
+                            playerRow(.wr, GallerySamples.player("Justin Jefferson", .wr, "MIN"), points: 24.3)
+                            playerRow(.qb, GallerySamples.player("Josh Allen", .qb, "BUF"))
+                            playerRow(.te, GallerySamples.player("Travis Kelce", .te, "KC", .questionable), points: 8.1)
+                            playerRow(.rb, GallerySamples.player("Christian McCaffrey", .rb, "SF", .out), points: 0)
+                            playerRow(.flex, GallerySamples.player("Rome Odunze", .wr, "CHI"), bye: true)
+                            playerRow(.def, GallerySamples.player("Pittsburgh Steelers", .def, "PIT"), points: 11)
+                            playerRow(.wr, .emptyLineupSlot(platform: .sleeper))
+                            playerRow(.bench, GallerySamples.player("Tank Dell", .wr, "HOU"), points: 3.2)
+                            PlayerRow(
+                                slot: .init(slot: .qb, isStarter: true,
+                                            player: GallerySamples.player("Jordan Love", .qb, "GB")),
+                                projection: 19.4, nflMatchup: "@ CHI", hasStarted: false, kickoff: "Sun 1:00 PM"
+                            )
+                        }
+                    }
+
+                    section("Player cards") {
+                        VStack(alignment: .leading, spacing: SWSpacing.xl) {
+                            PositionCarousel(title: "Your Guys", positions: GallerySamples.samplePositions,
+                                             kind: .started, points: { _ in (17.4, true) },
+                                             kickoff: { _ in "Sun 4:25 PM" })
+                            PositionCarousel(title: "Up against", positions: GallerySamples.sampleFaced,
+                                             kind: .faced, points: { _ in (14.1, false) })
+                        }
+                        .padding(.horizontal, -SWSpacing.xl)
+                    }
+
+                    section("Exposure, started and faced") {
                         HStack(alignment: .bottom, spacing: SWSpacing.xl) {
+                            ForEach([5, 3, 1, 0], id: \.self) {
+                                ExposureMeter(filled: $0, total: 5)
+                            }
                             ForEach([5, 3, 1], id: \.self) {
                                 ExposureMeter(filled: $0, total: 5, kind: .faced)
                             }
                         }
                     }
 
-                    section("Matchup") {
-                        VStack(spacing: SWSpacing.xl) {
-                            MatchupBar(myName: "You", myScore: 118.4, opponentName: "Mahomies", opponentScore: 102.1)
-                            MatchupBar(myName: "You", myScore: 74.2, opponentName: "NorthernBlitz", opponentScore: 131.8)
-                            MatchupBar(myName: "You", myScore: 0, opponentName: "Not started", opponentScore: 0)
+                    section("Season outlook") {
+                        ZStack {
+                            StaticSky(palette: Sky.palette())
+                            SeasonOutlookRow(snapshot: GallerySamples.snapshot(.live))
+                                .padding(SWSpacing.lg)
                         }
-                    }
-
-                    section("Player rows") {
-                        VStack(spacing: 0) {
-                            PlayerRow(slot: .init(slot: .wr, isStarter: true, player: Self.player("Justin Jefferson", .wr, "MIN"), points: 24.3))
-                            PlayerRow(slot: .init(slot: .qb, isStarter: true, player: Self.player("Josh Allen", .qb, "BUF")))
-                            PlayerRow(slot: .init(slot: .te, isStarter: true, player: Self.player("Travis Kelce", .te, "KC", .questionable), points: 8.1))
-                            PlayerRow(slot: .init(slot: .rb, isStarter: true, player: Self.player("Christian McCaffrey", .rb, "SF", .out), points: 0))
-                            PlayerRow(slot: .init(slot: .flex, isStarter: true, player: Self.player("Rome Odunze", .wr, "CHI"), isOnBye: true))
-                            PlayerRow(slot: .init(slot: .def, isStarter: true, player: Self.player("Pittsburgh Steelers", .def, "PIT"), points: 11))
-                            PlayerRow(slot: .init(slot: .wr, isStarter: true, player: .emptyLineupSlot(platform: .sleeper)))
-                            PlayerRow(slot: .init(slot: .bench, isStarter: false, player: Self.player("Tank Dell", .wr, "HOU"), points: 3.2))
-                        }
-                    }
-
-                    section("Lineup strip") {
-                        VStack(alignment: .leading, spacing: SWSpacing.xl) {
-                            LineupStrip(roster: Self.cleanRoster, league: Self.draftedLeague)
-                            LineupStrip(roster: Self.brokenRoster, league: Self.draftedLeague)
-                        }
-                    }
-
-                    section("Player cards") {
-                        VStack(alignment: .leading, spacing: SWSpacing.xl) {
-                            PositionCarousel(title: "Riding on", positions: Self.samplePositions,
-                                             kind: .started, points: { _ in (17.4, true) })
-                            PositionCarousel(title: "Up against", positions: Self.sampleFaced,
-                                             kind: .faced, points: { _ in (14.1, false) })
-                        }
-                        .padding(.horizontal, -SWSpacing.xl)
+                        .clipShape(RoundedRectangle(cornerRadius: SWRadius.md))
                     }
 
                     section("Podium") {
                         Podium(entries: [
                             .init(rank: 1, teamName: "MyLeekNeighbor", powerPoints: "84.2", unit: "power pts", allPlay: "121-33 all-play",
-                                  face: Self.faced("Josh Allen", .qb, "BUF", "4984"), isMine: false),
+                                  face: GallerySamples.faced("Josh Allen", .qb, "BUF", "4984"), isMine: false),
                             .init(rank: 2, teamName: "Globo Gym Purple Cobras", powerPoints: "71.6", unit: "power pts", allPlay: "97-57 all-play",
-                                  face: Self.faced("Justin Jefferson", .wr, "MIN", "6794"), isMine: true),
+                                  face: GallerySamples.faced("Justin Jefferson", .wr, "MIN", "6794"), isMine: true),
                             .init(rank: 3, teamName: "dirtz", powerPoints: "66.9", unit: "power pts", allPlay: "92-62 all-play",
-                                  face: Self.faced("Travis Kelce", .te, "KC", "1466"), isMine: false),
+                                  face: GallerySamples.faced("Travis Kelce", .te, "KC", "1466"), isMine: false),
                         ])
+                    }
+
+                    section("Stat cells") {
+                        HStack(alignment: .top, spacing: SWSpacing.xl) {
+                            StatCell(value: "118.4", caption: "Points")
+                            StatCell(value: "WR12", caption: "Rank", detail: "of 84")
+                            StatCell(value: "+2.1", caption: "vs. projection", tone: SWColor.positive, detail: "per game")
+                            StatCell(value: "-4.0", caption: "vs. projection", tone: SWColor.negative, detail: "per game")
+                        }
                     }
 
                     section("States") {
@@ -119,57 +187,7 @@ struct ComponentGallery: View {
                         }
                     }
 
-                    section("Feedback") {
-                        FeedbackDemo()
-                    }
-
-                    section("Stat cells") {
-                        HStack(alignment: .top, spacing: SWSpacing.xl) {
-                            StatCell(value: "118.4", caption: "Points")
-                            StatCell(value: "WR12", caption: "Rank", detail: "of 84")
-                            StatCell(value: "+2.1", caption: "vs. projection", tone: SWColor.positive, detail: "per game")
-                            StatCell(value: "-4.0", caption: "vs. projection", tone: SWColor.negative, detail: "per game")
-                        }
-                    }
-
-                    section("Progress row") {
-                        VStack(alignment: .leading, spacing: SWSpacing.md) {
-                            ProgressRow(mine: Self.sampleProgress[1], theirs: Self.sampleProgress[2])
-                            ProgressRow(mine: Self.sampleProgress[0], theirs: Self.sampleProgress[0],
-                                        isCompact: true)
-                            ProgressRow(mine: Self.sampleProgress[3], theirs: Self.sampleProgress[1])
-                        }
-                    }
-
-                    // These two must read as the same colour, or the closing zoom shows
-                    // a shade change as the screen shrinks into the card.
-                    section("Card tint vs. closing backdrop") {
-                        VStack(spacing: 0) {
-                            ForEach(Platform.allCases, id: \.self) { platform in
-                                HStack(spacing: 0) {
-                                    Rectangle()
-                                        .fill(SWColor.leagueFlat(platform, over: Sky.palette().sky))
-                                        .frame(height: 44)
-                                    ZStack {
-                                        StaticSky(palette: Sky.palette())
-                                        Rectangle().fill(.clear)
-                                            .glassEffect(.regular.tint(SWColor.leagueTint(platform)),
-                                                         in: .rect(cornerRadius: 0))
-                                    }
-                                    .frame(height: 44)
-                                }
-                                .overlay(alignment: .leading) {
-                                    Text(platform.displayName)
-                                        .font(SWType.micro)
-                                        .foregroundStyle(SWColor.primary)
-                                        .padding(.leading, SWSpacing.sm)
-                                }
-                            }
-                        }
-                        .clipShape(RoundedRectangle(cornerRadius: SWRadius.sm))
-                    }
-
-                    section("Lineup check and platform") {
+                    section("Lineup check and platform marks") {
                         HStack(spacing: SWSpacing.xl) {
                             LineupCheck(isSet: true, issueCount: 0)
                             LineupCheck(isSet: false, issueCount: 1)
@@ -178,20 +196,11 @@ struct ComponentGallery: View {
                         }
                     }
 
-                    section("Win bar") {
-                        VStack(alignment: .leading, spacing: SWSpacing.lg) {
-                            ForEach([28.0, 7.0, 0.0, -7.0, -28.0], id: \.self) { margin in
-                                WinBar(probability: WinProbability.value(margin: margin),
-                                       isLive: margin == 7.0)
-                            }
-                        }
-                    }
-
                     section("Headshots") {
                         HStack(spacing: SWSpacing.lg) {
-                            Headshot(player: Self.faced("Justin Jefferson", .wr, "MIN", "6794"), size: 48)
-                            Headshot(player: Self.player("Rookie Nobody", .rb, "BUF"), size: 48)
-                            Headshot(player: Self.defense, size: 48)
+                            Headshot(player: GallerySamples.faced("Justin Jefferson", .wr, "MIN", "6794"), size: 48)
+                            Headshot(player: GallerySamples.player("Rookie Nobody", .rb, "BUF"), size: 48)
+                            Headshot(player: GallerySamples.defense, size: 48)
                             Headshot(player: .emptyLineupSlot(platform: .sleeper), size: 48)
                         }
                     }
@@ -199,17 +208,12 @@ struct ComponentGallery: View {
                     section("Skeletons") {
                         VStack(alignment: .leading, spacing: SWSpacing.lg) {
                             HeroSkeleton()
-                            LeagueCardSkeleton(league: Self.draftedLeague)
+                            LeagueCardSkeleton(league: GallerySamples.league)
                         }
                     }
 
-                    section("Sync") {
-                        VStack(alignment: .leading, spacing: SWSpacing.sm) {
-                            Text("fresh renders nothing:").font(SWType.caption).foregroundStyle(SWColor.tertiary)
-                            SyncBadge(state: .fresh(Date()))
-                            SyncBadge(state: .stale(Date().addingTimeInterval(-3600 * 26)))
-                            SyncBadge(state: .failed(ProviderError.transport(underlying: "offline")))
-                        }
+                    section("Feedback") {
+                        FeedbackDemo()
                     }
 
                     section("Positions") {
@@ -224,39 +228,18 @@ struct ComponentGallery: View {
 
                     section("Type") {
                         VStack(alignment: .leading, spacing: SWSpacing.sm) {
-                            Text("Display 40").swVoice(SWType.displayFace).foregroundStyle(SWColor.primary)
+                            Text("Display 46").swVoice(SWType.displayFace).foregroundStyle(SWColor.primary)
+                            Text("Section header 30").swVoice(SWType.sectionHeaderFace).foregroundStyle(SWColor.primary)
                             Text("Title 26").font(SWType.title).foregroundStyle(SWColor.primary)
-                            Text("Headline 19 · rounded").font(SWType.headline).foregroundStyle(SWColor.primary)
-                            Text("Section header · Garamond").swVoice(SWType.sectionHeaderFace).foregroundStyle(SWColor.primary)
-                            Text("Press and hold a league card to open LeagueEditor — the "
-                                + "native List that reorders and hides. There is no custom "
-                                + "drag on the weekly view any more, by design.")
-                                .font(SWType.caption)
-                                .foregroundStyle(SWColor.secondary)
-                            Text("Every player — PlayerRow, LineupFaceoff, PlayerFoilCard, the "
-                                + "Podium faces — opens PlayerSheet via .playerTappable, using "
-                                + "the screen's contextLeagueID for its default scoring.")
-                                .font(SWType.caption)
-                                .foregroundStyle(SWColor.secondary)
-                            Text("MatchupHeader has two perspectives: yours (weekly card, "
-                                + "detail scoreboard) and neutral (Around the league rows and "
-                                + "MatchupSheet), where both names are equal and the win bar "
-                                + "names the side it describes. MatchupSheet is the detail "
-                                + "scoreboard plus LineupFaceoff for any pair.")
-                                .font(SWType.caption)
-                                .foregroundStyle(SWColor.secondary)
-                            Text("League order and visibility are edited in LeagueEditor, "
-                                + "reachable from the account sheet.")
-                                .font(SWType.caption)
-                                .foregroundStyle(SWColor.secondary)
-                            Text("Every other face on the device lives in the font browser, "
-                                + "reachable from the account sheet.")
-                                .font(SWType.caption)
-                                .foregroundStyle(SWColor.secondary)
+                            Text("Headline 19").font(SWType.headline).foregroundStyle(SWColor.primary)
+                            Text("Card title 19").font(SWType.cardTitle).foregroundStyle(SWColor.primary)
                             Text("Body 15").font(SWType.body).foregroundStyle(SWColor.primary)
+                            Text("Body medium 15").font(SWType.bodyMedium).foregroundStyle(SWColor.primary)
                             Text("Caption 13").font(SWType.caption).foregroundStyle(SWColor.secondary)
                             Text("MICRO 11").font(SWType.micro).foregroundStyle(SWColor.tertiary)
+                            Text("118.4").font(SWType.scoreLarge).foregroundStyle(SWColor.primary)
                             Text("118.4  ·  99.0  ·  102.1").font(SWType.score).foregroundStyle(SWColor.primary)
+                            Text("118.4  ·  99.0").font(SWType.scoreCaption).foregroundStyle(SWColor.secondary)
                         }
                     }
                 }
@@ -268,6 +251,12 @@ struct ComponentGallery: View {
         }
     }
 
+    private func playerRow(
+        _ slot: SlotKind, _ player: PlayerRef, points: Double? = nil, bye: Bool = false
+    ) -> some View {
+        PlayerRow(slot: .init(slot: slot, isStarter: slot != .bench, player: player, points: points, isOnBye: bye))
+    }
+
     private func section(_ title: String, @ViewBuilder content: () -> some View) -> some View {
         VStack(alignment: .leading, spacing: SWSpacing.md) {
             Text(title)
@@ -275,91 +264,6 @@ struct ComponentGallery: View {
                 .foregroundStyle(SWColor.primary)
             content()
         }
-    }
-
-    static var sampleProgress: [LineupProgress] {
-        [
-            LineupProgress(pointsScored: 0, finished: 0, inProgress: 0, yetToPlay: 9, total: 9),
-            LineupProgress(pointsScored: 42.6, finished: 3, inProgress: 2, yetToPlay: 4, total: 9),
-            LineupProgress(pointsScored: 128.4, finished: 9, inProgress: 0, yetToPlay: 0, total: 9),
-            LineupProgress(pointsScored: 88.2, finished: 6, inProgress: 1, yetToPlay: 1, notPlaying: 1, total: 9),
-        ]
-    }
-
-    static var draftedLeague: League {
-        League(id: "L", platform: .sleeper, name: "L", size: 12, scoringKind: .ppr,
-               currentWeek: 3, season: "2026", status: .inSeason)
-    }
-
-    static func date(hour: Int) -> Date {
-        Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: Date()) ?? Date()
-    }
-
-    static func player(_ name: String, _ position: Position, _ team: String,
-                       _ injury: InjuryStatus = .healthy) -> PlayerRef {
-        PlayerRef(identity: .canonical(id: name, source: .gsis), name: name,
-                  nflTeam: team, position: position, injuryStatus: injury)
-    }
-
-    static func faced(_ name: String, _ position: Position, _ team: String, _ sleeperID: String) -> PlayerRef {
-        PlayerRef(identity: .canonical(id: name, source: .gsis), name: name, nflTeam: team,
-                  position: position,
-                  headshotURL: URL(string: "https://sleepercdn.com/content/nfl/players/\(sleeperID).jpg"))
-    }
-
-    static var defense: PlayerRef {
-        PlayerRef(identity: .canonical(id: "DEF-PIT", source: .teamDefense),
-                  name: "Pittsburgh Steelers", nflTeam: "PIT", position: .def,
-                  headshotURL: URL(string: "https://sleepercdn.com/images/team_logos/nfl/pit.png"))
-    }
-
-    static func involvements(_ names: [String], opponents: [String] = []) -> [LeagueInvolvement] {
-        names.enumerated().map { index, name in
-            LeagueInvolvement(leagueID: name, leagueName: name,
-                              opponentName: index < opponents.count ? opponents[index] : nil)
-        }
-    }
-
-    static var samplePositions: [PlayerPosition] {
-        [
-            PlayerPosition(player: player("Travis Kelce", .te, "KC"),
-                           ownedIn: involvements(["Alpha", "Beta", "Gamma"]),
-                           startedIn: involvements(["Alpha", "Beta", "Gamma"]),
-                           facedIn: [], totalLeagues: 3),
-            PlayerPosition(player: player("Ashton Jeanty", .rb, "LV"),
-                           ownedIn: involvements(["Alpha", "Gamma"]),
-                           startedIn: involvements(["Alpha", "Gamma"]),
-                           facedIn: [], totalLeagues: 3),
-        ]
-    }
-
-    static var sampleFaced: [PlayerPosition] {
-        [
-            PlayerPosition(player: player("Jahmyr Gibbs", .rb, "DET"),
-                           ownedIn: [], facedIn: involvements(["Alpha", "Beta", "Gamma"], opponents: ["Mahomies", "NorthernBlitz", "FumbleFree"]), totalLeagues: 3),
-            PlayerPosition(player: player("Alec Pierce", .wr, "IND"),
-                           ownedIn: involvements(["Alpha"]), facedIn: involvements(["Beta"], opponents: ["NorthernBlitz"]), totalLeagues: 3),
-        ]
-    }
-
-    static var cleanRoster: Roster {
-        Roster(teamID: "1", leagueID: "L", week: 3, slots: [
-            .init(slot: .qb, isStarter: true, player: player("A", .qb, "BUF")),
-            .init(slot: .rb, isStarter: true, player: player("B", .rb, "SF")),
-            .init(slot: .wr, isStarter: true, player: player("C", .wr, "MIN")),
-            .init(slot: .te, isStarter: true, player: player("D", .te, "KC")),
-            .init(slot: .def, isStarter: true, player: player("E", .def, "PIT")),
-        ])
-    }
-
-    static var brokenRoster: Roster {
-        Roster(teamID: "1", leagueID: "L", week: 3, slots: [
-            .init(slot: .qb, isStarter: true, player: player("A", .qb, "BUF")),
-            .init(slot: .rb, isStarter: true, player: player("Hurt Guy", .rb, "SF", .out)),
-            .init(slot: .wr, isStarter: true, player: .emptyLineupSlot(platform: .sleeper)),
-            .init(slot: .te, isStarter: true, player: player("Resting", .te, "KC"), isOnBye: true),
-            .init(slot: .def, isStarter: true, player: player("E", .def, "PIT")),
-        ])
     }
 }
 

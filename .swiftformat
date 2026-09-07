@@ -41,4 +41,4 @@
 #   redundantLet               `let _ = x` inside a SwiftUI `body` is a statement; the bare `_ = x` it
 #                              rewrites to is an expression the ViewBuilder rejects (broke WeeklyView)
 --disable blankLinesAtStartOfScope,consecutiveSpaces,wrapIfStatementBodies,wrapPropertyBodies,wrapFunctionBodies,wrapLoopBodies,wrapIfExpressionBodies,wrapMultilineStatementBraces,docComments,hoistTry,hoistAwait,conditionalAssignment,preferKeyPath,opaqueGenericParameters,redundantPublic,redundantThrows,redundantAsync,redundantSwiftUIGroup,sortImports,noForceTryInTests,noForceUnwrapInTests,modifierOrder,redundantLet
---exclude SundayScaries/Design/Fonts,DerivedData,.build
+--exclude DerivedData,.build

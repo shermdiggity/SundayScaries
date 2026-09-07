@@ -11,8 +11,6 @@ import FantasyCore
 /// absence rather than mass, and being faced everywhere feels hollow.
 struct ExposureMeter: View {
     enum Kind {
-        /// On your roster somewhere.
-        case owned
         /// In your starting lineup — what your week actually rides on.
         case started
         /// In an opponent's starting lineup.
@@ -21,15 +19,12 @@ struct ExposureMeter: View {
 
     let filled: Int
     let total: Int
-    var kind: Kind = .owned
+    var kind: Kind = .started
     var barHeight: CGFloat = 8
     var barWidth: CGFloat = 44
 
     private var tint: Color {
         switch kind {
-        // Both are warm — you are on the same side of these players. Reliance is the
-        // full-strength version; a bench stash is the same colour, quieter.
-        case .owned:   SWColor.accent.opacity(0.55)
         case .started: SWColor.accent
         case .faced:   SWColor.negative
         }
@@ -46,7 +41,6 @@ struct ExposureMeter: View {
         .accessibilityLabel(
             {
                 switch kind {
-                case .owned:   Text("Rostered in \(filled) of \(total) leagues")
                 case .started: Text("Starting for you in \(filled) of \(total) leagues")
                 case .faced:   Text("Starting against you in \(filled) of \(total) leagues")
                 }
@@ -61,7 +55,7 @@ struct ExposureMeter: View {
         case (false, _):
             shape.fill(SWColor.onSky.opacity(0.22))
                 .frame(width: barWidth, height: 2)
-        case (true, .owned), (true, .started):
+        case (true, .started):
             shape.fill(tint)
                 .frame(width: barWidth, height: barHeight)
         case (true, .faced):

@@ -49,7 +49,7 @@ struct SWOpticalMetrics: ViewModifier {
         } else {
             // Registration failed or the family was removed: fall back rather than
             // render something wrong.
-            content.font(.system(size: face.size, weight: face.fallback))
+            content.font(face.fallbackFont)
         }
     }
 

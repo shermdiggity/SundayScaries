@@ -11,8 +11,8 @@ import CoreText
 ///   nothing to the bundle, need no licence, and are on every device. Several are
 ///   genuinely distinctive — Optima, Iowan Old Style, Charter, Didot, Hoefler Text —
 ///   and none of them are the free-webfont rotation that reads as generic.
-/// - **Bundled families.** Anything dropped into `Design/Fonts/` and registered by
-///   `FontRegistrar`. Right now that is EB Garamond alone.
+/// - **Bundled families.** Anything registered from the bundle at launch. Nothing is
+///   bundled today: the app runs entirely on Helvetica Neue.
 ///
 /// This is debug-only: the whole file compiles out of release.
 enum FontCatalog {

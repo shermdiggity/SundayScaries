@@ -13,7 +13,6 @@ included:
   - Shared
   - SundayScariesWidgets
 excluded:
-  - SundayScaries/Design/Fonts
   - DerivedData
   - .build
 

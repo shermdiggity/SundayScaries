@@ -75,17 +75,6 @@ enum SWColor {
         self.platform(platform).opacity(0.30)
     }
 
-    /// The single flat colour a league's card reads as: its sky, tinted by the same
-    /// amount the card's glass tints it, lifted slightly for the glass itself.
-    ///
-    /// A gradient cannot survive being compressed to card height — the whole ramp
-    /// squashes and the colour visibly shifts. Flattening to this before the zoom means
-    /// the shrinking rectangle is already the colour of the card it becomes.
-    static func leagueFlat(_ platform: Platform, over sky: Color) -> Color {
-        sky.mixed(with: self.platform(platform), by: 0.30)
-            .mixed(with: surfaceRaised, by: 0.28)
-    }
-
     /// Position colours follow the near-standard convention shared by Sleeper and ESPN.
     /// Matching it buys instant legibility for free; inventing our own costs clarity for
     /// nothing. Held at a lower saturation than the platforms use, so a lineup reads as
@@ -124,8 +113,6 @@ enum SWColor {
 ///
 /// SF Symbols are the one exception and stay on the system face: a symbol is a drawn
 /// glyph, not type, and it is designed against SF's metrics.
-///
-/// EB Garamond preceded this and is still bundled in `Design/Fonts/`, now unreferenced.
 enum SWType {
     private static let displayBold = "HelveticaNeue-Bold"
     private static let displayMedium = "HelveticaNeue-Medium"
@@ -137,9 +124,12 @@ enum SWType {
         let name: String
         let size: CGFloat
         let fallback: Font.Weight
+
+        /// The system face at the same size, for when the family cannot be loaded.
+        var fallbackFont: Font { .system(size: size, weight: fallback) }
     }
 
-    /// Falls back to the system face if registration failed, so a broken bundle looks
+    /// Falls back to the system face if the family is missing, so a broken build looks
     /// plain rather than wrong.
     private static func voice(_ name: String, _ size: CGFloat, fallback: Font.Weight) -> Font {
         let resolved = resolvedName(name)
@@ -180,7 +170,6 @@ enum SWType {
     // typeface whose line box was not cut for Latin.
 
     /// The weekly view's hero line, and nothing else.
-    static var display: Font { voice(displayBold, 46, fallback: .bold) }
     static var displayFace: Face { Face(name: resolvedName(displayBold), size: 46, fallback: .bold) }
 
     /// The weekly view's section headers — "Riding on", "Up against", "The season so
@@ -188,7 +177,6 @@ enum SWType {
     // Bold, and a clear step above the card title (Bold 19). Set Medium at 23 it was
     // OUTWEIGHED by the cards it introduces — the sections' own titles read as the
     // headers and these read as captions, the hierarchy exactly inverted.
-    static var sectionHeader: Font { voice(displayBold, 30, fallback: .bold) }
     static var sectionHeaderFace: Face { Face(name: resolvedName(displayBold), size: 30, fallback: .bold) }
 
     // MARK: Interface
