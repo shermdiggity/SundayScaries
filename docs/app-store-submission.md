@@ -36,9 +36,10 @@ The state of the project on 7 September, and what each item needs before the bui
 
 - **The kit's v0.2.2 is tagged locally and not on GitHub. The app pins 0.2.1.** v0.2.2
   carries the `projectedPoints` cache fix and the September provider fixes, and the
-  working tree now also holds the team-rename fix (`StalenessPolicy.teams`, every
-  provider's team list refreshable, `TeamRenameTests`), uncommitted. Commit it and move
-  the never-pushed tag onto it, so one tag carries everything. The archive resolves the
+  working tree now also holds the cache audit's fixes (teams refreshable on a pull, an
+  expired sign-in no longer hidden behind the cache, ESPN discovery re-read on a pull,
+  DEBUG cache logging; `TeamRenameTests`, `AuthFailureTests`), uncommitted. Commit it
+  and move the never-pushed tag onto it, so one tag carries everything. The archive resolves the
   package from GitHub at the pinned version, so without the push and the bump the App
   Store build ships the old kit. Commands in section 3.
 - **Six app commits are ahead of `origin/main`, plus today's uncommitted work** (the
@@ -86,8 +87,8 @@ Run from `fantasy/`. Each step is a check that must be green before the next.
 ```bash
 # 1. The kit: tests, commit the rename fix, move the (never pushed) tag onto it, push.
 cd FantasyKit
-swift test                                   # 291 tests, no network
-git add -A && git commit -m "A renamed team shows after a refresh"
+swift test                                   # 295 tests, no network
+git add -A && git commit -m "Cache audit: teams refresh on a pull, auth failures surface"
 git tag -f v0.2.2
 git push origin main v0.2.2
 

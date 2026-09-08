@@ -49,14 +49,9 @@ struct ComponentGallery: View {
                         ZStack {
                             StaticSky(palette: Sky.palette())
                             VStack(spacing: SWSpacing.lg) {
-                                LeagueCard(snapshot: GallerySamples.snapshot(.live))
-                                LeagueCard(snapshot: GallerySamples.snapshot(.upcoming))
-                                LeagueCard(snapshot: GallerySamples.snapshot(.failed))
-                                LeagueCard(snapshot: GallerySamples.snapshot(.undrafted))
-                                LeagueCard(snapshot: GallerySamples.snapshot(.carryover))
-                                LeagueCard(snapshot: GallerySamples.snapshot(.noTeam))
-                                LeagueCard(snapshot: GallerySamples.snapshot(.noMatchup))
-                                LeagueCard(snapshot: GallerySamples.snapshot(.complete))
+                                ForEach(GallerySamples.State.allCases, id: \.self) { state in
+                                    LeagueCard(snapshot: GallerySamples.snapshot(state))
+                                }
                                 LeagueCardSkeleton(league: GallerySamples.league)
                             }
                             .padding(SWSpacing.lg)

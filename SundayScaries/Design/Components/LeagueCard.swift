@@ -16,7 +16,7 @@ struct LeagueCard: View {
 
             switch state {
             case .failed:
-                note("Couldn't refresh this league.", tone: SWColor.negative)
+                note(failureNote, tone: SWColor.negative)
             case .undrafted:
                 note(snapshot.isPreDraftCarryover
                     ? "Not drafted yet — last season's keepers"
@@ -38,6 +38,16 @@ struct LeagueCard: View {
     }
 
     private enum State { case failed, undrafted, noTeam, noMatchup, upcoming, live }
+
+    /// Why the league could not be read. A sign-in that stopped working is the one
+    /// failure the reader can fix, so it says so; everything else is a shrug.
+    private var failureNote: String {
+        if case let .failed(error) = snapshot.syncState,
+           case let ProviderError.unauthorized(platform, message) = error {
+            return message ?? String(localized: "\(platform.displayName) needs you to sign in again.")
+        }
+        return String(localized: "Couldn't refresh this league.")
+    }
 
     private var state: State {
         if case .failed = snapshot.syncState { return .failed }

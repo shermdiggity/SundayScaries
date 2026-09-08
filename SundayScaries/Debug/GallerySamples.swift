@@ -7,7 +7,9 @@ import FantasyProviders
 /// outlook row can be shown in every state without a network. The shapes are the real
 /// domain types. Only the names are made up.
 enum GallerySamples {
-    enum State { case live, upcoming, failed, undrafted, carryover, noTeam, noMatchup, complete }
+    enum State: CaseIterable {
+        case live, upcoming, failed, signedOut, undrafted, carryover, noTeam, noMatchup, complete
+    }
 
     // MARK: Players and pieces
 
@@ -197,6 +199,9 @@ enum GallerySamples {
             League(id: league.id, platform: .sleeper, name: "Dynasty of Regret", size: 4,
                    scoringKind: .halfPPR, currentWeek: nil, season: "2026", status: .preDraft,
                    previousLeagueID: "last-year")
+        case .signedOut:
+            League(id: league.id, platform: .espn, name: "Office Redraft", size: 4,
+                   scoringKind: .ppr, currentWeek: 3, season: "2026", status: .inSeason)
         case .complete:
             League(id: league.id, platform: .myFantasyLeague, name: "Work League", size: 4,
                    scoringKind: .standard, currentWeek: 18, season: "2026", status: .complete)
@@ -216,9 +221,11 @@ enum GallerySamples {
         let league = league(for: state)
         let teams = state == .noTeam ? teams.map(disowned) : teams
         var matchups = seasonMatchups
-        let sync: SyncState = state == .failed
-            ? .failed(ProviderError.transport(underlying: "offline"))
-            : .fresh(Date())
+        let sync: SyncState = switch state {
+        case .failed:    .failed(ProviderError.transport(underlying: "offline"))
+        case .signedOut: .failed(ProviderError.unauthorized(platform: .espn, message: nil))
+        default:         .fresh(Date())
+        }
         if live {
             matchups[4] = Matchup(week: 3, homeTeamID: me.id, awayTeamID: them.id, homeScore: 61.2, awayScore: 48.9)
         }
