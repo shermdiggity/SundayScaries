@@ -38,7 +38,9 @@ struct MatchupHeader: View {
         rightScore = snapshot.opponentScore
         leftRoster = snapshot.myRoster
         rightRoster = snapshot.opponentRoster
-        probability = snapshot.winProbability
+        // A finished game has a result, not odds — the same rule a pair keeps. Stepping
+        // back to a played week used to put "100% to win" under a final score.
+        probability = snapshot.isDecided ? nil : snapshot.winProbability
         hasKickedOff = snapshot.hasKickedOff
     }
 

@@ -53,15 +53,21 @@ struct LeagueCardSkeleton: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: SWSpacing.md) {
-            HStack(spacing: SWSpacing.sm) {
+            // The card's header, line for line: your team (not known until the rosters
+            // land) as a block on the title line, the league already named under it,
+            // and a block where the record goes. Each block sits in a hidden line of
+            // the real type, so it is exactly as tall as the text that replaces it.
+            HStack(alignment: .top, spacing: SWSpacing.sm) {
                 PlatformMark(platform: league.platform)
+                    .padding(.top, SWSpacing.xxs)
                 VStack(alignment: .leading, spacing: SWSpacing.xxs) {
+                    line(SWType.cardTitle) { SkeletonBlock(width: 152, height: 15, radius: 5) }
                     Text(league.name)
-                        .font(SWType.cardTitle)
-                        .foregroundStyle(SWColor.primary)
-                        .lineLimit(2, reservesSpace: true)
-                        .minimumScaleFactor(0.75)
-                    SkeletonBlock(width: 64, height: 11)
+                        .font(SWType.caption)
+                        .foregroundStyle(SWColor.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                    line(SWType.scoreCaption) { SkeletonBlock(width: 64, height: 11) }
                 }
                 Spacer(minLength: 0)
             }
@@ -84,6 +90,17 @@ struct LeagueCardSkeleton: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .leagueSurface(league.platform)
         .accessibilityLabel(Text("Loading \(league.name)"))
+    }
+
+    /// A placeholder block on a line of the given type: the line's height without its
+    /// words.
+    private func line<Block: View>(_ font: Font, @ViewBuilder block: () -> Block) -> some View {
+        Text(verbatim: "Ag")
+            .font(font)
+            .hidden()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .overlay(alignment: .leading) { block() }
+            .accessibilityHidden(true)
     }
 
     private var placeholderSide: some View {

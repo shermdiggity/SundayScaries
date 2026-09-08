@@ -105,4 +105,56 @@ extension WeeklyModel {
     /// Leagues with at least one problem — not the total number of problems. "Nine
     /// lineups need you" for two undrafted leagues is both alarming and untrue.
     var leaguesNeedingAttention: Int { snapshots.count { !$0.issues.isEmpty } }
+
+    // MARK: How the week is going
+
+    /// Your games this week, tallied. `isOver` once every one of them has been decided.
+    struct WeekTally: Equatable {
+        var wins = 0
+        var losses = 0
+        var ties = 0
+        /// Your margin in the one game, when there is only one. Positive is a lead.
+        var margin: Double = 0
+        var isOver = false
+
+        var games: Int { wins + losses + ties }
+    }
+
+    /// Wins and losses across the leagues on screen, from the games that have started.
+    ///
+    /// Nil until a game has kicked off: before then the only fact worth the hero is
+    /// whether the lineups are set. Once games are on it is the standing — up in two,
+    /// down in one — and once every game is over it is the result. A game is over when
+    /// the platform has moved past the week, or when every starter on both sides has
+    /// finished; a 0-0 that never kicked off is not a game.
+    var weekTally: WeekTally? {
+        var tally = WeekTally()
+        var undecided = 0
+        for snapshot in snapshots {
+            guard snapshot.myTeam != nil, snapshot.opponent != nil, snapshot.hasKickedOff else { continue }
+            let margin = snapshot.myScore - snapshot.opponentScore
+            if margin > 0 { tally.wins += 1 } else if margin < 0 { tally.losses += 1 } else { tally.ties += 1 }
+            tally.margin = margin
+            if !snapshot.isDecided { undecided += 1 }
+        }
+        guard tally.games > 0 else { return nil }
+        tally.isOver = undecided == 0
+        return tally
+    }
+}
+
+extension LeagueSnapshot {
+    /// Whether this week's game is over: the platform has moved past the week, or every
+    /// starter on both sides has played. The platform's word first, the schedule's
+    /// second, never the clock's alone.
+    var isDecided: Bool {
+        guard hasKickedOff else { return false }
+        if let platformWeek = league.currentWeek, week < platformWeek { return true }
+        return progress.isComplete && opponentProgress.isComplete
+    }
+}
+
+extension LineupProgress {
+    /// Every starter who had a game this week has finished it.
+    var isComplete: Bool { hasStarted && inProgress == 0 && yetToPlay == 0 }
 }

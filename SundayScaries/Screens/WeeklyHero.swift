@@ -64,11 +64,42 @@ struct WeeklyHero<Welcome: View>: View {
         !model.hasAccount || (model.knownLeagues.isEmpty && !model.isLoading && model.loadProblem != nil)
     }
 
-    /// The header answers one question and one only: are my lineups set?
+    /// The header answers one question, and which question depends on the day. Before
+    /// kickoff: are my lineups set? While games are on: am I winning? Once the week is
+    /// over, or when you step back to a played week: how did it go?
     private var quietHeadline: LocalizedStringKey {
         if model.snapshots.isEmpty { return model.isLoading ? "" : "Nothing to show yet." }
         let leagues = model.leaguesNeedingAttention
-        guard leagues > 0 else { return "Every lineup is set." }
-        return "\(leagues) lineups need you."
+        if leagues > 0 { return "\(leagues) lineups need you." }
+        guard let tally = model.weekTally else { return "Every lineup is set." }
+        return tally.isOver ? Self.result(tally) : Self.standing(tally)
+    }
+
+    /// The week, done. One league gets its margin; several get the record.
+    static func result(_ tally: WeeklyModel.WeekTally) -> LocalizedStringKey {
+        if tally.games == 1 {
+            if tally.margin > 0 { return "You won by \(tally.margin, specifier: "%.1f")." }
+            if tally.margin < 0 { return "You lost by \(-tally.margin, specifier: "%.1f")." }
+            return "You tied."
+        }
+        if tally.ties > 0 { return "You went \(tally.wins)-\(tally.losses)-\(tally.ties)." }
+        if tally.losses == 0 { return "A clean sweep, \(tally.wins)-0." }
+        if tally.wins == 0 { return "Winless, 0-\(tally.losses)." }
+        return "You went \(tally.wins)-\(tally.losses)."
+    }
+
+    /// Games on. The same shape as the result, in the present tense.
+    static func standing(_ tally: WeeklyModel.WeekTally) -> LocalizedStringKey {
+        if tally.games == 1 {
+            if tally.margin > 0 { return "Up by \(tally.margin, specifier: "%.1f")." }
+            if tally.margin < 0 { return "Down by \(-tally.margin, specifier: "%.1f")." }
+            return "All square."
+        }
+        switch (tally.wins, tally.losses, tally.ties) {
+        case (_, 0, 0): return "Up in all \(tally.wins)."
+        case (0, _, 0): return "Down in all \(tally.losses)."
+        case (_, _, 0): return "Up in \(tally.wins), down in \(tally.losses)."
+        default: return "Up in \(tally.wins), down in \(tally.losses), tied in \(tally.ties)."
+        }
     }
 }

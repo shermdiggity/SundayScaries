@@ -15,12 +15,14 @@ who you are relying on everywhere and who is starting against you.
 |---|---|---|
 | ![The weekly view: the sky, one headline, a card per league with the matchup and who is starting](docs/screenshots/week.png) | ![A league: scoreboard, win probability, both starting lineups slot by slot](docs/screenshots/league.png) | ![A player's season, scored under the league you pick](docs/screenshots/player.png) |
 
-| You | Your leagues | iPad |
+| Sunday morning | Tuesday | iPad |
 |---|---|---|
-| ![The You sheet: platforms, leagues, attribution](docs/screenshots/account.png) | ![Show, hide and reorder leagues](docs/screenshots/editor.png) | ![The week on iPad](docs/screenshots/ipad-week.png) |
+| ![Before kickoff: one lineup has a hole in it](docs/screenshots/week-morning.png) | ![The week just played: how you did](docs/screenshots/week-final.png) | ![The week on iPad](docs/screenshots/ipad-week.png) |
 
-Captured on the iOS 26 simulator on the Saturday before Week 1, which is why every
-score is 0.0 and every lineup is still to play.
+Captured on the iOS 26 simulator from the app's demo data (`-sw.demo live`, `morning`
+or `final`, DEBUG only): three invented leagues on three platforms, a Sunday afternoon
+with the late games on. The You sheet and the league editor are under
+[`docs/screenshots`](docs/screenshots) too.
 
 ## Architecture
 

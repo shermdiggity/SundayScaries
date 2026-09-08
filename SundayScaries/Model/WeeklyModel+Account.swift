@@ -80,7 +80,12 @@ extension WeeklyModel {
     var hasESPN: Bool { !LeagueIDs.parse(espnLeagueIDs).isEmpty || isSignedInToESPN }
     var isSignedInToESPN: Bool { ESPNCredentialStore.current != nil }
 
-    var hasAccount: Bool { hasSleeper || hasESPN || hasMFL || hasFleaflicker || hasYahoo }
+    var hasAccount: Bool {
+        #if DEBUG
+        if DemoData.isActive { return true }
+        #endif
+        return hasSleeper || hasESPN || hasMFL || hasFleaflicker || hasYahoo
+    }
 
     /// The NFL league year rolls over in March.
     static func currentSeason(now: Date = Date(), calendar: Calendar = .current) -> String {

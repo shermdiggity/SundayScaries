@@ -56,24 +56,33 @@ struct LeagueCard: View {
     }
 
     private var header: some View {
-        HStack(alignment: .center, spacing: SWSpacing.sm) {
+        // Top-aligned, so the mark and the lineup check sit on the title line rather
+        // than floating in the middle of a three-line block.
+        HStack(alignment: .top, spacing: SWSpacing.sm) {
             PlatformMark(platform: snapshot.league.platform)
+                .padding(.top, SWSpacing.xxs)
 
-            // Your team first, then the league it plays in — the order you think about
-            // them in.
-            VStack(alignment: .leading, spacing: 0) {
-                // Two lines rather than an ellipsis. A team called "Kupp of Ambition"
-                // in "Sigma Alpha Epsilon Keeper Dynasty" is not a rare case, and
-                // shaving the end off it hides the very thing the line exists to say.
-                // The height is reserved for two lines either way, so a short name and
-                // a long one leave every card the same size and nothing reflows when
-                // real data replaces a skeleton.
+            // Title, subtitle, record. Your team is the title; the league it plays in
+            // is the line under it, smaller and quieter. They used to share one line
+            // ("Kupp of Ambition · Sigma Alpha Epsilon Keeper Dynasty") with a second
+            // line reserved for the wrap, which left a dead band under every pair short
+            // enough to fit on one. Each line is real now, so there is nothing to
+            // reserve and nothing to gap.
+            VStack(alignment: .leading, spacing: SWSpacing.xxs) {
                 Text(title)
                     .font(SWType.cardTitle)
                     .foregroundStyle(SWColor.primary)
-                    .lineLimit(2, reservesSpace: true)
+                    .lineLimit(1)
                     .minimumScaleFactor(0.8)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .truncationMode(.tail)
+
+                if let subtitle {
+                    Text(subtitle)
+                        .font(SWType.caption)
+                        .foregroundStyle(SWColor.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
 
                 if let team = snapshot.myTeam {
                     HStack(spacing: SWSpacing.xs) {
@@ -97,9 +106,14 @@ struct LeagueCard: View {
         }
     }
 
+    /// Your team, or the league itself when you have no team in it.
     private var title: String {
-        guard let team = snapshot.myTeam?.displayName else { return snapshot.league.name }
-        return "\(team) · \(snapshot.league.name)"
+        snapshot.myTeam?.displayName ?? snapshot.league.name
+    }
+
+    /// The league, under your team. Nil when the league is already the title.
+    private var subtitle: String? {
+        snapshot.myTeam == nil ? nil : snapshot.league.name
     }
 
     @ViewBuilder
@@ -125,46 +139,91 @@ struct LeagueCard: View {
     }
 }
 
-/// A tinted pane, without a backdrop blur.
+/// A pane of tinted glass, lit from one side, without a backdrop blur.
 ///
 /// This was `.glassEffect`, and that is what caused the flicker when returning from a
 /// league. Glass samples and blurs whatever is behind it, and the zoom transition
 /// snapshots the source card's raster: at the moment the system hands the snapshot back
 /// to the live view, the glass has to re-resolve its backdrop, and that one frame is
-/// visible. Plain alpha blending has nothing to re-resolve.
+/// visible. Plain alpha blending has nothing to re-resolve — and it costs nothing on
+/// scroll over the animated sky, where a material would re-blur every frame.
 ///
-/// It keeps the look — a translucent tinted surface with a lit top lip — without the
-/// sampling. The edge is the surface's own colour at low opacity, an edge you feel
-/// rather than see: six leagues used to wear six bright platform-coloured outlines.
+/// What makes a sheet of glass read as glass is not the blur, it is the light: a sheen
+/// raked across it from one direction, a cut edge that catches that light along the top
+/// and goes dark at the foot, the tint gathering where the pane is thickest. All of that
+/// is gradients on the pane's own shape. The first version had a symmetric top-to-centre
+/// highlight and a flat platform-coloured outline, which read as a tinted rectangle
+/// rather than as a material.
 struct LeagueSurface: ViewModifier {
     let platform: Platform
+
+    private var pane: RoundedRectangle {
+        RoundedRectangle(cornerRadius: SWRadius.lg, style: .continuous)
+    }
 
     func body(content: Content) -> some View {
         content
             .background {
-                RoundedRectangle(cornerRadius: SWRadius.lg, style: .continuous)
-                    .fill(SWColor.surface.opacity(0.72))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: SWRadius.lg, style: .continuous)
-                            .fill(SWColor.platform(platform).opacity(0.24))
-                    }
-                    .overlay {
-                        // The lit lip along the top edge, which is most of what reads
-                        // as glass in the first place.
-                        RoundedRectangle(cornerRadius: SWRadius.lg, style: .continuous)
-                            .fill(
-                                LinearGradient(
-                                    colors: [.white.opacity(0.14), .clear],
-                                    startPoint: .top, endPoint: .center
-                                )
-                            )
-                    }
+                ZStack {
+                    // The body. Dark enough that near-white content still clears a
+                    // midday cloud behind it — the gallery's legibility strip is the
+                    // check.
+                    pane.fill(SWColor.surface.opacity(0.72))
+
+                    // The league's colour, gathering toward the foot the way a tinted
+                    // sheet reads deeper where it meets the ground.
+                    pane.fill(
+                        LinearGradient(
+                            colors: [
+                                SWColor.platform(platform).opacity(0.18),
+                                SWColor.platform(platform).opacity(0.30),
+                            ],
+                            startPoint: .top, endPoint: .bottom
+                        )
+                    )
+
+                    // One light, top-left. A sheen raked across the upper corner and
+                    // gone before the middle — never a symmetric bloom.
+                    pane.fill(
+                        LinearGradient(
+                            stops: [
+                                .init(color: .white.opacity(0.16), location: 0),
+                                .init(color: .white.opacity(0.06), location: 0.32),
+                                .init(color: .clear, location: 0.58),
+                            ],
+                            startPoint: .topLeading, endPoint: .bottomTrailing
+                        )
+                    )
+
+                    // The pane's thickness at the foot, away from the light. Tight,
+                    // directional, inside the shape — not a shadow cast around it.
+                    pane.fill(
+                        LinearGradient(
+                            stops: [
+                                .init(color: .black.opacity(0.18), location: 0),
+                                .init(color: .clear, location: 0.16),
+                            ],
+                            startPoint: .bottom, endPoint: .top
+                        )
+                    )
+                }
             }
             .overlay {
-                RoundedRectangle(cornerRadius: SWRadius.lg, style: .continuous)
-                    .strokeBorder(SWColor.platform(platform).opacity(0.18), lineWidth: 1)
+                // The cut edge: lit along the top lip, a trace down the sides, almost
+                // nothing at the foot. An edge you feel rather than a drawn outline.
+                pane.strokeBorder(
+                    LinearGradient(
+                        stops: [
+                            .init(color: .white.opacity(0.38), location: 0),
+                            .init(color: .white.opacity(0.10), location: 0.45),
+                            .init(color: .white.opacity(0.04), location: 1),
+                        ],
+                        startPoint: .top, endPoint: .bottom
+                    ),
+                    lineWidth: 1
+                )
             }
-            .clipShape(RoundedRectangle(cornerRadius: SWRadius.lg, style: .continuous))
+            .clipShape(pane)
     }
 }
 

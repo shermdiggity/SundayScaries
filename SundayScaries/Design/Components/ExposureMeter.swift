@@ -30,7 +30,7 @@ struct ExposureMeter: View {
 
     private var tint: Color {
         switch kind {
-        case .started: SWColor.accent
+        case .started: SWColor.positive
         case .faced:   SWColor.negative
         }
     }

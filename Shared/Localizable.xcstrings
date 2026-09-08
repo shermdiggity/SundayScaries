@@ -82,9 +82,6 @@
         }
       }
     },
-    "%@ %@, %@ %@" : {
-
-    },
     "%@ all-play" : {
 
     },
@@ -111,12 +108,6 @@
 
     },
     "%@ points, %@" : {
-
-    },
-    "%@ starts against you everywhere." : {
-
-    },
-    "%@ starts against you in %@ of %@ leagues." : {
 
     },
     "%@, %@, facing in %lld of %lld leagues: %@" : {
@@ -503,13 +494,11 @@
     "Leagues by ID" : {
 
     },
-    "Lineup needs attention: %@" : {
-
-    },
     "Lineup set" : {
 
     },
     "Lineup set, %lld starters" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "variations" : {
@@ -582,9 +571,6 @@
     "No starters yet" : {
 
     },
-    "Nobody has scored yet, so this is week %lld projections. Power points take over once games are played." : {
-
-    },
     "Nobody yet" : {
 
     },
@@ -645,9 +631,6 @@
     "playing" : {
 
     },
-    "Power points blend all-play win rate, points for and recent form." : {
-
-    },
     "power pts" : {
 
     },
@@ -685,6 +668,7 @@
 
     },
     "Rostered in %lld of %lld leagues" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -943,12 +927,6 @@
 
     },
     "You" : {
-
-    },
-    "You're %@-for-%@ on %@." : {
-
-    },
-    "You're all-in on %@." : {
 
     },
     "Your bench" : {

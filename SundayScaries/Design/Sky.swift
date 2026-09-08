@@ -43,7 +43,12 @@ enum Sky {
 
     static func palette(at date: Date = Date(), calendar: Calendar = .current) -> SkyPalette {
         let parts = calendar.dateComponents([.hour, .minute], from: date)
-        let hour = Double(parts.hour ?? 12) + Double(parts.minute ?? 0) / 60
+        var hour = Double(parts.hour ?? 12) + Double(parts.minute ?? 0) / 60
+        #if DEBUG
+        // Screenshots: `-sw.debugHour 16.5` pins the sky to half past four whatever the
+        // clock says. Never compiled into Release.
+        if let pinned = debugHour { hour = pinned }
+        #endif
 
         for index in 0..<(anchors.count - 1) {
             let lower = anchors[index]
@@ -56,6 +61,13 @@ enum Sky {
         }
         return anchors[0].palette
     }
+
+    #if DEBUG
+    private static var debugHour: Double? {
+        let value = UserDefaults.standard.double(forKey: "sw.debugHour")
+        return value > 0 ? min(value, 24) : nil
+    }
+    #endif
 }
 
 /// The sky as a still gradient — the same palette, no shader.

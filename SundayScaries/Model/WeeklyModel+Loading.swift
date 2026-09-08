@@ -31,6 +31,7 @@ extension WeeklyModel {
     /// replaced in place as it resolves, so a poll during a game rolls the numbers rather
     /// than flashing the whole screen to skeletons every minute.
     func load(season: String? = nil, force: Bool = false) async {
+        if installDemoIfRequested() { return }
         guard hasAccount else {
             clearForNoAccount()
             return
@@ -161,6 +162,18 @@ extension WeeklyModel {
         )
     }
 
+    /// The screenshot demo (`-sw.demo`), which takes the place of every load. Never true
+    /// in Release, where the demo does not exist.
+    private func installDemoIfRequested() -> Bool {
+        #if DEBUG
+        guard let scenario = DemoData.scenario else { return false }
+        installDemo(scenario)
+        return true
+        #else
+        return false
+        #endif
+    }
+
     /// Disconnecting the last platform must clear the screen, not freeze it on whatever
     /// was loaded before.
     private func clearForNoAccount() {
@@ -277,6 +290,9 @@ extension WeeklyModel {
     /// stays up either way.
     @discardableResult
     func refresh(leagueID: String) async -> Bool {
+        #if DEBUG
+        if DemoData.isActive { return true }
+        #endif
         guard let league = allLeagues.first(where: { $0.id == leagueID }),
               let shownWeek = week ?? liveWeek else { return false }
         let season = loadedSeason

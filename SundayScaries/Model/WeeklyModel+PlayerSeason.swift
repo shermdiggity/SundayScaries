@@ -27,9 +27,15 @@ extension WeeklyModel {
     /// rules. The stats and projections come from one league-agnostic feed and are
     /// cached per week, so the first sheet of the day fetches and the rest are instant.
     func playerSeason(for player: PlayerRef, under leagueID: String) async -> PlayerSeason? {
-        guard let playerSeasons else { return nil }
         guard let snapshot = allSnapshots.first(where: { $0.id == leagueID }) else { return nil }
         let option = scoringOptions.first { $0.leagueID == leagueID }
+        #if DEBUG
+        if DemoData.isActive {
+            let kind = option?.kind ?? snapshot.league.scoringKind
+            return DemoData.playerSeason(for: player, under: snapshot, kind: kind)
+        }
+        #endif
+        guard let playerSeasons else { return nil }
         // The platform's real current week bounds what has been played, whatever week
         // the screen happens to be showing.
         let currentWeek = snapshot.league.currentWeek ?? snapshot.week

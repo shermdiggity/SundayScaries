@@ -74,9 +74,11 @@ struct PlayerFoilCard: View {
             // resolved to the surface.
             Text(countLabel)
                 .font(SWType.micro)
-                .foregroundStyle(tint)
-                .padding(.horizontal, SWSpacing.md)
-                .padding(.bottom, SWSpacing.sm)
+                .foregroundStyle(SWColor.canvas)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 3)
+                .background(Capsule().fill(tint))
+                .padding(SWSpacing.sm)
         }
     }
 

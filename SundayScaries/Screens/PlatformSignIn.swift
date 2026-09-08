@@ -45,7 +45,7 @@ struct MFLConnectView: View {
                 } header: {
                     Text("Sign in")
                 } footer: {
-                    Text("Your password goes to MyFantasyLeague once, over HTTPS, and is never stored. Only the sign-in cookie is kept, in the keychain, and it lists the leagues you're in.")
+                    Text("Your password goes to MyFantasyLeague once and is never stored. Only the sign-in cookie is kept in the keychain to list the leagues you're in.")
                 }
 
                 Section {
