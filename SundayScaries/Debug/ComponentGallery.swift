@@ -115,7 +115,8 @@ struct ComponentGallery: View {
                     section("Lineup faceoff") {
                         let live = GallerySamples.snapshot(.live)
                         if let mine = live.myRoster {
-                            LineupFaceoff(snapshot: live, mine: mine, theirs: live.opponentRoster)
+                            LineupFaceoff(snapshot: live, mine: mine, theirs: live.opponentRoster,
+                                          statLines: GallerySamples.statLines)
                                 .padding(SWSpacing.lg)
                                 .background(RoundedRectangle(cornerRadius: SWRadius.md).fill(SWColor.surface))
                         }
@@ -134,7 +135,13 @@ struct ComponentGallery: View {
                             PlayerRow(
                                 slot: .init(slot: .qb, isStarter: true,
                                             player: GallerySamples.player("Jordan Love", .qb, "GB")),
-                                projection: 19.4, nflMatchup: "@ CHI", hasStarted: false, kickoff: "Sun 1:00 PM"
+                                projection: 19.4, nflMatchup: "@ CHI", gameState: .notStarted, kickoff: "Sun 1:00 PM"
+                            )
+                            PlayerRow(
+                                slot: .init(slot: .rb, isStarter: true,
+                                            player: GallerySamples.player("Bijan Robinson", .rb, "ATL"), points: 14.2),
+                                projection: 19.3, nflMatchup: "vs. PIT", gameState: .inProgress,
+                                statLine: "58 yds · 1 TD · 3 rec"
                             )
                         }
                     }

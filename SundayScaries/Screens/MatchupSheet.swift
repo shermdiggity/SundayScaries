@@ -15,6 +15,7 @@ struct MatchupSheet: View {
     let model: WeeklyModel
     @Environment(\.dismiss) private var dismiss
     @State private var inspector = PlayerInspector(owner: "matchup")
+    @State private var statLines: [String: [String: Double]] = [:]
 
     private var week: Int { pair.matchup.week }
 
@@ -52,7 +53,9 @@ struct MatchupSheet: View {
                             .lineLimit(1)
                             .accessibilityElement(children: .combine)
 
-                            LineupFaceoff(snapshot: snapshot, mine: left, theirs: pair.rightRoster)
+                            LineupFaceoff(
+                                snapshot: snapshot, mine: left, theirs: pair.rightRoster, statLines: statLines
+                            )
                         }
                         .padding(SWSpacing.lg)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -60,6 +63,10 @@ struct MatchupSheet: View {
                             RoundedRectangle(cornerRadius: SWRadius.md, style: .continuous)
                                 .fill(SWColor.surface)
                         )
+                        .task(id: "\(pair.leftScore)|\(pair.rightScore)") {
+                            let players = (left.starters + (pair.rightRoster?.starters ?? [])).map(\.player)
+                            statLines = await model.statLines(for: players, in: snapshot)
+                        }
                     } else {
                         StateView(kind: .empty, title: "No lineups to show for this matchup yet.")
                     }

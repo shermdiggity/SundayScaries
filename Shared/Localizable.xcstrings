@@ -16,6 +16,16 @@
     "%@ – %@" : {
 
     },
+    "%@ · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
     "%@ · %lld faces" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -317,6 +327,9 @@
     "×%lld" : {
 
     },
+    "A clean sweep, %lld-0." : {
+
+    },
     "A public league needs no sign-in. The id is the number after /home/ in the league's address." : {
 
     },
@@ -345,6 +358,9 @@
 
     },
     "Against you in all %lld" : {
+
+    },
+    "All square." : {
 
     },
     "Are your lineups set, and how every matchup stands." : {
@@ -443,6 +459,12 @@
     "Done" : {
 
     },
+    "Down by %.1f." : {
+
+    },
+    "Down in all %lld." : {
+
+    },
     "Drag to reorder. This is the order on your week." : {
 
     },
@@ -468,6 +490,9 @@
 
     },
     "Every lineup is set." : {
+
+    },
+    "Final" : {
 
     },
     "Getting robbed" : {
@@ -884,6 +909,32 @@
     "Try again" : {
 
     },
+    "Up by %.1f." : {
+
+    },
+    "Up in %lld, down in %lld, tied in %lld." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Up in %1$lld, down in %2$lld, tied in %3$lld."
+          }
+        }
+      }
+    },
+    "Up in %lld, down in %lld." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Up in %1$lld, down in %2$lld."
+          }
+        }
+      }
+    },
+    "Up in all %lld." : {
+
+    },
     "Username" : {
 
     },
@@ -917,6 +968,9 @@
     "Who you're relying on, and who's coming for you." : {
 
     },
+    "Winless, 0-%lld." : {
+
+    },
     "Yahoo" : {
 
     },
@@ -927,6 +981,35 @@
 
     },
     "You" : {
+
+    },
+    "You lost by %.1f." : {
+
+    },
+    "You tied." : {
+
+    },
+    "You went %lld-%lld-%lld." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You went %1$lld-%2$lld-%3$lld."
+          }
+        }
+      }
+    },
+    "You went %lld-%lld." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "You went %1$lld-%2$lld."
+          }
+        }
+      }
+    },
+    "You won by %.1f." : {
 
     },
     "Your bench" : {

@@ -40,7 +40,7 @@ extension DemoData {
         switch player.position {
         case .qb:
             return ["pass_cmp": 18 + (roll * 10).rounded(), "pass_att": 29 + (roll * 12).rounded(),
-                    "pass_yd": (points * 11).rounded(), "pass_td": (points / 8).rounded(.down),
+                    "pass_yd": (150 + points * 8).rounded(), "pass_td": (points / 8).rounded(.down),
                     "rush_yd": (roll * 40).rounded()]
         case .rb:
             let receptions = 2 + (roll * 4).rounded()

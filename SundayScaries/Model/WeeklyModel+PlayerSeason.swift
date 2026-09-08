@@ -20,6 +20,32 @@ extension WeeklyModel {
         scoringOptions.filter { !hiddenLeagueIDs.contains($0.leagueID) }
     }
 
+    /// This week's box-score line for each player, by canonical id, for the lineup rows.
+    ///
+    /// Read through the same season path the sheet uses, so the feed is fetched once per
+    /// week and cached, and a second league's lineup costs dictionary lookups. A player
+    /// whose game has not started, or who is not in the feed, has no entry.
+    func statLines(for players: [PlayerRef], in snapshot: LeagueSnapshot) async -> [String: [String: Double]] {
+        let week = snapshot.week
+        let leagueID = snapshot.id
+        return await withTaskGroup(of: (String, [String: Double])?.self) { group in
+            for player in players {
+                guard let id = player.canonicalID else { continue }
+                group.addTask { [self] in
+                    guard let season = await playerSeason(for: player, under: leagueID),
+                          let line = season.weeks.first(where: { $0.week == week })?.stats,
+                          line.values.contains(where: { $0 != 0 }) else { return nil }
+                    return (id, line)
+                }
+            }
+            var lines: [String: [String: Double]] = [:]
+            for await entry in group {
+                if let (id, line) = entry { lines[id] = line }
+            }
+            return lines
+        }
+    }
+
     /// Every week of this player's season, scored under one league's rules.
     ///
     /// The league's own points win whenever it scored him itself — a roster he was on

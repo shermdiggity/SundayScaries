@@ -36,6 +36,20 @@ enum GallerySamples {
                   headshotURL: URL(string: "https://sleepercdn.com/content/nfl/players/\(sleeperID).jpg"))
     }
 
+    /// Box-score lines for the live faceoff, keyed the way the snapshot keys players.
+    static var statLines: [String: [String: Double]] {
+        [
+            "Josh Allen": ["pass_cmp": 22, "pass_att": 31, "pass_yd": 268, "pass_td": 2, "rush_yd": 31],
+            "Jahmyr Gibbs": ["rush_att": 14, "rush_yd": 72, "rush_td": 1, "rec": 3, "rec_yd": 24],
+            "Justin Jefferson": ["rec": 7, "rec_tgt": 10, "rec_yd": 114, "rec_td": 1],
+            "Travis Kelce": ["rec": 4, "rec_tgt": 6, "rec_yd": 43],
+            "Jake Bates": ["fgm": 2, "fga": 2, "xpm": 2, "xpa": 2],
+            "DEF-PIT": ["pts_allow": 13, "sack": 4, "int": 1],
+            "Bijan Robinson": ["rush_att": 11, "rush_yd": 58, "rush_td": 1, "rec": 3, "rec_yd": 19],
+            "Ja'Marr Chase": ["rec": 8, "rec_tgt": 12, "rec_yd": 131, "rec_td": 1],
+        ]
+    }
+
     static var defense: PlayerRef {
         PlayerRef(identity: .canonical(id: "DEF-PIT", source: .teamDefense),
                   name: "Pittsburgh Steelers", nflTeam: "PIT", position: .def,

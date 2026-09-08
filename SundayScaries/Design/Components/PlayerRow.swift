@@ -14,13 +14,17 @@ struct PlayerRow: View {
     var projection: Double?
     /// "@ KC" / "vs. DEN" — who this player's NFL team is up against this week.
     var nflMatchup: String?
-    /// Whether THIS player's game has begun. Sleeper reports 0 for every player before
+    /// Where THIS player's game stands. Sleeper reports 0 for every player before
     /// kickoff, which is indistinguishable from actually scoring nothing — so until his
     /// game starts a 0 is not a score, and the projection is the honest number.
-    var hasStarted: Bool = true
+    var gameState: ByeWeeks.GameState = .final
     /// "Sun 1:00 PM" for this player's game.
     var kickoff: String?
+    /// What he has done so far, once his game is on: "84 yds · 1 TD · 6 rec".
+    var statLine: String?
     var showsHeadshot: Bool = true
+
+    private var hasStarted: Bool { gameState == .inProgress || gameState == .final }
 
     private var player: PlayerRef { slot.player }
     private var isEmpty: Bool { player.isEmptyLineupSlot }
@@ -49,11 +53,8 @@ struct PlayerRow: View {
                         .foregroundStyle(metaColor)
                         .lineLimit(1)
                 }
-                if let kickoff, !isEmpty {
-                    Text(kickoff)
-                        .font(SWType.micro)
-                        .foregroundStyle(SWColor.tertiary)
-                        .lineLimit(1)
+                if !isEmpty, !slot.isOnBye {
+                    stateLine
                 }
             }
 
@@ -70,6 +71,32 @@ struct PlayerRow: View {
         .playerTappable(player)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityText)
+    }
+
+    /// The third line: the kickoff before the game, then what he has done in it, led
+    /// by where it stands. "Live" is the one word that wears the live colour. Wraps at
+    /// a separator rather than truncating; see `LineupFaceoff.state`.
+    private var stateLine: some View {
+        let lead: Text
+        switch gameState {
+        case .final:
+            lead = Text("Final")
+        case .inProgress:
+            lead = Text("Live").foregroundStyle(SWColor.live)
+        case .notStarted:
+            lead = Text(verbatim: LineupFaceoff.unbreakable(kickoff ?? ""))
+        case .none:
+            lead = Text(verbatim: "")
+        }
+        let line = hasStarted ? statLine : nil
+        let text = line.map {
+            Text("\(lead) · \(Text(verbatim: LineupFaceoff.unbreakable($0)).foregroundStyle(SWColor.secondary))")
+        } ?? lead
+        return text
+            .font(SWType.micro)
+            .foregroundStyle(SWColor.tertiary)
+            .lineLimit(2)
+            .fixedSize(horizontal: false, vertical: true)
     }
 
     /// Real points once they exist; the projection before that, visibly quieter so the
@@ -146,13 +173,18 @@ struct PlayerRow: View {
 extension PlayerRow {
     /// A slot from a league's rosters, with everything the row shows looked up from that
     /// league's projections and schedule.
-    init(slot: RosterSlot, in snapshot: LeagueSnapshot, week: Int) {
+    init(
+        slot: RosterSlot, in snapshot: LeagueSnapshot, week: Int, statLines: [String: [String: Double]] = [:]
+    ) {
+        let line = slot.player.canonicalID.flatMap { statLines[$0] }
+            .map { StatLine.summary($0, position: slot.player.position, compact: true) }
         self.init(
             slot: slot,
             projection: snapshot.projections.projection(for: slot.player),
             nflMatchup: snapshot.schedule.opponentLabel(nflTeam: slot.player.nflTeam, week: week),
-            hasStarted: snapshot.schedule.gameState(nflTeam: slot.player.nflTeam, week: week) != .notStarted,
-            kickoff: snapshot.schedule.kickoffLabel(nflTeam: slot.player.nflTeam, week: week)
+            gameState: snapshot.schedule.gameState(nflTeam: slot.player.nflTeam, week: week),
+            kickoff: snapshot.schedule.kickoffLabel(nflTeam: slot.player.nflTeam, week: week),
+            statLine: line.flatMap { $0.isEmpty ? nil : $0 }
         )
     }
 }

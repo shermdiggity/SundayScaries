@@ -32,6 +32,9 @@ struct LeagueDetailView: View {
     /// Only the decision is stored, not the offset. Keeping the raw scroll position in
     /// state re-rendered the whole screen on every frame of every scroll.
     @State private var isCollapsed = false
+    /// This week's box-score lines for everyone in the two lineups. Loaded after the
+    /// screen is up and again whenever the scores move.
+    @State private var statLines: [String: [String: Double]] = [:]
 
     private var palette: SkyPalette { Sky.palette() }
     private var week: Int { snapshot.week }
@@ -237,7 +240,7 @@ struct LeagueDetailView: View {
                 .lineLimit(1)
                 .accessibilityElement(children: .combine)
 
-                LineupFaceoff(snapshot: snapshot, mine: mine, theirs: snapshot.opponentRoster)
+                LineupFaceoff(snapshot: snapshot, mine: mine, theirs: snapshot.opponentRoster, statLines: statLines)
 
                 if !mine.bench.isEmpty {
                     Text("Your bench")
@@ -245,7 +248,7 @@ struct LeagueDetailView: View {
                         .foregroundStyle(SWColor.secondary)
                         .padding(.top, SWSpacing.md)
                     ForEach(Array(mine.bench.enumerated()), id: \.offset) { _, slot in
-                        PlayerRow(slot: slot, in: snapshot, week: mine.week)
+                        PlayerRow(slot: slot, in: snapshot, week: mine.week, statLines: statLines)
                             .opacity(0.72)
                     }
                 }
@@ -253,6 +256,12 @@ struct LeagueDetailView: View {
             .padding(SWSpacing.lg)
             .frame(maxWidth: .infinity, alignment: .leading)
             .glassEffect(.regular.tint(SWColor.leagueTint(snapshot.league.platform)), in: .rect(cornerRadius: SWRadius.lg))
+            // Keyed on the scores, so a poll that moves a number refetches the lines
+            // behind it; a poll that moves nothing costs nothing.
+            .task(id: "\(snapshot.myScore)|\(snapshot.opponentScore)") {
+                let players = (mine.slots + (snapshot.opponentRoster?.starters ?? [])).map(\.player)
+                statLines = await model.statLines(for: players, in: snapshot)
+            }
         }
     }
 }
