@@ -134,6 +134,7 @@ struct PlayerSheet: View {
                             .font(SWType.bodyMedium)
                             .foregroundStyle(SWColor.primary)
                             .lineLimit(1)
+                            .truncationMode(.tail)
                         Image(systemName: "chevron.up.chevron.down")
                             .font(SWType.glyph)
                             .foregroundStyle(SWColor.secondary)
@@ -144,7 +145,16 @@ struct PlayerSheet: View {
                     .background(Capsule().fill(SWColor.surface))
                     .frame(minHeight: SWSize.hitTarget)
                     .contentShape(.rect)
+                    // Picking a league with a much longer name used to leave the capsule
+                    // half-morphed for seconds: the menu's dismissal animates its label
+                    // back into place, and a label that changes width mid-way is drawn
+                    // stretched between the old shape and the new. The swap is not
+                    // animated at all now, and the label keeps its natural width rather
+                    // than being sized by the row around it.
+                    .transaction { $0.animation = nil }
+                    .fixedSize(horizontal: true, vertical: false)
                 }
+                .layoutPriority(1)
                 .accessibilityLabel("Scoring rules: \(option.name)")
             }
         } else if let option {

@@ -34,14 +34,15 @@ The state of the project on 7 September, and what each item needs before the bui
 
 **Must fix before archiving**
 
-- **The kit's v0.2.2 is tagged locally and not on GitHub. The app pins 0.2.1.** v0.2.2
-  carries the `projectedPoints` cache fix and the September provider fixes, and the
-  working tree now also holds the cache audit's fixes (teams refreshable on a pull, an
-  expired sign-in no longer hidden behind the cache, ESPN discovery re-read on a pull,
-  DEBUG cache logging; `TeamRenameTests`, `AuthFailureTests`), uncommitted. Commit it
-  and move the never-pushed tag onto it, so one tag carries everything. The archive resolves the
-  package from GitHub at the pinned version, so without the push and the bump the App
-  Store build ships the old kit. Commands in section 3.
+- **The kit's v0.2.2 on GitHub points at the wrong commit.** The tag was pushed at
+  `d37cbd9`, one commit BEFORE "Update cache policy" (`f933616`), which holds every cache
+  fix (teams refreshable on a pull, an expired sign-in no longer hidden behind the cache,
+  ESPN discovery re-read on a pull, DEBUG cache logging, `TeamRenameTests`,
+  `AuthFailureTests`). The app pins 0.2.2 and resolves it to `d37cbd9`, so no build so
+  far has had any of it: that is why a renamed team still showed stale. The kit's
+  working tree also holds the ESPN headshot resizer change, uncommitted. Commit that,
+  tag **v0.2.3** on the result (a fresh number, so Xcode cannot keep the old revision
+  under the same version), push, and pin 0.2.3. Commands in section 3.
 - **Six app commits are ahead of `origin/main`, plus today's uncommitted work** (the
   glass card, the finished-week hero, the demo data, the screenshots). CI only runs on a
   push. Commit and push before archiving so the archive matches something CI has built.
@@ -85,18 +86,19 @@ The state of the project on 7 September, and what each item needs before the bui
 Run from `fantasy/`. Each step is a check that must be green before the next.
 
 ```bash
-# 1. The kit: tests, commit the rename fix, move the (never pushed) tag onto it, push.
+# 1. The kit: tests, commit the headshot change, tag v0.2.3 on top of the cache fixes, push.
 cd FantasyKit
 swift test                                   # 295 tests, no network
-git add -A && git commit -m "Cache audit: teams refresh on a pull, auth failures surface"
-git tag -f v0.2.2
-git push origin main v0.2.2
+git add -A && git commit -m "ESPN headshots at the size they are drawn"
+git tag v0.2.3
+git push origin main v0.2.3
 
-# 2. The app: pin 0.2.2 (both places), then resolve.
+# 2. The app: pin 0.2.3 (both places), then resolve. The pin must move to the NEW
+#    revision, so check the revision line, not just the version.
 cd ../SundayScaries
-sed -i '' 's/version = 0\.2\.1/version = 0.2.2/' SundayScaries.xcodeproj/project.pbxproj
+sed -i '' 's/version = 0\.2\.2/version = 0.2.3/' SundayScaries.xcodeproj/project.pbxproj
 xcodebuild -resolvePackageDependencies -project SundayScaries.xcodeproj -scheme SundayScaries
-grep -n '"version"' SundayScaries.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved   # expect 0.2.2
+grep -n '"revision"\|"version"' SundayScaries.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
 
 # 3. The three project checks.
 grep -rnE '^\s*import (SwiftUI|UIKit)' ../FantasyKit/Sources/ && exit 1 || echo "core clean"
@@ -272,6 +274,14 @@ exposure before submitting: render defenses as a two-letter team monogram in the
 colour, the way platforms already get a monogram, about twenty lines in `Headshot`. Not
 done today because it changes the product's look. Your call.
 
+**5.2.1 Platform logos on the cards.** Each league card shows its platform's own logo,
+fetched from that platform's CDN, as the mark that says "this league lives on Sleeper".
+Nominative use of a mark to identify the source of the user's own data; the app never
+redraws or bundles them, and the letter monogram takes over wherever a logo cannot load.
+They were removed once out of caution and restored on 8 September because the monograms
+did not read as the platforms. If a reviewer raises it, the fallback is one line in
+`SWColor.platformLogo` returning nil for every case, and the monograms return.
+
 **5.2.1 / 2.3.7 Trademarks in metadata.** The name, subtitle and keywords above carry
 no platform name. The description says "Works with Sleeper, ESPN Fantasy…" which is a
 compatibility statement, and ends with the non-affiliation line. Do not add platform
@@ -407,7 +417,7 @@ for event-tied launches more often than the form suggests.
 
 Print this and tick it.
 
-- [ ] Kit rename fix committed, v0.2.2 moved onto it and pushed. Pin bumped in `project.pbxproj` and `Package.resolved`
+- [ ] Kit headshot change committed, v0.2.3 tagged and pushed. Pin bumped to 0.2.3, and `Package.resolved` shows the new revision
 - [ ] `PlatformSignIn.swift:48` wrapped. Lint and format green locally
 - [ ] Debug and Release build. `swift test` in the kit passes
 - [ ] String catalog synced from an Xcode build and committed

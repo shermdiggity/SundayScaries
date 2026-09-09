@@ -24,6 +24,15 @@ enum SWColor {
     /// 50% clears WCAG AA (4.9 on the raised surface); 42% did not.
     static let tertiary  = Color(red: 0.976, green: 0.969, blue: 0.957).opacity(0.50)
 
+    /// The league card's pane: a neutral semi-transparent grey over the sky. `scrim` is
+    /// the sky's own darkening factor for the hour (0.12 at midnight, 0.78 at midday), so
+    /// the pane is a light grey over a night sky and darkens as the sky brightens,
+    /// which is what keeps off-white text readable at one in the afternoon. At night it
+    /// composites to a luminance near 0.18, the floor for 4.5:1 against the primary ink.
+    static func pane(scrim: Double) -> Color {
+        Color(white: 0.5 - 0.4 * scrim).opacity(0.33 + 0.45 * scrim)
+    }
+
     /// Content sitting directly on the sky, which can be bright at midday. Always
     /// paired with `Sky.scrim` so the contrast holds in every state.
     static let onSky          = Color.white
@@ -66,6 +75,21 @@ enum SWColor {
         case .myFantasyLeague:  Color(red: 0.20, green: 0.45, blue: 0.75)
         case .fleaflicker:      Color(red: 0.25, green: 0.60, blue: 0.35)
         case .cbs:              Color(red: 0.10, green: 0.40, blue: 0.80)
+        }
+    }
+
+    /// Each platform's own mark, served from its own CDN. Used nominatively, to say
+    /// "this league lives on Sleeper", never restyled, redrawn or bundled. Removed once
+    /// for App Review caution and put back at Cole's call (8 September 2026): the letter
+    /// monograms did not read as the platforms. The monogram remains the fallback while
+    /// a logo loads and wherever one cannot (the widgets fetch nothing).
+    static func platformLogo(_ platform: Platform) -> URL? {
+        switch platform {
+        case .sleeper:          URL(string: "https://sleepercdn.com/images/v2/logos/sleeper.png")
+        case .espn:             URL(string: "https://a.espncdn.com/i/espn/espn_logos/espn_red.png")
+        case .myFantasyLeague:  URL(string: "https://www.myfantasyleague.com/apple-touch-icon.png")
+        // Fleaflicker serves no mark at any of the usual paths (checked 8 September 2026).
+        default:                nil
         }
     }
 

@@ -88,7 +88,7 @@ struct LeagueCardSkeleton: View {
         }
         .padding(SWSpacing.lg)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .leagueSurface(league.platform)
+        .leagueSurface()
         .accessibilityLabel(Text("Loading \(league.name)"))
     }
 

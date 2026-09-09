@@ -33,7 +33,7 @@ struct LeagueCard: View {
         }
         .padding(SWSpacing.lg)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .leagueSurface(snapshot.league.platform)
+        .leagueSurface()
         .contentShape(.rect(cornerRadius: SWRadius.lg))
     }
 
@@ -160,13 +160,21 @@ struct LeagueCard: View {
 ///
 /// What makes a sheet of glass read as glass is not the blur, it is the light: a sheen
 /// raked across it from one direction, a cut edge that catches that light along the top
-/// and goes dark at the foot, the tint gathering where the pane is thickest. All of that
-/// is gradients on the pane's own shape. The first version had a symmetric top-to-centre
-/// highlight and a flat platform-coloured outline, which read as a tinted rectangle
-/// rather than as a material.
+/// and goes dark at the foot. All of that is gradients on the pane's own shape. The
+/// first version had a symmetric top-to-centre highlight and a flat platform-coloured
+/// outline, which read as a tinted rectangle rather than as a material.
+///
+/// No platform tint. Every card used to carry its platform's colour through the glass,
+/// which put a blue card over a green card over a red one and made the week read as a
+/// row of coloured panels. The platform is the mark beside the title; the pane is the
+/// same glass for every league.
+///
+/// The body is a plain semi-transparent grey rather than the near-black surface at 72%,
+/// which read as too dark (Cole, 8 September). It tracks the sky: `SWColor.pane(scrim:)`
+/// is a light grey over a night sky and darkens with the day, so the midday cloud that
+/// breaks white type is still met with a dark enough pane. The bottom thickness band is
+/// gone with it; the sheen and the lit edge stay, because they are what makes it glass.
 struct LeagueSurface: ViewModifier {
-    let platform: Platform
-
     private var pane: RoundedRectangle {
         RoundedRectangle(cornerRadius: SWRadius.lg, style: .continuous)
     }
@@ -175,22 +183,9 @@ struct LeagueSurface: ViewModifier {
         content
             .background {
                 ZStack {
-                    // The body. Dark enough that near-white content still clears a
-                    // midday cloud behind it — the gallery's legibility strip is the
-                    // check.
-                    pane.fill(SWColor.surface.opacity(0.72))
-
-                    // The league's colour, gathering toward the foot the way a tinted
-                    // sheet reads deeper where it meets the ground.
-                    pane.fill(
-                        LinearGradient(
-                            colors: [
-                                SWColor.platform(platform).opacity(0.18),
-                                SWColor.platform(platform).opacity(0.30),
-                            ],
-                            startPoint: .top, endPoint: .bottom
-                        )
-                    )
+                    // The body: grey, translucent, darker as the sky gets brighter. The
+                    // gallery's legibility strip is the check at every hour.
+                    pane.fill(SWColor.pane(scrim: Sky.palette().scrim))
 
                     // One light, top-left. A sheen raked across the upper corner and
                     // gone before the middle — never a symmetric bloom.
@@ -202,18 +197,6 @@ struct LeagueSurface: ViewModifier {
                                 .init(color: .clear, location: 0.58),
                             ],
                             startPoint: .topLeading, endPoint: .bottomTrailing
-                        )
-                    )
-
-                    // The pane's thickness at the foot, away from the light. Tight,
-                    // directional, inside the shape — not a shadow cast around it.
-                    pane.fill(
-                        LinearGradient(
-                            stops: [
-                                .init(color: .black.opacity(0.18), location: 0),
-                                .init(color: .clear, location: 0.16),
-                            ],
-                            startPoint: .bottom, endPoint: .top
                         )
                     )
                 }
@@ -238,21 +221,34 @@ struct LeagueSurface: ViewModifier {
 }
 
 extension View {
-    func leagueSurface(_ platform: Platform) -> some View {
-        modifier(LeagueSurface(platform: platform))
+    func leagueSurface() -> some View {
+        modifier(LeagueSurface())
     }
 }
 
-/// Where this league lives: the platform's initial on its own colour. Not its logo,
-/// which is the platform's trademark and not ours to fetch and show.
+/// Where this league lives: the platform's real mark, from its own CDN, with the
+/// letter monogram underneath it until it arrives and instead of it when it cannot.
+/// Same size, same corner, so the swap from letter to logo moves nothing.
 struct PlatformMark: View {
     let platform: Platform
     var size: CGFloat = 18
 
     var body: some View {
-        PlatformMonogram(platform: platform, size: size)
-            .frame(width: size, height: size)
-            .accessibilityLabel(Text(platform.displayName))
+        Group {
+            if let url = SWColor.platformLogo(platform) {
+                CachedImage(url: url) {
+                    PlatformMonogram(platform: platform, size: size)
+                } fallback: {
+                    PlatformMonogram(platform: platform, size: size)
+                }
+                .scaledToFit()
+                .clipShape(RoundedRectangle(cornerRadius: size * 0.28, style: .continuous))
+            } else {
+                PlatformMonogram(platform: platform, size: size)
+            }
+        }
+        .frame(width: size, height: size)
+        .accessibilityLabel(Text(platform.displayName))
     }
 }
 

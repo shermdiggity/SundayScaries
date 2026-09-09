@@ -99,7 +99,7 @@ enum WidgetBridge {
         let file = id.replacingOccurrences(of: "/", with: "_") + ".png"
         let destination = directory.appendingPathComponent(file)
         if FileManager.default.fileExists(atPath: destination.path) { return file }
-        guard let image = await ImageCache.shared.load(url) else { return nil }
+        guard case let .image(image) = await ImageCache.shared.load(url) else { return nil }
         let side: CGFloat = 96
         let renderer = UIGraphicsImageRenderer(size: CGSize(width: side, height: side))
         let small = renderer.image { _ in

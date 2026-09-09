@@ -6,8 +6,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/shermdiggity/FantasyKit",
       "state" : {
-        "revision" : "d37cbd9ce35e999bbb29737f3436fe0c729a7b7e",
-        "version" : "0.2.2"
+        "revision" : "44350e6cee562be94fc8f2f690fe56e0416c076c",
+        "version" : "0.2.3"
       }
     }
   ],

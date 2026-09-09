@@ -62,7 +62,7 @@ struct WelcomeView: View {
                     }
                     .padding(.horizontal, SWSpacing.lg)
                     .padding(.vertical, SWSpacing.md)
-                    .leagueSurface(.sleeper)
+                    .leagueSurface()
                     .transition(.opacity.combined(with: .move(edge: .top)))
                 }
                 connectCard(.espn, detail: "Sign in on ESPN's page. We keep nothing but your session.") {
@@ -95,7 +95,7 @@ struct WelcomeView: View {
                     }
                     .padding(.horizontal, SWSpacing.lg)
                     .padding(.vertical, SWSpacing.md)
-                    .leagueSurface(.fleaflicker)
+                    .leagueSurface()
                     .transition(.opacity.combined(with: .move(edge: .top)))
                 }
             }
@@ -146,7 +146,7 @@ struct WelcomeView: View {
                     .accessibilityHidden(true)
             }
             .padding(SWSpacing.lg)
-            .leagueSurface(platform)
+            .leagueSurface()
             .contentShape(.rect(cornerRadius: SWRadius.lg))
         }
         .buttonStyle(.plain)

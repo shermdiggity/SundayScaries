@@ -24,6 +24,10 @@ struct Headshot: View {
                     // Only ever seen the first time a face is fetched. On every later
                     // appearance the image is already in memory and renders on frame one.
                     placeholder
+                } fallback: {
+                    // No photo on the CDN, or none that could be fetched: the initials,
+                    // the same as a player with no URL at all. Never a blank circle.
+                    fallback
                 }
                 .aspectRatio(contentMode: isLogo ? .fit : .fill)
                 .padding(isLogo ? size * 0.16 : 0)
