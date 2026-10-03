@@ -88,18 +88,30 @@ struct WeeklyHero<Welcome: View>: View {
         return "You went \(tally.wins)-\(tally.losses)."
     }
 
-    /// Games on. The same shape as the result, in the present tense.
+    /// Games on. The same shape as the result, in the present tense, and every league
+    /// you have a game in is in it: the ones not yet kicked off are counted as still to
+    /// start rather than left out.
     static func standing(_ tally: WeeklyModel.WeekTally) -> LocalizedStringKey {
-        if tally.games == 1 {
+        if tally.total == 1 {
             if tally.margin > 0 { return "Up by \(tally.margin, specifier: "%.1f")." }
             if tally.margin < 0 { return "Down by \(-tally.margin, specifier: "%.1f")." }
             return "All square."
         }
-        switch (tally.wins, tally.losses, tally.ties) {
-        case (_, 0, 0): return "Up in all \(tally.wins)."
-        case (0, _, 0): return "Down in all \(tally.losses)."
-        case (_, _, 0): return "Up in \(tally.wins), down in \(tally.losses)."
-        default: return "Up in \(tally.wins), down in \(tally.losses), tied in \(tally.ties)."
+        if tally.toStart == 0, tally.ties == 0 {
+            if tally.losses == 0 { return "Up in all \(tally.wins)." }
+            if tally.wins == 0 { return "Down in all \(tally.losses)." }
         }
+        return "\(Self.counts(tally))"
+    }
+
+    /// "Up in 2, down in 1, 3 yet to start." Only the counts that are not zero.
+    private static func counts(_ tally: WeeklyModel.WeekTally) -> String {
+        var parts: [String] = []
+        if tally.wins > 0 { parts.append("up in \(tally.wins)") }
+        if tally.losses > 0 { parts.append("down in \(tally.losses)") }
+        if tally.ties > 0 { parts.append("tied in \(tally.ties)") }
+        if tally.toStart > 0 { parts.append("\(tally.toStart) yet to start") }
+        let line = parts.joined(separator: ", ")
+        return line.prefix(1).uppercased() + line.dropFirst() + "."
     }
 }

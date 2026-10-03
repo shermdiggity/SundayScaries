@@ -113,32 +113,44 @@ extension WeeklyModel {
         var wins = 0
         var losses = 0
         var ties = 0
+        /// Games this week that have not kicked off yet. They are in the week, they are
+        /// just not winning or losing.
+        var toStart = 0
         /// Your margin in the one game, when there is only one. Positive is a lead.
         var margin: Double = 0
         var isOver = false
 
+        /// Games under way or over.
         var games: Int { wins + losses + ties }
+        /// Every game you have this week.
+        var total: Int { games + toStart }
     }
 
-    /// Wins and losses across the leagues on screen, from the games that have started.
+    /// Wins and losses across EVERY league on screen that has a game for you this week.
     ///
-    /// Nil until a game has kicked off: before then the only fact worth the hero is
-    /// whether the lineups are set. Once games are on it is the standing — up in two,
-    /// down in one — and once every game is over it is the result. A game is over when
-    /// the platform has moved past the week, or when every starter on both sides has
-    /// finished; a 0-0 that never kicked off is not a game.
-    var weekTally: WeekTally? {
+    /// Nil until one of them has kicked off: before then the only fact worth the hero is
+    /// whether the lineups are set. Once any game is on, every league is in the count —
+    /// the ones under way by their score, the rest as still to start. It used to count
+    /// only leagues with points on the board, so the Friday after a Thursday game said
+    /// "Up in all 2." for someone in six leagues. A game is over when the platform has
+    /// moved past the week, or every starter on both sides has finished.
+    var weekTally: WeekTally? { Self.tally(snapshots) }
+
+    static func tally(_ snapshots: [LeagueSnapshot]) -> WeekTally? {
         var tally = WeekTally()
         var undecided = 0
-        for snapshot in snapshots {
-            guard snapshot.myTeam != nil, snapshot.opponent != nil, snapshot.hasKickedOff else { continue }
+        for snapshot in snapshots where snapshot.myTeam != nil && snapshot.opponent != nil {
+            guard snapshot.hasKickedOff else {
+                tally.toStart += 1
+                continue
+            }
             let margin = snapshot.myScore - snapshot.opponentScore
             if margin > 0 { tally.wins += 1 } else if margin < 0 { tally.losses += 1 } else { tally.ties += 1 }
             tally.margin = margin
             if !snapshot.isDecided { undecided += 1 }
         }
         guard tally.games > 0 else { return nil }
-        tally.isOver = undecided == 0
+        tally.isOver = undecided == 0 && tally.toStart == 0
         return tally
     }
 }

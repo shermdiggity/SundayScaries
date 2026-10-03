@@ -40,8 +40,18 @@ struct LeagueSnapshot: Identifiable, Sendable {
 
     var id: String { league.id }
 
-    var myScore: Double { matchup.flatMap { m in myTeam.flatMap { m.score(for: $0.id) } } ?? 0 }
-    var opponentScore: Double { matchup.flatMap { m in opponent.flatMap { m.score(for: $0.id) } } ?? 0 }
+    var myScore: Double { score(of: myTeam?.id, in: matchup, roster: myRoster) }
+    var opponentScore: Double { score(of: opponent?.id, in: matchup, roster: opponentRoster) }
+
+    /// The platform's score for a side, or — while it still reads 0 — the sum of that
+    /// lineup's starters. ESPN's settled `totalPoints` can sit at 0 through a live
+    /// matchup period while every player row already has points. Trusting the 0 left a
+    /// league out of the hero's tally and its odds frozen at the pre-game figure.
+    private func score(of teamID: String?, in matchup: Matchup?, roster: Roster?) -> Double {
+        let platform = matchup.flatMap { m in teamID.flatMap { m.score(for: $0) } } ?? 0
+        guard platform == 0, let roster else { return platform }
+        return roster.starters.compactMap(\.points).reduce(0, +)
+    }
 
     var standing: Int? {
         guard let myTeam else { return nil }
@@ -50,9 +60,17 @@ struct LeagueSnapshot: Identifiable, Sendable {
 
     var issues: [LineupIssue] { myRoster?.issues(in: league) ?? [] }
 
-    /// Whether this week's game has actually started. A 0-0 bar has nothing to say.
-    var hasKickedOff: Bool { myScore > 0 || opponentScore > 0 }
+    /// Whether this week's game has actually started: points on the board, or a starter
+    /// on either side whose game is under way or over. A first quarter at 0-0 is a game
+    /// in progress, not one still to come.
+    var hasKickedOff: Bool {
+        myScore > 0 || opponentScore > 0 || progress.hasStarted || opponentProgress.hasStarted
+    }
 
+    /// What a lineup is on course to score. Before kickoff, its projection. Once games
+    /// are on, banked points plus the projection for the minutes still to play
+    /// (`LiveProjectionBuilder`), so the number moves with the games instead of sitting
+    /// on Saturday's forecast all Sunday.
     func projectedTotal(for roster: Roster?) -> Double? {
         guard let roster else { return nil }
         // `projections` is THIS week's. For any other week the only honest number is
@@ -62,15 +80,14 @@ struct LeagueSnapshot: Identifiable, Sendable {
             let values = roster.starters.compactMap(\.projectedPoints)
             return values.isEmpty ? nil : values.reduce(0, +)
         }
-        let values = roster.starters.compactMap { projections.projection(for: $0.player) }
-        return values.isEmpty ? nil : values.reduce(0, +)
+        return liveProjection(for: roster)?.total
     }
 
-    /// Points still to be scored, as a share of the projected total. Drives how much
-    /// uncertainty is left in the win probability.
-    private func remainingShare(_ roster: Roster?, scored: Double) -> Double {
-        guard let projected = projectedTotal(for: roster), projected > 0 else { return 1 }
-        return min(max(1 - (scored / projected), 0), 1)
+    func liveProjection(for roster: Roster?) -> LiveProjection? {
+        guard let roster, roster.week == week else { return nil }
+        return LiveProjectionBuilder.build(
+            roster: roster, projection: { projections.projection(for: $0) }, schedule: schedule
+        )
     }
 
     /// `nil` when there is no opponent or nothing to project — better to show nothing
@@ -85,19 +102,17 @@ struct LeagueSnapshot: Identifiable, Sendable {
 
     /// The same calculation for ANY two sides in the league, from the left side's point
     /// of view. Your own matchup is one call of this; so is everyone else's.
+    ///
+    /// Live from the first snap: each side's banked score plus what its lineup is still
+    /// expected to add, with the uncertainty narrowing as the minutes run out. Before
+    /// kickoff that is exactly the pre-game projection margin. It used to add
+    /// `projected × (1 − scored / projected)` as the remainder, which is the pre-game
+    /// projection again, so the odds barely moved all Sunday.
     func winProbability(left: Roster?, leftScore: Double, right: Roster?, rightScore: Double) -> Double? {
-        guard let leftProjected = projectedTotal(for: left),
-              let rightProjected = projectedTotal(for: right) else { return nil }
-        guard leftScore > 0 || rightScore > 0 else {
-            return WinProbability.value(margin: leftProjected - rightProjected)
-        }
-        let leftShare = remainingShare(left, scored: leftScore)
-        let rightShare = remainingShare(right, scored: rightScore)
-        return WinProbability.live(
-            myScore: leftScore, opponentScore: rightScore,
-            myRemainingProjection: leftProjected * leftShare,
-            opponentRemainingProjection: rightProjected * rightShare,
-            remainingShare: max(leftShare, rightShare)
+        guard let leftLive = liveProjection(for: left),
+              let rightLive = liveProjection(for: right) else { return nil }
+        return LiveProjectionBuilder.winProbability(
+            left: leftLive, leftScore: leftScore, right: rightLive, rightScore: rightScore
         )
     }
 
@@ -115,8 +130,15 @@ struct LeagueSnapshot: Identifiable, Sendable {
 
         var id: String { "\(matchup.week)-\(matchup.homeTeamID)-\(matchup.awayTeamID)" }
         var week: Int { matchup.week }
-        var leftScore: Double { matchup.homeScore }
-        var rightScore: Double { matchup.awayScore }
+        var leftScore: Double { Self.score(matchup.homeScore, leftRoster) }
+        var rightScore: Double { Self.score(matchup.awayScore, rightRoster) }
+
+        /// The platform's score, or the lineup's own sum while that still reads 0 — the
+        /// same rule as your own matchup's.
+        private static func score(_ platform: Double, _ roster: Roster?) -> Double {
+            guard platform == 0, let roster else { return platform }
+            return roster.starters.compactMap(\.points).reduce(0, +)
+        }
         var hasKickedOff: Bool { leftScore > 0 || rightScore > 0 }
 
         func involves(_ teamID: String?) -> Bool {
